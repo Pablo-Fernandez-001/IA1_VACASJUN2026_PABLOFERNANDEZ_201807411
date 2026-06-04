@@ -347,7 +347,9 @@ function pintarRutas(rutas) {
   });
 }
 
-function mostrarResultado(html) { document.getElementById("resultadoPrincipal").innerHTML = html; }
+function mostrarResultado(html) {
+  document.getElementById("resultadoPrincipal").innerHTML = html;
+}
 
 function mostrarResultadoCargando(mensaje) {
   mostrarResultado(`<div class="empty-state"><div class="empty-icon">⟳</div><h3>Procesando consulta</h3><p>${mensaje}</p></div>`);
@@ -360,17 +362,32 @@ function mostrarResultadoError(mensaje) {
 function limpiarResultados() {
   ultimaRutaMasCorta = null;
   ultimasRutas = [];
+
   actualizarMetrica("metricRutas", "--");
   actualizarMetrica("metricDistancia", "--");
   actualizarRutasCounter(0);
-  mostrarResultado(`<div class="empty-state"><div class="empty-icon">⌁</div><h3>Esperando consulta</h3><p>Selecciona origen y destino para visualizar la ruta más corta.</p></div>`);
+
+  mostrarResultado(`
+    <div class="empty-state">
+      <div class="empty-icon">⌁</div>
+      <h3>Esperando consulta</h3>
+      <p>Selecciona origen y destino para visualizar la ruta más corta.</p>
+    </div>
+  `);
+
   const rutasContainer = document.getElementById("rutasContainer");
   rutasContainer.classList.add("empty-routes");
   rutasContainer.innerHTML = "No hay rutas cargadas todavía.";
+
+  ocultarEstadisticasRutas();
+  limpiarMapa();
+
   mostrarToast("Resultados limpiados.", "info");
 }
 
-function formatearRuta(ruta) { return ruta.map(ciudad => formatearNombre(ciudad)).join(" → "); }
+function formatearRuta(ruta) {
+  return ruta.map(ciudad => formatearNombre(ciudad)).join(" → ");
+}
 
 function formatearNombre(nombre) {
   if (!nombre) return "";
@@ -397,6 +414,11 @@ function mostrarToast(mensaje, tipo = "info") {
   toast.className = `toast show ${tipo}`;
   clearTimeout(mostrarToast.timeoutId);
   mostrarToast.timeoutId = setTimeout(() => { toast.className = "toast"; }, 3200);
+}
+
+function limpiarMapa() {
+  // Esta función es segura aunque no exista un mapa en esta versión del frontend.
+  // Se deja aquí para limpiar estados visuales cuando no hay ruta o se reinicia la búsqueda.
 }
 
 function mostrarMensajeSinRuta(origen, destino) {
