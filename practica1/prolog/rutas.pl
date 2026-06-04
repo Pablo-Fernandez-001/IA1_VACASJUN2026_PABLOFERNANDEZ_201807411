@@ -1,12 +1,10 @@
 % ==========================================================
-% Ruta mas corta entre ciudades usando Prolog
+% Ruta mas corta entre ciudades
 % ==========================================================
 
 :- dynamic conexion/3.
 
 % ----------------------------------------------------------
-% Base de conocimiento inicial
-% conexion(Origen, Destino, Distancia).
 % Distancias aproximadas en kilometros.
 % ----------------------------------------------------------
 
@@ -32,9 +30,7 @@ conexion(zacapa, chiquimula, 35).
 conexion(chiquimula, jalapa, 95).
 
 % ----------------------------------------------------------
-% camino/3
 % Permite que las conexiones sean bidireccionales.
-% Si existe conexion(A, B, D), tambien se puede viajar B -> A.
 % ----------------------------------------------------------
 
 camino(A, B, D) :-
@@ -44,7 +40,6 @@ camino(A, B, D) :-
     conexion(B, A, D).
 
 % ----------------------------------------------------------
-% ciudad/1
 % Obtiene ciudades conocidas desde origen o destino.
 % ----------------------------------------------------------
 
@@ -55,7 +50,6 @@ ciudad(C) :-
     conexion(_, C, _).
 
 % ----------------------------------------------------------
-% ciudades/1
 % Devuelve lista unica y ordenada de ciudades.
 % ----------------------------------------------------------
 
@@ -64,7 +58,6 @@ ciudades(ListaCiudades) :-
     sort(Ciudades, ListaCiudades).
 
 % ----------------------------------------------------------
-% conexion_existente/2
 % Verifica si ya existe una conexion entre dos ciudades.
 % ----------------------------------------------------------
 
@@ -72,7 +65,6 @@ conexion_existente(A, B) :-
     camino(A, B, _).
 
 % ----------------------------------------------------------
-% ruta/4
 % Busca una ruta sin repetir ciudades.
 % ----------------------------------------------------------
 
@@ -81,12 +73,10 @@ ruta(Origen, Destino, Ruta, Distancia) :-
     viajar(Origen, Destino, [Origen], RutaInvertida, Distancia),
     reverse(RutaInvertida, Ruta).
 
-% Caso base:
 % Existe camino directo hacia el destino.
 viajar(Origen, Destino, Visitados, [Destino|Visitados], Distancia) :-
     camino(Origen, Destino, Distancia).
 
-% Caso recursivo:
 % Busca una ciudad intermedia que no haya sido visitada.
 viajar(Origen, Destino, Visitados, Ruta, DistanciaTotal) :-
     camino(Origen, Intermedio, Distancia1),
@@ -96,7 +86,6 @@ viajar(Origen, Destino, Visitados, Ruta, DistanciaTotal) :-
     DistanciaTotal is Distancia1 + Distancia2.
 
 % ----------------------------------------------------------
-% rutas_posibles/3
 % Obtiene todas las rutas posibles ordenadas por distancia.
 % ----------------------------------------------------------
 
@@ -109,7 +98,6 @@ rutas_posibles(Origen, Destino, RutasOrdenadas) :-
     sort(Rutas, RutasOrdenadas).
 
 % ----------------------------------------------------------
-% ruta_mas_corta/4
 % Obtiene la primera ruta luego de ordenar por distancia.
 % ----------------------------------------------------------
 
@@ -117,7 +105,6 @@ ruta_mas_corta(Origen, Destino, MejorRuta, MenorDistancia) :-
     rutas_posibles(Origen, Destino, [[MenorDistancia, MejorRuta]|_]).
 
 % ----------------------------------------------------------
-% agregar_conexion/3
 % Agrega dinamicamente una conexion nueva a Prolog.
 % ----------------------------------------------------------
 
@@ -127,7 +114,6 @@ agregar_conexion(Origen, Destino, Distancia) :-
     assertz(conexion(Origen, Destino, Distancia)).
 
 % ----------------------------------------------------------
-% eliminar_conexion/2
 % Elimina dinamicamente una conexion.
 % ----------------------------------------------------------
 
