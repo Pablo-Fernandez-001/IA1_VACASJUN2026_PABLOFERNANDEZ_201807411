@@ -77,10 +77,16 @@ async function buscarRutaMasCorta() {
 
     if (!response.ok) {
       ultimaRutaMasCorta = null;
+      ultimasRutas = [];
+
       actualizarMetrica("metricDistancia", "--");
-      mostrarResultadoError("No se encontró una ruta disponible entre esas ciudades.");
-      mostrarToast("No existe ruta. Podés crear una nueva conexión abajo.", "info");
+      actualizarMetrica("metricRutas", "--");
+      actualizarRutasCounter(0);
+
       rellenarConexionConValores(origen, destino);
+      mostrarMensajeSinRuta(origen, destino);
+
+      mostrarToast("No existe ruta. Podés crear una nueva conexión.", "info");
       return;
     }
 
@@ -113,11 +119,23 @@ async function buscarTodasLasRutas(mostrarToastFinal = true) {
 
     if (!response.ok) {
       ultimasRutas = [];
+
       actualizarRutasCounter(0);
       actualizarMetrica("metricRutas", "--");
+
       container.classList.add("empty-routes");
-      container.innerHTML = "No se encontraron rutas disponibles.";
-      if (mostrarToastFinal) mostrarToast("No hay rutas alternativas disponibles.", "info");
+      container.innerHTML = `
+    No se encontraron rutas disponibles entre
+    ${formatearNombre(origen)} y ${formatearNombre(destino)}.
+  `;
+
+      ocultarEstadisticasRutas();
+
+      if (mostrarToastFinal) {
+        mostrarMensajeSinRuta(origen, destino);
+        mostrarToast("No hay rutas para comparar.", "info");
+      }
+
       return;
     }
 
@@ -127,6 +145,7 @@ async function buscarTodasLasRutas(mostrarToastFinal = true) {
     pintarRutas(ultimasRutas);
     actualizarRutasCounter(ultimasRutas.length);
     actualizarMetrica("metricRutas", ultimasRutas.length);
+    mostrarEstadisticasRutas(ultimasRutas);
 
     if (mostrarToastFinal) {
       mostrarToast(`Se encontraron ${ultimasRutas.length} rutas posibles.`, "success");
@@ -378,4 +397,92 @@ function mostrarToast(mensaje, tipo = "info") {
   toast.className = `toast show ${tipo}`;
   clearTimeout(mostrarToast.timeoutId);
   mostrarToast.timeoutId = setTimeout(() => { toast.className = "toast"; }, 3200);
+}
+
+function mostrarMensajeSinRuta(origen, destino) {
+  const mensaje = `
+    <div class="no-route-box">
+      <h3>No existe una ruta disponible</h3>
+      <p>
+        No se encontró ningún recorrido entre
+        <strong>${formatearNombre(origen)}</strong> y
+        <strong>${formatearNombre(destino)}</strong>.
+      </p>
+      <p>
+        Esto puede pasar porque las ciudades no están conectadas todavía en la base de conocimiento de Prolog.
+      </p>
+      <div class="no-route-actions">
+        <button onclick="rellenarConexionConSeleccion()" class="btn-primary">
+          Crear conexión entre estas ciudades
+        </button>
+        <button onclick="limpiarResultados()" class="btn-muted">
+          Limpiar búsqueda
+        </button>
+      </div>
+    </div>
+  `;
+
+  mostrarResultado(mensaje);
+
+  const rutasContainer = document.getElementById("rutasContainer");
+  rutasContainer.classList.add("empty-routes");
+  rutasContainer.innerHTML = `
+    No hay rutas posibles para comparar porque no existe conexión entre las ciudades seleccionadas.
+  `;
+
+  ocultarEstadisticasRutas();
+  limpiarMapa();
+}
+
+function mostrarEstadisticasRutas(rutas) {
+  const panel = document.getElementById("estadisticasRutas");
+
+  if (!panel || !rutas.length) {
+    ocultarEstadisticasRutas();
+    return;
+  }
+
+  const distancias = rutas.map(ruta => Number(ruta.distancia));
+  const menor = Math.min(...distancias);
+  const mayor = Math.max(...distancias);
+  const promedio = distancias.reduce((acc, item) => acc + item, 0) / distancias.length;
+  const diferencia = mayor - menor;
+
+  panel.classList.remove("hidden");
+
+  panel.innerHTML = `
+    <div class="stat-card">
+      <strong>${rutas.length}</strong>
+      <span>rutas encontradas</span>
+    </div>
+
+    <div class="stat-card">
+      <strong>${menor}</strong>
+      <span>km ruta más corta</span>
+    </div>
+
+    <div class="stat-card">
+      <strong>${mayor}</strong>
+      <span>km ruta más larga</span>
+    </div>
+
+    <div class="stat-card">
+      <strong>${promedio.toFixed(1)}</strong>
+      <span>km promedio</span>
+    </div>
+
+    <div class="stat-card">
+      <strong>${diferencia}</strong>
+      <span>km de diferencia</span>
+    </div>
+  `;
+}
+
+function ocultarEstadisticasRutas() {
+  const panel = document.getElementById("estadisticasRutas");
+
+  if (!panel) return;
+
+  panel.classList.add("hidden");
+  panel.innerHTML = "";
 }

@@ -120,3 +120,7 @@ agregar_conexion(Origen, Destino, Distancia) :-
 eliminar_conexion(Origen, Destino) :-
     retractall(conexion(Origen, Destino, _)),
     retractall(conexion(Destino, Origen, _)).
+
+conexion(zacapa, san_mateo, 850).
+conexion(guatemala, palin, 260).
+conexion(teculutan, guatemala, 110).
