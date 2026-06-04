@@ -2,109 +2,166 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Ruta más corta entre ciudades</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruta Inteligente GT | Prolog + Python</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="page-shell">
+    <header class="hero">
+      <nav class="topbar">
+        <div class="brand">
+          <span class="brand-icon">IA</span>
+          <div>
+            <strong>Ruta Inteligente GT</strong>
+            <small>Prolog · Python · Frontend dinámico</small>
+          </div>
+        </div>
+        <div class="status-pill" id="apiStatus">
+          <span class="status-dot"></span>
+          Verificando backend...
+        </div>
+      </nav>
 
-  <header class="header">
-    <h1>Ruta más corta entre ciudades</h1>
-    <p>Sistema híbrido usando Prolog + Python + Frontend dinámico</p>
-  </header>
-
-  <main class="container">
-
-    <section class="card">
-      <h2>Buscar ruta</h2>
-
-      <div class="form-grid">
-        <div>
-          <label for="origen">Ciudad origen</label>
-          <select id="origen"></select>
+      <section class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Práctica 1 · Inteligencia Artificial 1</p>
+          <h1>Encuentra la mejor ruta entre ciudades</h1>
+          <p>
+            Selecciona un origen y un destino. El backend consulta a Prolog para encontrar
+            la ruta más corta, listar alternativas y permitir conexiones dinámicas.
+          </p>
+          <div class="hero-actions">
+            <button onclick="buscarRutaMasCorta()" class="btn-primary">Buscar ruta óptima</button>
+            <button onclick="buscarTodasLasRutas()" class="btn-ghost">Comparar rutas</button>
+          </div>
         </div>
 
-        <div>
-          <label for="destino">Ciudad destino</label>
-          <select id="destino"></select>
+        <div class="hero-card">
+          <span class="hero-card-label">Motor lógico</span>
+          <h2>SWI-Prolog</h2>
+          <p>La búsqueda, cálculo de distancias y optimización se mantienen en Prolog.</p>
+          <div class="metric-row">
+            <div class="metric"><strong id="metricCiudades">--</strong><span>ciudades</span></div>
+            <div class="metric"><strong id="metricRutas">--</strong><span>rutas encontradas</span></div>
+            <div class="metric"><strong id="metricDistancia">--</strong><span>km óptimos</span></div>
+          </div>
         </div>
-      </div>
+      </section>
+    </header>
 
-      <div class="actions">
-        <button onclick="buscarRutaMasCorta()">Buscar ruta más corta</button>
-        <button onclick="buscarTodasLasRutas()" class="secondary">Ver todas las rutas</button>
-        <button onclick="limpiarResultados()" class="clean">Limpiar</button>
-      </div>
-    </section>
+    <main class="container">
+      <section class="layout">
+        <aside class="panel search-panel">
+          <div class="section-title">
+            <span class="section-icon">01</span>
+            <div>
+              <h2>Consulta de ruta</h2>
+              <p>Elige dos ciudades registradas en la base de conocimiento.</p>
+            </div>
+          </div>
 
-    <section class="card result-card">
-      <h2>Resultado principal</h2>
-      <div id="resultadoPrincipal" class="result">
-        Seleccioná origen y destino para buscar una ruta.
-      </div>
-    </section>
+          <div class="field">
+            <label for="origen">Ciudad origen</label>
+            <select id="origen"></select>
+          </div>
 
-    <section class="card">
-      <h2>Todas las rutas posibles</h2>
-      <div id="rutasContainer" class="routes-list">
-        No hay rutas cargadas todavía.
-      </div>
-    </section>
+          <button class="swap-btn" onclick="intercambiarCiudades()" title="Intercambiar origen y destino">⇅ Intercambiar ciudades</button>
 
-    <section class="card">
-      <h2>Agregar nueva conexión</h2>
+          <div class="field">
+            <label for="destino">Ciudad destino</label>
+            <select id="destino"></select>
+          </div>
 
-      <div class="form-grid">
-        <div>
-          <label for="nuevoOrigen">Origen</label>
-          <input type="text" id="nuevoOrigen" placeholder="Ejemplo: Guatemala">
+          <div class="actions stacked">
+            <button onclick="buscarRutaMasCorta()" class="btn-primary full">Buscar ruta más corta</button>
+            <button onclick="buscarTodasLasRutas()" class="btn-secondary full">Ver todas las rutas</button>
+            <button onclick="limpiarResultados()" class="btn-muted full">Limpiar búsqueda</button>
+          </div>
+        </aside>
+
+        <section class="panel result-panel">
+          <div class="section-title">
+            <span class="section-icon">02</span>
+            <div>
+              <h2>Resultado principal</h2>
+              <p>Resumen visual de la ruta óptima calculada por Prolog.</p>
+            </div>
+          </div>
+          <div id="resultadoPrincipal" class="result empty-state">
+            <div class="empty-icon">⌁</div>
+            <h3>Esperando consulta</h3>
+            <p>Selecciona origen y destino para visualizar la ruta más corta.</p>
+          </div>
+        </section>
+      </section>
+
+      <section class="panel">
+        <div class="section-title split">
+          <div class="title-left">
+            <span class="section-icon">03</span>
+            <div>
+              <h2>Rutas posibles</h2>
+              <p>Comparación de alternativas ordenadas por distancia.</p>
+            </div>
+          </div>
+          <span class="counter-badge" id="rutasCounter">0 rutas</span>
         </div>
+        <div id="rutasContainer" class="routes-list empty-routes">No hay rutas cargadas todavía.</div>
+      </section>
 
-        <div>
-          <label for="nuevoDestino">Destino</label>
-          <input type="text" id="nuevoDestino" placeholder="Ejemplo: Peten">
-        </div>
+      <section class="admin-grid">
+        <section class="panel">
+          <div class="section-title">
+            <span class="section-icon">04</span>
+            <div>
+              <h2>Agregar conexión</h2>
+              <p>Amplía dinámicamente la red de ciudades sin usar base de datos.</p>
+            </div>
+          </div>
 
-        <div>
-          <label for="nuevaDistancia">Distancia km</label>
-          <input type="number" id="nuevaDistancia" placeholder="Ejemplo: 480">
-        </div>
-      </div>
+          <div class="form-grid">
+            <div class="field"><label for="nuevoOrigen">Origen</label><input type="text" id="nuevoOrigen" placeholder="Ejemplo: Guatemala"></div>
+            <div class="field"><label for="nuevoDestino">Destino</label><input type="text" id="nuevoDestino" placeholder="Ejemplo: Peten"></div>
+            <div class="field"><label for="nuevaDistancia">Distancia km</label><input type="number" id="nuevaDistancia" min="1" placeholder="Ejemplo: 480"></div>
+          </div>
 
-      <div class="actions">
-        <button onclick="agregarConexion()">Agregar conexión</button>
-      </div>
+          <div class="actions">
+            <button onclick="agregarConexion()" class="btn-primary">Agregar conexión</button>
+            <button onclick="rellenarConexionConSeleccion()" class="btn-ghost dark">Usar selección actual</button>
+          </div>
+          <p class="note">La conexión se envía al backend, Prolog la registra con assertz/1 y Python la persiste en rutas.pl.</p>
+        </section>
 
-      <p class="note">
-        Esta conexión se agrega dinámicamente a Prolog y también se guarda en el archivo rutas.pl.
-      </p>
-    </section>
+        <section class="panel danger-panel">
+          <div class="section-title">
+            <span class="section-icon">05</span>
+            <div>
+              <h2>Eliminar conexión</h2>
+              <p>Elimina conexiones registradas dinámicamente o existentes en Prolog.</p>
+            </div>
+          </div>
 
-    <section class="card">
-      <h2>Eliminar conexión</h2>
+          <div class="form-grid two">
+            <div class="field"><label for="eliminarOrigen">Origen</label><input type="text" id="eliminarOrigen" placeholder="Ejemplo: Guatemala"></div>
+            <div class="field"><label for="eliminarDestino">Destino</label><input type="text" id="eliminarDestino" placeholder="Ejemplo: Peten"></div>
+          </div>
 
-      <div class="form-grid">
-        <div>
-          <label for="eliminarOrigen">Origen</label>
-          <input type="text" id="eliminarOrigen" placeholder="Ejemplo: Guatemala">
-        </div>
+          <div class="actions">
+            <button onclick="eliminarConexion()" class="btn-danger">Eliminar conexión</button>
+            <button onclick="rellenarEliminacionConSeleccion()" class="btn-ghost dark">Usar selección actual</button>
+          </div>
+          <p class="note">Úsalo con cuidado: se elimina la conexión en memoria y también del archivo Prolog.</p>
+        </section>
+      </section>
+    </main>
 
-        <div>
-          <label for="eliminarDestino">Destino</label>
-          <input type="text" id="eliminarDestino" placeholder="Ejemplo: Peten">
-        </div>
-      </div>
+    <footer class="footer">
+      <p>IA1 · Práctica 1 · Ruta más corta entre ciudades · v1.1.0 visual</p>
+    </footer>
+  </div>
 
-      <div class="actions">
-        <button onclick="eliminarConexion()" class="danger">Eliminar conexión</button>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="footer">
-    <p>IA1 - Práctica 1 - Prolog + Python</p>
-  </footer>
-
+  <div id="toast" class="toast"></div>
   <script src="app.js"></script>
 </body>
 </html>
