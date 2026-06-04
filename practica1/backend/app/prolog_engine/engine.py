@@ -40,7 +40,7 @@ class PrologEngine:
         query_text = f"agregar_conexion({origen_atom}, {destino_atom}, {distancia})"
         result = self.query(query_text)
 
-        if result is not None:
+        if result:
             self.persist_connection(origen_atom, destino_atom, distancia)
             return {
                 "origen": origen_atom,
