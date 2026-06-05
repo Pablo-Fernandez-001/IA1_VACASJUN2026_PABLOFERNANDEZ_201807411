@@ -15,6 +15,27 @@ La lógica de búsqueda y optimización no se implementa en Python.
 
 ---
 
+## Cumplimiento del enunciado
+
+| Requisito del enunciado | Implementación en la práctica |
+|---|---|
+| Base de conocimiento en Prolog con al menos 10 ciudades | `prolog/rutas.pl` define más de 10 ciudades y conexiones con distancias. |
+| Representar distancias entre ciudades | Se usa el hecho `conexion(Origen, Destino, Distancia)`. |
+| Buscar rutas entre origen y destino | Predicado `ruta/4`, endpoint `GET /rutas/todas` y frontend en la sección `Consulta de ruta`. |
+| Evitar ciclos o ciudades repetidas | `viajar/5` mantiene una lista de visitados y valida `\+ member(Intermedio, Visitados)`. |
+| Calcular distancia total | Prolog acumula distancias con `DistanciaTotal is Distancia1 + Distancia2`. |
+| Determinar ruta más corta | `ruta_mas_corta/4` toma la primera ruta ordenada por distancia. |
+| Backend Python para consultar Prolog | FastAPI usa PySwip mediante `PrologEngine`. |
+| Python sin algoritmo de rutas | Python solo normaliza entradas, ejecuta consultas y serializa respuestas. |
+| Frontend funcional e intuitivo | `frontend/index.html`, `style.css` y `app.js` permiten consultar y administrar conexiones. |
+| Agregar nuevas ciudades y conexiones | `POST /conexiones/` usa `assertz/1` y persiste en `rutas.pl`; una nueva conexión puede introducir ciudades nuevas. |
+| Mostrar todas las rutas posibles | `GET /rutas/todas` devuelve rutas ordenadas de menor a mayor distancia. |
+| Patrón de arquitectura para backend | Arquitectura por funcionalidades con capas `router`, `service`, `schemas` y `prolog_engine`. |
+| Manual de usuario y técnico en `.md` | Documentos en `docs/MANUAL_USUARIO.md` y `docs/MANUAL_TECNICO.md`. |
+| Evidencia de ejecución | Capturas generadas con Cypress en `evidencias/cypress/screenshots`. |
+
+---
+
 ## Arquitectura implementada
 
 El backend utiliza una arquitectura orientada por funcionalidades con separación por capas internas.
@@ -36,6 +57,21 @@ SWI-Prolog
    ↓
 rutas.pl
 ~~~
+
+---
+
+## Tecnologías utilizadas
+
+| Tecnología | Uso dentro del sistema |
+|---|---|
+| SWI-Prolog | Base de conocimiento, reglas, búsqueda de rutas, cálculo de distancias y selección de la ruta más corta. |
+| Python 3.x | Backend de integración entre HTTP y Prolog. |
+| FastAPI | API REST, documentación automática y manejo de endpoints. |
+| PySwip | Comunicación directa entre Python y SWI-Prolog. |
+| Pydantic | Validación de datos para crear y eliminar conexiones. |
+| HTML, CSS y JavaScript | Interfaz web para consulta y administración de rutas. |
+| Cypress | Pruebas end-to-end y capturas reales de backend, `/docs` y frontend. |
+| Live Server | Servidor local para ejecutar el frontend durante las evidencias. |
 
 ---
 
@@ -346,9 +382,12 @@ Para permitir cambios dinámicos, el archivo Prolog declara:
 
 ~~~prolog
 :- dynamic conexion/3.
+:- discontiguous conexion/3.
 ~~~
 
 Esto permite modificar hechos `conexion/3` durante la ejecución.
+
+La directiva `discontiguous/1` evita advertencias de SWI-Prolog cuando las conexiones nuevas persisten al final de `rutas.pl`, después de las reglas.
 
 El predicado para agregar conexiones es:
 
@@ -376,6 +415,8 @@ eliminar_conexion(Origen, Destino) :-
 ~~~
 
 `retractall/1` elimina todos los hechos que coincidan con la conexión indicada.
+
+Antes de ejecutar la eliminación, Python consulta `conexion_existente/2`. Si no existe una conexión entre las ciudades indicadas, el endpoint responde `404` y no modifica `rutas.pl`.
 
 ---
 
@@ -460,6 +501,7 @@ Esto permite:
 | Evitar ciclos en rutas | Prolog |
 | Origen diferente de destino | Prolog y frontend |
 | Mensajes cuando no hay ruta | Backend y frontend |
+| Eliminar solo conexiones existentes | PrologEngine y FastAPI |
 
 ---
 
@@ -474,6 +516,47 @@ Esto permite:
 - El frontend permite consultar y administrar conexiones.
 - El sistema tiene arquitectura orientada por funcionalidades.
 - Se permite el cambio dinámico de rutas.
+
+---
+
+## Mejoras implementadas sobre el mínimo
+
+Además de los requisitos mínimos, la práctica incluye:
+
+- Listado de todas las rutas posibles ordenadas por distancia.
+- Panel de estadísticas con ruta más corta, ruta más larga, promedio y diferencia.
+- Mensajes visuales para errores, resultados vacíos y operaciones exitosas.
+- Botón para intercambiar origen y destino.
+- Persistencia de conexiones nuevas directamente en `rutas.pl`, sin base de datos.
+- Endpoint `/estado` para evidenciar visualmente que el backend está activo.
+- Pruebas end-to-end con Cypress y capturas reales de ejecución.
+
+---
+
+## Pruebas automatizadas
+
+Las pruebas se encuentran en:
+
+~~~text
+cypress/e2e/backend.cy.js
+cypress/e2e/frontend.cy.js
+~~~
+
+La suite realiza las siguientes validaciones:
+
+- El backend responde desde `GET /`.
+- La documentación automática carga en `GET /docs`.
+- `GET /ciudades/` devuelve ciudades reales desde Prolog.
+- `GET /rutas/mas-corta` devuelve la ruta `guatemala -> antigua -> chimaltenango -> quetzaltenango` con `230 km`.
+- `DELETE /conexiones/` devuelve `404` cuando se intenta eliminar una conexión inexistente.
+- El frontend se sirve con Live Server y confirma conexión real al backend.
+- La búsqueda desde la interfaz llama a la API real y muestra el resultado calculado por Prolog.
+
+Para ejecutarlas:
+
+~~~bash
+npm run evidencias
+~~~
 
 ---
 
@@ -506,3 +589,38 @@ Para demostrar el funcionamiento del sistema se recomienda incluir capturas de:
 10. Archivo `rutas.pl` actualizado.
 11. Repositorio en GitHub.
 
+---
+
+## Evidencias generadas con Cypress
+
+Las siguientes capturas fueron generadas ejecutando pruebas reales con Cypress. El flujo levanta o reutiliza el backend FastAPI, sirve el frontend con Live Server y valida endpoints reales sin usar mocks.
+
+Comando utilizado desde la carpeta `practica1`:
+
+~~~bash
+npm run evidencias
+~~~
+
+### Backend ejecutándose
+
+La prueba valida que el endpoint raíz del backend responda correctamente y captura la página de estado del servidor.
+
+![Backend ejecutándose](../evidencias/cypress/screenshots/backend.cy.js/backend-servidor-ejecutandose.png)
+
+### Documentación automática de FastAPI
+
+La prueba abre `/docs` y verifica que Swagger UI cargue con los grupos de endpoints del sistema.
+
+![Documentación Swagger del backend](../evidencias/cypress/screenshots/backend.cy.js/backend-swagger-docs.png)
+
+### Frontend servido con Live Server
+
+La prueba abre el frontend en `http://127.0.0.1:5500`, confirma la conexión real con el backend y valida que las ciudades se carguen desde la API.
+
+![Frontend conectado al backend](../evidencias/cypress/screenshots/frontend.cy.js/frontend-live-server-conectado.png)
+
+### Consulta real de ruta más corta
+
+La prueba selecciona `guatemala` como origen y `quetzaltenango` como destino, consulta la API real y valida que la ruta óptima muestre una distancia de `230 km`.
+
+![Ruta más corta calculada desde el frontend](../evidencias/cypress/screenshots/frontend.cy.js/frontend-ruta-mas-corta-real.png)

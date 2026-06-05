@@ -113,6 +113,13 @@ practica1/
 
 ---
 
+## Manuales
+
+- [Manual de Usuario](docs/MANUAL_USUARIO.md)
+- [Manual Técnico](docs/MANUAL_TECNICO.md)
+
+---
+
 ## Instalación
 
 ### 1. Instalar SWI-Prolog
@@ -216,6 +223,27 @@ También se puede abrir con la extensión Live Server de Visual Studio Code.
 
 ---
 
+## Pruebas y capturas con Cypress
+
+Desde la carpeta `practica1`:
+
+~~~bash
+npm install
+npm run evidencias
+~~~
+
+El comando levanta el backend real en `http://127.0.0.1:8000`, sirve el frontend con Live Server en `http://127.0.0.1:5500` y ejecuta Cypress contra ambos servicios.
+
+Las capturas generadas quedan en:
+
+~~~text
+evidencias/cypress/screenshots
+~~~
+
+La suite valida endpoints reales del backend, abre `/docs` de FastAPI y consulta la ruta mas corta desde el frontend sin usar mocks.
+
+---
+
 ## Endpoints principales
 
 | Método | Endpoint | Descripción |
@@ -272,4 +300,3 @@ El repositorio debe tener el formato solicitado:
 ~~~text
 [IA1]_VACASJUN2026_PABLOFERNANDEZ_201807411
 ~~~
-

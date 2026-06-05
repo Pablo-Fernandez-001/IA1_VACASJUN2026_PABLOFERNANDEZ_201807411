@@ -3,6 +3,7 @@
 % ==========================================================
 
 :- dynamic conexion/3.
+:- discontiguous conexion/3.
 
 % ----------------------------------------------------------
 % Distancias aproximadas en kilometros.

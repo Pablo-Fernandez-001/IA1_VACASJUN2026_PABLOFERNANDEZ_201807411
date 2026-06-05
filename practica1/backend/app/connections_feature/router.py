@@ -38,6 +38,12 @@ def delete_connection(data: ConnectionDelete):
         data.destino
     )
 
+    if deleted is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No existe una conexión registrada entre las ciudades indicadas."
+        )
+
     return {
         "mensaje": "Conexión eliminada dinámicamente.",
         "conexion": deleted

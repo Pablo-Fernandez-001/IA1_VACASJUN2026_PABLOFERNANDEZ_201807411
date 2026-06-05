@@ -1,0 +1,18 @@
+{
+  "name": "practica1-rutas-cypress",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pruebas e2e y capturas reales para la Practica 1.",
+  "scripts": {
+    "backend": "cd backend && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+    "frontend": "live-server frontend --host=127.0.0.1 --port=5500 --no-browser",
+    "cypress:verify": "node scripts/cypress-env.js verify",
+    "test:e2e": "node scripts/cypress-env.js run",
+    "test:e2e:open": "node scripts/cypress-env.js open",
+    "evidencias": "node scripts/evidencias.js"
+  },
+  "devDependencies": {
+    "cypress": "13.17.0",
+    "live-server": "^1.2.2"
+  }
+}

@@ -1,0 +1,5 @@
+node_modules/
+evidencias/cypress/downloads/
+cypress/videos/
+__pycache__/
+*.pyc

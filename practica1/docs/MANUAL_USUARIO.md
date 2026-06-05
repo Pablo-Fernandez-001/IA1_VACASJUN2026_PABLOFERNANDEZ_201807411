@@ -14,9 +14,28 @@ Antes de usar el sistema, se debe contar con:
 
 - Python instalado.
 - SWI-Prolog instalado.
+- Node.js y npm instalados si se desean ejecutar las evidencias automáticas con Cypress.
 - Backend ejecutándose correctamente.
 - Navegador web actualizado.
 - Archivos del proyecto descargados o clonados desde GitHub.
+
+---
+
+## Instalación inicial
+
+Desde la carpeta `practica1`, instalar las dependencias del backend:
+
+~~~bash
+cd backend
+pip install -r requirements.txt
+~~~
+
+Si se desea generar evidencias automáticas con Cypress, volver a la carpeta `practica1` e instalar las dependencias de Node:
+
+~~~bash
+cd ..
+npm install
+~~~
 
 ---
 
@@ -63,6 +82,18 @@ http://127.0.0.1:8000
 
 Si todo está correcto, se mostrará un mensaje indicando que la API está funcionando.
 
+También se puede abrir una vista visual del servidor en:
+
+~~~text
+http://127.0.0.1:8000/estado
+~~~
+
+La documentación automática de la API está disponible en:
+
+~~~text
+http://127.0.0.1:8000/docs
+~~~
+
 ---
 
 ## Abrir el frontend
@@ -101,11 +132,33 @@ http://localhost:5500
 
 ---
 
+## Pantallas principales
+
+### Backend activo
+
+El backend puede verificarse desde la página de estado:
+
+![Backend ejecutándose](../evidencias/cypress/screenshots/backend.cy.js/backend-servidor-ejecutandose.png)
+
+### Documentación de la API
+
+FastAPI genera la documentación automática de endpoints en `/docs`:
+
+![Documentación Swagger del backend](../evidencias/cypress/screenshots/backend.cy.js/backend-swagger-docs.png)
+
+### Frontend conectado
+
+Al abrir el frontend, la parte superior debe mostrar `Backend conectado` y los selectores deben cargar ciudades desde Prolog:
+
+![Frontend conectado al backend](../evidencias/cypress/screenshots/frontend.cy.js/frontend-live-server-conectado.png)
+
+---
+
 ## Buscar la ruta más corta
 
 Para buscar una ruta:
 
-1. Ir a la sección `Buscar ruta`.
+1. Ir a la sección `Consulta de ruta`.
 2. Seleccionar una ciudad en el campo `Ciudad origen`.
 3. Seleccionar una ciudad en el campo `Ciudad destino`.
 4. Presionar el botón `Buscar ruta más corta`.
@@ -122,6 +175,10 @@ Ejemplo:
 guatemala → antigua → chimaltenango → quetzaltenango
 Distancia total: 230 km
 ~~~
+
+Captura del resultado:
+
+![Ruta más corta calculada desde el frontend](../evidencias/cypress/screenshots/frontend.cy.js/frontend-ruta-mas-corta-real.png)
 
 ---
 
@@ -165,6 +222,8 @@ Ejemplo:
 
 Después de agregarla, la nueva ciudad o conexión aparecerá en los selectores del sistema.
 
+Si el origen o destino no existía antes, la ciudad queda disponible porque Prolog obtiene las ciudades desde los hechos `conexion/3`.
+
 ---
 
 ## Eliminar una conexión
@@ -177,6 +236,8 @@ Para eliminar una conexión:
 4. Presionar `Eliminar conexión`.
 
 El sistema eliminará la conexión tanto de Prolog en ejecución como del archivo donde se almacenan las conexiones.
+
+Si la conexión no existe, el sistema mostrará un mensaje de error y no modificará el archivo Prolog.
 
 ---
 
@@ -204,6 +265,10 @@ Puede ocurrir por las siguientes razones:
 - La distancia ingresada no es válida.
 - Algún campo está vacío.
 
+### No existe una conexión registrada
+
+Este mensaje aparece cuando se intenta eliminar una conexión que no existe entre las ciudades indicadas.
+
 ### Error al consultar la ruta
 
 Puede ocurrir si el backend no está encendido o si existe un problema de comunicación entre el frontend y la API.
@@ -217,6 +282,24 @@ Puede ocurrir si el backend no está encendido o si existe un problema de comuni
 - Usar nombres de ciudades claros.
 - Evitar agregar conexiones duplicadas.
 - Ingresar distancias mayores que cero.
+
+---
+
+## Generar evidencias automáticas
+
+Desde la carpeta `practica1`, ejecutar:
+
+~~~bash
+npm run evidencias
+~~~
+
+Este comando:
+
+- Reutiliza el backend si ya está activo en `http://127.0.0.1:8000`.
+- Levanta el backend si no está activo.
+- Sirve el frontend con Live Server en `http://127.0.0.1:5500`.
+- Ejecuta pruebas Cypress contra servicios reales.
+- Guarda las capturas en `evidencias/cypress/screenshots`.
 
 ---
 
@@ -235,4 +318,3 @@ Destino: quetzaltenango
 5. Revisar el resultado.
 6. Presionar `Ver todas las rutas` para comparar alternativas.
 7. Agregar una nueva conexión si se desea ampliar la red de ciudades.
-

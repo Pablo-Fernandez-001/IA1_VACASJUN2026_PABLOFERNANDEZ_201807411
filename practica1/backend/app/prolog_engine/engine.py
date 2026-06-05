@@ -54,6 +54,9 @@ class PrologEngine:
         origen_atom = self.sanitize_atom(origen)
         destino_atom = self.sanitize_atom(destino)
 
+        if not self.query(f"conexion_existente({origen_atom}, {destino_atom})"):
+            return None
+
         query_text = f"eliminar_conexion({origen_atom}, {destino_atom})"
         self.query(query_text)
 
