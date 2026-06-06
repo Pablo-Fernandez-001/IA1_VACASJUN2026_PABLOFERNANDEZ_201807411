@@ -9,7 +9,8 @@
     "cypress:verify": "node scripts/cypress-env.js verify",
     "test:e2e": "node scripts/cypress-env.js run",
     "test:e2e:open": "node scripts/cypress-env.js open",
-    "evidencias": "node scripts/evidencias.js"
+    "evidencias": "node scripts/evidencias.js",
+    "verificar:rubrica": "node scripts/verificar-rubrica.js"
   },
   "devDependencies": {
     "cypress": "13.17.0",

@@ -34,6 +34,12 @@ La lógica de búsqueda y optimización no se implementa en Python.
 | Manual de usuario y técnico en `.md` | Documentos en `docs/MANUAL_USUARIO.md` y `docs/MANUAL_TECNICO.md`. |
 | Evidencia de ejecución | Capturas generadas con Cypress en `evidencias/cypress/screenshots`. |
 
+La matriz específica de la hoja de calificación se encuentra en:
+
+~~~text
+docs/HOJA_CALIFICACION_CUMPLIMIENTO.md
+~~~
+
 ---
 
 ## Arquitectura implementada

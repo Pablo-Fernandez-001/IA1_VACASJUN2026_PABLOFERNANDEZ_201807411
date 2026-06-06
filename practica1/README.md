@@ -117,6 +117,7 @@ practica1/
 
 - [Manual de Usuario](docs/MANUAL_USUARIO.md)
 - [Manual Técnico](docs/MANUAL_TECNICO.md)
+- [Cumplimiento de Hoja de Calificación](docs/HOJA_CALIFICACION_CUMPLIMIENTO.md)
 
 ---
 
@@ -229,10 +230,11 @@ Desde la carpeta `practica1`:
 
 ~~~bash
 npm install
+npm run verificar:rubrica
 npm run evidencias
 ~~~
 
-El comando levanta el backend real en `http://127.0.0.1:8000`, sirve el frontend con Live Server en `http://127.0.0.1:5500` y ejecuta Cypress contra ambos servicios.
+El comando `verificar:rubrica` consulta SWI-Prolog directamente para comprobar los puntos principales de la hoja de calificación. El comando `evidencias` levanta el backend real en `http://127.0.0.1:8000`, sirve el frontend con Live Server en `http://127.0.0.1:5500` y ejecuta Cypress contra ambos servicios.
 
 Las capturas generadas quedan en:
 
@@ -300,3 +302,12 @@ El repositorio debe tener el formato solicitado:
 ~~~text
 [IA1]_VACASJUN2026_PABLOFERNANDEZ_201807411
 ~~~
+
+---
+
+## Checklist final antes de entregar
+
+- Subir el repositorio o archivo final a UEDI dentro del plazo indicado.
+- Agregar al auxiliar como colaborador del repositorio remoto si el curso lo solicita.
+- Confirmar que el repositorio remoto use el nombre requerido.
+- Ejecutar `npm run verificar:rubrica` y `npm run evidencias` antes de la revisión.
