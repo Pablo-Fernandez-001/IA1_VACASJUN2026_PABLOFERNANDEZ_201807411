@@ -108,7 +108,7 @@ Al finalizar verás:
 
 ```text
 todo está subido en:
-Frontend:          http://localhost:8080
+Frontend:          http://localhost:8081
 API Gateway docs:  http://localhost:8000/docs
 API health:        http://localhost:8000/api/health
 Prolog health:     http://localhost:8001/health
@@ -120,6 +120,8 @@ Detener Docker:
 ```powershell
 .\scripts\stop_docker_windows.ps1
 ```
+
+El puerto del frontend Docker se controla con `FRONTEND_PORT` en `.env`. Por defecto queda en `8081` para evitar choques con apps que usen `8080`.
 
 ## Telegram
 

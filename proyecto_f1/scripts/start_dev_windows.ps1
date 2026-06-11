@@ -12,7 +12,12 @@ function Stop-ProjectPorts {
     $Connections = Get-NetTCPConnection -LocalPort $Ports -State Listen -ErrorAction SilentlyContinue
     if ($Connections) {
         $Connections | ForEach-Object {
-            Write-Host "Liberando puerto $($_.LocalPort) (PID $($_.OwningProcess))" -ForegroundColor Yellow
+            $Process = Get-Process -Id $_.OwningProcess
+            if ($Process.ProcessName -in @("com.docker.backend", "wslrelay")) {
+                Write-Host "Puerto $($_.LocalPort) administrado por Docker ($($Process.ProcessName)); usa .\scripts\stop_docker_windows.ps1 si quieres liberar ese puerto." -ForegroundColor Cyan
+                return
+            }
+            Write-Host "Liberando puerto $($_.LocalPort) (PID $($_.OwningProcess), $($Process.ProcessName))" -ForegroundColor Yellow
             Stop-Process -Id $_.OwningProcess -Force
         }
     }
@@ -23,7 +28,11 @@ function Assert-FreePort {
 
     $Connection = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
     if ($Connection) {
-        throw "El puerto $Port ya esta en uso. Ejecuta .\scripts\stop_services_windows.ps1 o inicia este script con -StopExisting."
+        $Process = Get-Process -Id $Connection.OwningProcess
+        if ($Process.ProcessName -in @("com.docker.backend", "wslrelay")) {
+            throw "El puerto $Port lo esta usando Docker. Ejecuta .\scripts\stop_docker_windows.ps1 antes de iniciar modo dev."
+        }
+        throw "El puerto $Port ya esta en uso por $($Process.ProcessName). Ejecuta .\scripts\stop_services_windows.ps1 o inicia este script con -StopExisting."
     }
 }
 

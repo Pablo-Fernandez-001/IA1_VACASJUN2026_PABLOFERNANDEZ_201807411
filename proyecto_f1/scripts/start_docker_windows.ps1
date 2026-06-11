@@ -48,12 +48,36 @@ function Invoke-NativeCommand {
     }
 }
 
+function Get-EnvValue {
+    param(
+        [string]$Name,
+        [string]$DefaultValue = ""
+    )
+
+    $Line = Get-Content ".env" -ErrorAction SilentlyContinue |
+        Where-Object { $_ -match "^$Name=" } |
+        Select-Object -First 1
+
+    if (-not $Line) {
+        return $DefaultValue
+    }
+
+    $Value = ($Line -replace "^$Name=", "").Trim()
+    if (-not $Value) {
+        return $DefaultValue
+    }
+
+    return $Value
+}
+
 Push-Location $ProjectRoot
 
 if (-not (Test-Path ".env")) {
     Copy-Item ".env.example" ".env"
     Write-Host "Archivo .env creado desde .env.example" -ForegroundColor Green
 }
+
+$FrontendPort = Get-EnvValue "FRONTEND_PORT" "8081"
 
 Write-Host "Verificando Docker Desktop..." -ForegroundColor Cyan
 $DockerInfo = Invoke-NativeCommand "docker" @("info")
@@ -64,10 +88,6 @@ if ($DockerInfo.ExitCode -ne 0) {
     exit 1
 }
 
-if (Test-Path $DevStopScript) {
-    & $DevStopScript
-}
-
 Write-Host "Limpiando contenedores anteriores..." -ForegroundColor Cyan
 $ComposeDown = Invoke-NativeCommand "docker" @("compose", "down", "--remove-orphans")
 Write-Host ($ComposeDown.Output -join [Environment]::NewLine)
@@ -75,6 +95,10 @@ if ($ComposeDown.ExitCode -ne 0) {
     Write-Host "docker compose down fallo. Revisa que Docker Desktop este corriendo." -ForegroundColor Red
     Pop-Location
     exit 1
+}
+
+if (Test-Path $DevStopScript) {
+    & $DevStopScript
 }
 
 Write-Host "Construyendo y levantando Doctor Byte con Docker..." -ForegroundColor Cyan
@@ -90,11 +114,11 @@ Write-Host "Esperando servicios..." -ForegroundColor Cyan
 Wait-Url "Prolog Service" "http://localhost:8001/health"
 Wait-Url "Telegram Service" "http://localhost:8002/health"
 Wait-Url "API Gateway" "http://localhost:8000/api/health"
-Wait-Url "Frontend" "http://localhost:8080"
+Wait-Url "Frontend" "http://localhost:$FrontendPort"
 
 Write-Host ""
-Write-Host "todo está subido en:" -ForegroundColor Green
-Write-Host "Frontend:          http://localhost:8080" -ForegroundColor Green
+Write-Host ("todo est{0} subido en:" -f [char]0x00E1) -ForegroundColor Green
+Write-Host "Frontend:          http://localhost:$FrontendPort" -ForegroundColor Green
 Write-Host "API Gateway docs:  http://localhost:8000/docs" -ForegroundColor Green
 Write-Host "API health:        http://localhost:8000/api/health" -ForegroundColor Green
 Write-Host "Prolog health:     http://localhost:8001/health" -ForegroundColor Green

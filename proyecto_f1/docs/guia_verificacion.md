@@ -168,7 +168,7 @@ El script construye, levanta y espera los servicios. Al finalizar debe mostrar:
 
 ```text
 todo está subido en:
-Frontend:          http://localhost:8080
+Frontend:          http://localhost:8081
 API Gateway docs:  http://localhost:8000/docs
 API health:        http://localhost:8000/api/health
 Prolog health:     http://localhost:8001/health
@@ -180,6 +180,8 @@ Para detener:
 ```powershell
 .\scripts\stop_docker_windows.ps1
 ```
+
+El puerto del frontend Docker se controla con `FRONTEND_PORT` en `.env`. Por defecto queda en `8081`.
 
 ## 9. Errores comunes y solución
 
