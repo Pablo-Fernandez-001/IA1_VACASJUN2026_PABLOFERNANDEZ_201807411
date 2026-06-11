@@ -1,0 +1,54 @@
+services:
+  prolog-service:
+    build: ./backend/prolog_service
+    container_name: doctor-byte-prolog-service
+    ports:
+      - "8001:8001"
+    networks:
+      - doctor-byte-net
+
+  telegram-service:
+    build: ./backend/telegram_service
+    container_name: doctor-byte-telegram-service
+    env_file:
+      - .env
+    ports:
+      - "8002:8002"
+    networks:
+      - doctor-byte-net
+
+  api-gateway:
+    build: ./backend/api_gateway
+    container_name: doctor-byte-api-gateway
+    env_file:
+      - .env
+    environment:
+      PROLOG_SERVICE_URL: http://prolog-service:8001
+      TELEGRAM_SERVICE_URL: http://telegram-service:8002
+      DATABASE_URL: sqlite:///./data/doctor_byte.db
+    volumes:
+      - doctor-byte-data:/app/data
+    ports:
+      - "8000:8000"
+    depends_on:
+      - prolog-service
+      - telegram-service
+    networks:
+      - doctor-byte-net
+
+  frontend:
+    build: ./frontend
+    container_name: doctor-byte-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - doctor-byte-net
+
+networks:
+  doctor-byte-net:
+    driver: bridge
+
+volumes:
+  doctor-byte-data:

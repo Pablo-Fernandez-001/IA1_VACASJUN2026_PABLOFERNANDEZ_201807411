@@ -125,3 +125,7 @@ eliminar_conexion(Origen, Destino) :-
 conexion(zacapa, san_mateo, 850).
 conexion(guatemala, palin, 260).
 conexion(teculutan, guatemala, 110).
+
+conexion(sansare, aguasalobrega, 80).
+
+conexion(aguasalobrega, guatemala, 50).

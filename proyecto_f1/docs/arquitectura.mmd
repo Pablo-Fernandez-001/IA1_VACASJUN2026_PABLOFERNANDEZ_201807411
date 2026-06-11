@@ -1,0 +1,8 @@
+flowchart LR
+  U[Usuario] --> F[Frontend React]
+  F -->|REST /api| G[API Gateway FastAPI]
+  G -->|REST /diagnose| P[Prolog Service FastAPI]
+  P -->|subprocess| SWI[SWI-Prolog doctor_byte.pl]
+  G -->|SQLite| DB[(Historial de diagnósticos)]
+  G -->|REST /notify| T[Telegram Service FastAPI]
+  T -->|Telegram Bot API| TG[Telegram]
