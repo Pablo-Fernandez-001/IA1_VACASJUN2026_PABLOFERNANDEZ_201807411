@@ -51,7 +51,9 @@ Write-Host "Bot configurado: @$($Bot.result.username)" -ForegroundColor Green
 $Updates = Invoke-RestMethod "https://api.telegram.org/bot$Token/getUpdates"
 if (-not $Updates.result -or $Updates.result.Count -eq 0) {
     Write-Host "Telegram todavia no devolvio ningun chat_id." -ForegroundColor Yellow
-    Write-Host "Abre @$($Bot.result.username), envia /start y vuelve a ejecutar:" -ForegroundColor Yellow
+    Write-Host "Abre este enlace, presiona Start o envia /start:" -ForegroundColor Yellow
+    Write-Host "https://t.me/$($Bot.result.username)" -ForegroundColor Cyan
+    Write-Host "Luego vuelve a ejecutar:" -ForegroundColor Yellow
     Write-Host ".\scripts\telegram_chat_id_windows.ps1 -SaveFirst" -ForegroundColor Cyan
     exit 0
 }
