@@ -39,6 +39,18 @@ TELEGRAM_DEFAULT_CHAT_ID=
 
 Sin token, el sistema sigue funcionando y marca Telegram como no configurado.
 
+Para encontrar y guardar el `chat_id`, abre el bot en Telegram, envía `/start` y ejecuta:
+
+```powershell
+.\scripts\telegram_chat_id_windows.ps1 -SaveFirst
+```
+
+Para probar un mensaje directo:
+
+```powershell
+.\scripts\telegram_test_windows.ps1
+```
+
 ## 4. Verificar motor Prolog directo
 
 ```powershell
@@ -149,14 +161,24 @@ Debe mostrar el diagnóstico creado en historial.
 ## 8. Verificar con Docker
 
 ```powershell
-docker compose up --build
+.\scripts\start_docker_windows.ps1
 ```
 
-Abrir:
+El script construye, levanta y espera los servicios. Al finalizar debe mostrar:
 
 ```text
-http://localhost:8080
-http://localhost:8000/docs
+todo está subido en:
+Frontend:          http://localhost:8080
+API Gateway docs:  http://localhost:8000/docs
+API health:        http://localhost:8000/api/health
+Prolog health:     http://localhost:8001/health
+Telegram health:   http://localhost:8002/health
+```
+
+Para detener:
+
+```powershell
+.\scripts\stop_docker_windows.ps1
 ```
 
 ## 9. Errores comunes y solución

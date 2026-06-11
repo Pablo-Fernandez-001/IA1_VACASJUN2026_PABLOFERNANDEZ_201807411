@@ -101,20 +101,24 @@ El servicio Prolog incluye pruebas automatizadas para los 12 casos documentados 
 
 ```powershell
 cd C:\Users\pabda\Desktop\IA1_VACASJUN2026_PABLOFERNANDEZ_201807411\proyecto_f1
-copy .env.example .env
-docker compose up --build
+.\scripts\start_docker_windows.ps1
 ```
 
-Frontend:
+Al finalizar verás:
 
 ```text
-http://localhost:8080
+todo está subido en:
+Frontend:          http://localhost:8080
+API Gateway docs:  http://localhost:8000/docs
+API health:        http://localhost:8000/api/health
+Prolog health:     http://localhost:8001/health
+Telegram health:   http://localhost:8002/health
 ```
 
-API:
+Detener Docker:
 
-```text
-http://localhost:8000/docs
+```powershell
+.\scripts\stop_docker_windows.ps1
 ```
 
 ## Telegram
@@ -126,6 +130,24 @@ http://localhost:8000/docs
 5. Colocar el chat id en la interfaz o en `.env` como `TELEGRAM_DEFAULT_CHAT_ID`.
 
 Sin token, el sistema funciona normalmente y marca Telegram como no configurado.
+
+Para obtener el `chat_id` sin copiar JSON:
+
+```powershell
+.\scripts\telegram_chat_id_windows.ps1
+```
+
+Si todavía no aparece, abre el bot, envía `/start` y luego ejecuta:
+
+```powershell
+.\scripts\telegram_chat_id_windows.ps1 -SaveFirst
+```
+
+Para probar un mensaje directo:
+
+```powershell
+.\scripts\telegram_test_windows.ps1
+```
 
 ## Problemas comunes
 

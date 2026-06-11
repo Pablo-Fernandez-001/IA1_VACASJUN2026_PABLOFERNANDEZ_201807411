@@ -2,24 +2,39 @@ services:
   prolog-service:
     build: ./backend/prolog_service
     container_name: doctor-byte-prolog-service
+    restart: unless-stopped
     ports:
       - "8001:8001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     networks:
       - doctor-byte-net
 
   telegram-service:
     build: ./backend/telegram_service
     container_name: doctor-byte-telegram-service
+    restart: unless-stopped
     env_file:
       - .env
     ports:
       - "8002:8002"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     networks:
       - doctor-byte-net
 
   api-gateway:
     build: ./backend/api_gateway
     container_name: doctor-byte-api-gateway
+    restart: unless-stopped
     env_file:
       - .env
     environment:
@@ -31,18 +46,34 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - prolog-service
-      - telegram-service
+      prolog-service:
+        condition: service_healthy
+      telegram-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     networks:
       - doctor-byte-net
 
   frontend:
     build: ./frontend
     container_name: doctor-byte-frontend
+    restart: unless-stopped
     ports:
       - "8080:80"
     depends_on:
-      - api-gateway
+      api-gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     networks:
       - doctor-byte-net
 
