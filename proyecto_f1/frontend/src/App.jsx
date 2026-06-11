@@ -1,29 +1,121 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Activity, BrainCircuit, History, Send, ShieldCheck, Trash2, Cpu, Search } from 'lucide-react';
-import { deleteHistory, diagnose, getHistory, getSymptoms } from './api';
+import {
+  Activity,
+  BrainCircuit,
+  Cpu,
+  Edit3,
+  History,
+  Plus,
+  Route,
+  Save,
+  Search,
+  ShieldCheck,
+  Trash2,
+  Wrench,
+  X,
+} from 'lucide-react';
+import {
+  createDiagnosisRule,
+  createSymptom,
+  deleteDiagnosisRule,
+  deleteHistory,
+  deleteSymptom,
+  diagnose,
+  getDiagnosisRules,
+  getHistory,
+  getSymptoms,
+  updateDiagnosisRule,
+  updateSymptom,
+} from './api';
 import './styles.css';
+
+const emptySymptom = { id: '', name: '', category: 'general', weight: 3 };
+const emptyRule = {
+  id: '',
+  name: '',
+  message: '',
+  category: 'general',
+  severity: 'media',
+  enabled: true,
+  min_score: 0,
+  required_symptoms: '',
+  support_symptoms: '',
+  recommendations: '',
+  solution_steps: '',
+};
 
 function Badge({ children }) {
   return <span className="badge">{children}</span>;
 }
 
+function splitList(value) {
+  return value
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function lines(value) {
+  return value
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function ruleToForm(rule) {
+  return {
+    ...rule,
+    required_symptoms: (rule.required_symptoms || []).join(', '),
+    support_symptoms: (rule.support_symptoms || []).join(', '),
+    recommendations: (rule.recommendations || []).join('\n'),
+    solution_steps: (rule.solution_steps || []).join('\n'),
+  };
+}
+
+function formToRule(form) {
+  return {
+    id: form.id.trim(),
+    name: form.name.trim(),
+    message: form.message.trim(),
+    category: form.category.trim(),
+    severity: form.severity,
+    enabled: Boolean(form.enabled),
+    min_score: Number(form.min_score || 0),
+    required_symptoms: splitList(form.required_symptoms),
+    support_symptoms: splitList(form.support_symptoms),
+    recommendations: lines(form.recommendations),
+    solution_steps: lines(form.solution_steps),
+  };
+}
+
 function App() {
   const [symptoms, setSymptoms] = useState([]);
+  const [rules, setRules] = useState([]);
   const [selected, setSelected] = useState([]);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('todas');
-  const [userName, setUserName] = useState('Pablo Fernández');
+  const [userName, setUserName] = useState('Pablo Fernandez');
   const [notifyTelegram, setNotifyTelegram] = useState(false);
   const [chatId, setChatId] = useState('');
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [adminTab, setAdminTab] = useState('rules');
+  const [symptomForm, setSymptomForm] = useState(emptySymptom);
+  const [editingSymptomId, setEditingSymptomId] = useState('');
+  const [ruleForm, setRuleForm] = useState(emptyRule);
+  const [editingRuleId, setEditingRuleId] = useState('');
+
+  async function loadCatalogs() {
+    const [symptomData, ruleData] = await Promise.all([getSymptoms(), getDiagnosisRules()]);
+    setSymptoms(symptomData.symptoms);
+    setRules(ruleData.diagnosis_rules);
+  }
 
   async function loadAll() {
-    const [symptomData, historyData] = await Promise.all([getSymptoms(), getHistory()]);
-    setSymptoms(symptomData.symptoms);
+    const [historyData] = await Promise.all([getHistory(), loadCatalogs()]);
     setHistory(historyData);
   }
 
@@ -32,23 +124,30 @@ function App() {
   }, []);
 
   const categories = useMemo(() => ['todas', ...new Set(symptoms.map((s) => s.category))], [symptoms]);
+  const diagnostics = result?.result?.diagnostics || [];
+  const top = diagnostics[0];
+
+  const symptomName = useMemo(() => {
+    return symptoms.reduce((acc, symptom) => ({ ...acc, [symptom.id]: symptom.name }), {});
+  }, [symptoms]);
 
   const filteredSymptoms = useMemo(() => {
     return symptoms.filter((s) => {
-      const matchesQuery = `${s.name} ${s.id} ${s.category}`.toLowerCase().includes(query.toLowerCase());
+      const haystack = `${s.name} ${s.id} ${s.category}`.toLowerCase();
+      const matchesQuery = haystack.includes(query.toLowerCase());
       const matchesCategory = category === 'todas' || s.category === category;
       return matchesQuery && matchesCategory;
     });
   }, [symptoms, query, category]);
 
   function toggleSymptom(id) {
-    setSelected((current) => current.includes(id) ? current.filter((x) => x !== id) : [...current, id]);
+    setSelected((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
   }
 
   async function handleDiagnose() {
     setError('');
     if (selected.length === 0) {
-      setError('Seleccioná al menos un síntoma para diagnosticar.');
+      setError('Selecciona al menos un sintoma para diagnosticar.');
       return;
     }
     setLoading(true);
@@ -69,36 +168,107 @@ function App() {
     }
   }
 
-  async function handleDelete(id) {
+  async function handleSaveSymptom(event) {
+    event.preventDefault();
+    setError('');
+    try {
+      const payload = { ...symptomForm, id: symptomForm.id.trim(), name: symptomForm.name.trim(), category: symptomForm.category.trim(), weight: Number(symptomForm.weight) };
+      if (editingSymptomId) {
+        await updateSymptom(editingSymptomId, payload);
+      } else {
+        await createSymptom(payload);
+      }
+      setSymptomForm(emptySymptom);
+      setEditingSymptomId('');
+      await loadCatalogs();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleDeleteSymptom(id) {
+    await deleteSymptom(id);
+    setSelected((current) => current.filter((item) => item !== id));
+    await loadCatalogs();
+  }
+
+  async function handleSaveRule(event) {
+    event.preventDefault();
+    setError('');
+    try {
+      const payload = formToRule(ruleForm);
+      if (editingRuleId) {
+        await updateDiagnosisRule(editingRuleId, payload);
+      } else {
+        await createDiagnosisRule(payload);
+      }
+      setRuleForm(emptyRule);
+      setEditingRuleId('');
+      await loadCatalogs();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleDeleteRule(id) {
+    await deleteDiagnosisRule(id);
+    await loadCatalogs();
+  }
+
+  async function handleDeleteHistory(id) {
     await deleteHistory(id);
     setHistory(await getHistory());
   }
-
-  const top = result?.result?.diagnostics?.[0];
 
   return (
     <div className="page-shell">
       <header className="hero">
         <div>
-          <div className="eyebrow"><Cpu size={18}/> Sistema experto distribuido</div>
+          <div className="eyebrow"><Cpu size={18}/> Sistema experto editable</div>
           <h1>Doctor Byte</h1>
-          <p>Diagnóstico inteligente de fallas comunes en computadoras usando React, FastAPI, SWI-Prolog y Telegram.</p>
+          <p>Diagnostico de fallas comunes con sintomas, reglas, probabilidades y rutas de solucion editables.</p>
           <div className="hero-actions">
-            <Badge>+15 síntomas</Badge><Badge>+10 fallas</Badge><Badge>Prolog</Badge><Badge>Telegram</Badge><Badge>Historial dinámico</Badge>
+            <Badge>{symptoms.length} sintomas</Badge><Badge>{rules.length} reglas</Badge><Badge>Prolog</Badge><Badge>CRUD</Badge><Badge>Telegram</Badge>
           </div>
         </div>
         <div className="hero-card">
           <BrainCircuit size={54}/>
-          <strong>Motor de inferencia</strong>
-          <span>Reglas, hechos, listas, variables y corte en Prolog.</span>
+          <strong>Motor Prolog</strong>
+          <span>Calcula todos los diagnosticos posibles desde reglas modificables.</span>
         </div>
       </header>
 
       {error && <div className="alert">{error}</div>}
 
+      {top && (
+        <section className="panel result-panel">
+          <h2><BrainCircuit/> Resultado principal</h2>
+          <div className="result-layout">
+            <div className="score-ring"><span>{top.probability ?? top.score}%</span><small>probabilidad</small></div>
+            <div>
+              <h3>{top.name}</h3>
+              <p>{top.message}</p>
+              <p>Categoria: <b>{top.category}</b> | Severidad: <b>{top.severity}</b> | Problema: <b>{top.problem_percentage}%</b> | Efectividad: <b>{top.effectiveness_probability}%</b></p>
+              <h4><Route size={18}/> Ruta de solucion</h4>
+              <ol>{top.solution_steps?.map((step) => <li key={step}>{step}</li>)}</ol>
+            </div>
+          </div>
+          <h4>Diagnosticos posibles</h4>
+          <div className="diagnostic-list">
+            {diagnostics.map((d) => (
+              <div key={d.id} className="diagnostic-card">
+                <b>{d.name}</b>
+                <span>{d.probability ?? d.score}% probabilidad | {d.problem_percentage}% problema | {d.effectiveness_probability}% efectividad</span>
+                <small>Coinciden: {(d.matched_symptom_ids || []).join(', ') || 'ninguno'}</small>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <main className="grid-main">
         <section className="panel controls-panel">
-          <h2><ShieldCheck/> Datos del diagnóstico</h2>
+          <h2><ShieldCheck/> Diagnostico</h2>
           <label>Nombre del usuario</label>
           <input value={userName} onChange={(e) => setUserName(e.target.value)} />
 
@@ -109,63 +279,125 @@ function App() {
           {notifyTelegram && <input placeholder="Chat ID de Telegram" value={chatId} onChange={(e) => setChatId(e.target.value)} />}
 
           <div className="selected-box">
-            <strong>Síntomas seleccionados: {selected.length}</strong>
+            <strong>Sintomas seleccionados: {selected.length}</strong>
             <div className="selected-tags">
-              {selected.map((id) => <button key={id} onClick={() => toggleSymptom(id)}>{id} ×</button>)}
-              {selected.length === 0 && <span>Aún no hay síntomas seleccionados.</span>}
+              {selected.map((id) => <button key={id} onClick={() => toggleSymptom(id)}>{symptomName[id] || id} <X size={13}/></button>)}
+              {selected.length === 0 && <span>Aun no hay sintomas seleccionados.</span>}
             </div>
           </div>
 
-          <button className="primary" onClick={handleDiagnose} disabled={loading}>{loading ? 'Diagnosticando...' : 'Solicitar diagnóstico'}</button>
-          <button className="secondary" onClick={() => { setSelected([]); setResult(null); }}>Limpiar selección</button>
+          <button className="primary" onClick={handleDiagnose} disabled={loading}>{loading ? 'Diagnosticando...' : 'Solicitar diagnostico'}</button>
+          <button className="secondary" onClick={() => { setSelected([]); setResult(null); }}>Limpiar seleccion</button>
         </section>
 
         <section className="panel symptoms-panel">
-          <h2><Activity/> Catálogo dinámico de síntomas</h2>
+          <h2><Activity/> Catalogo de sintomas</h2>
           <div className="toolbar">
-            <div className="search"><Search size={18}/><input placeholder="Buscar síntoma..." value={query} onChange={(e) => setQuery(e.target.value)} /></div>
+            <div className="search"><Search size={18}/><input placeholder="Buscar sintoma..." value={query} onChange={(e) => setQuery(e.target.value)} /></div>
             <select value={category} onChange={(e) => setCategory(e.target.value)}>{categories.map((c) => <option key={c} value={c}>{c}</option>)}</select>
           </div>
           <div className="symptom-grid">
             {filteredSymptoms.map((s) => (
               <button key={s.id} className={`symptom-card ${selected.includes(s.id) ? 'active' : ''}`} onClick={() => toggleSymptom(s.id)}>
                 <span>{s.name}</span>
-                <small>{s.category} · peso {s.weight}</small>
+                <small>{s.category} | peso {s.weight}</small>
               </button>
             ))}
           </div>
         </section>
       </main>
 
-      {top && (
-        <section className="panel result-panel">
-          <h2><BrainCircuit/> Resultado principal</h2>
-          <div className="result-layout">
-            <div className="score-ring"><span>{top.score}%</span><small>confianza</small></div>
-            <div>
-              <h3>{top.name}</h3>
-              <p>Categoría: <b>{top.category}</b> · Severidad: <b>{top.severity}</b> · Telegram: <b>{result.telegram_sent}</b></p>
-              <h4>Recomendaciones</h4>
-              <ul>{top.recommendations?.map((r) => <li key={r}>{r}</li>)}</ul>
+      <section className="panel admin-panel">
+        <h2><Wrench/> Administracion de conocimiento</h2>
+        <div className="tabs">
+          <button className={adminTab === 'rules' ? 'active' : ''} onClick={() => setAdminTab('rules')}>Reglas diagnosticas</button>
+          <button className={adminTab === 'symptoms' ? 'active' : ''} onClick={() => setAdminTab('symptoms')}>Sintomas</button>
+        </div>
+
+        {adminTab === 'rules' && (
+          <div className="admin-grid">
+            <form className="editor-form" onSubmit={handleSaveRule}>
+              <h3>{editingRuleId ? 'Editar regla' : 'Nueva regla'}</h3>
+              <label>ID</label>
+              <input value={ruleForm.id} onChange={(e) => setRuleForm({ ...ruleForm, id: e.target.value })} required />
+              <label>Nombre</label>
+              <input value={ruleForm.name} onChange={(e) => setRuleForm({ ...ruleForm, name: e.target.value })} required />
+              <label>Mensaje</label>
+              <textarea value={ruleForm.message} onChange={(e) => setRuleForm({ ...ruleForm, message: e.target.value })} />
+              <div className="form-row">
+                <div><label>Categoria</label><input value={ruleForm.category} onChange={(e) => setRuleForm({ ...ruleForm, category: e.target.value })} required /></div>
+                <div><label>Severidad</label><select value={ruleForm.severity} onChange={(e) => setRuleForm({ ...ruleForm, severity: e.target.value })}><option>baja</option><option>media</option><option>alta</option><option>critica</option></select></div>
+                <div><label>Min %</label><input type="number" min="0" max="100" value={ruleForm.min_score} onChange={(e) => setRuleForm({ ...ruleForm, min_score: e.target.value })} /></div>
+              </div>
+              <label>Sintomas requeridos</label>
+              <textarea value={ruleForm.required_symptoms} onChange={(e) => setRuleForm({ ...ruleForm, required_symptoms: e.target.value })} placeholder="pantalla_negra, ventiladores_giran" />
+              <label>Sintomas de apoyo</label>
+              <textarea value={ruleForm.support_symptoms} onChange={(e) => setRuleForm({ ...ruleForm, support_symptoms: e.target.value })} />
+              <label>Recomendaciones</label>
+              <textarea value={ruleForm.recommendations} onChange={(e) => setRuleForm({ ...ruleForm, recommendations: e.target.value })} />
+              <label>Ruta de solucion</label>
+              <textarea value={ruleForm.solution_steps} onChange={(e) => setRuleForm({ ...ruleForm, solution_steps: e.target.value })} />
+              <div className="switch-row">
+                <input type="checkbox" checked={ruleForm.enabled} onChange={(e) => setRuleForm({ ...ruleForm, enabled: e.target.checked })} />
+                <span>Regla activa</span>
+              </div>
+              <button className="primary" type="submit"><Save size={17}/> Guardar regla</button>
+              {editingRuleId && <button className="secondary" type="button" onClick={() => { setEditingRuleId(''); setRuleForm(emptyRule); }}>Cancelar edicion</button>}
+            </form>
+            <div className="admin-list">
+              {rules.map((rule) => (
+                <div key={rule.id} className="admin-item">
+                  <div><b>{rule.name}</b><span>{rule.id} | {rule.category} | {rule.severity}</span></div>
+                  <div className="row-actions">
+                    <button className="icon-btn" onClick={() => { setEditingRuleId(rule.id); setRuleForm(ruleToForm(rule)); }}><Edit3 size={16}/></button>
+                    <button className="icon-btn danger" onClick={() => handleDeleteRule(rule.id)}><Trash2 size={16}/></button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <h4>Otros diagnósticos posibles</h4>
-          <div className="diagnostic-list">
-            {result.result.diagnostics.slice(1).map((d) => <div key={d.id}><b>{d.name}</b><span>{d.score}% · {d.severity}</span></div>)}
+        )}
+
+        {adminTab === 'symptoms' && (
+          <div className="admin-grid">
+            <form className="editor-form" onSubmit={handleSaveSymptom}>
+              <h3>{editingSymptomId ? 'Editar sintoma' : 'Nuevo sintoma'}</h3>
+              <label>ID</label>
+              <input value={symptomForm.id} onChange={(e) => setSymptomForm({ ...symptomForm, id: e.target.value })} required />
+              <label>Nombre</label>
+              <input value={symptomForm.name} onChange={(e) => setSymptomForm({ ...symptomForm, name: e.target.value })} required />
+              <div className="form-row">
+                <div><label>Categoria</label><input value={symptomForm.category} onChange={(e) => setSymptomForm({ ...symptomForm, category: e.target.value })} required /></div>
+                <div><label>Peso</label><input type="number" min="1" max="5" value={symptomForm.weight} onChange={(e) => setSymptomForm({ ...symptomForm, weight: e.target.value })} /></div>
+              </div>
+              <button className="primary" type="submit"><Plus size={17}/> Guardar sintoma</button>
+              {editingSymptomId && <button className="secondary" type="button" onClick={() => { setEditingSymptomId(''); setSymptomForm(emptySymptom); }}>Cancelar edicion</button>}
+            </form>
+            <div className="admin-list">
+              {symptoms.map((symptom) => (
+                <div key={symptom.id} className="admin-item">
+                  <div><b>{symptom.name}</b><span>{symptom.id} | {symptom.category} | peso {symptom.weight}</span></div>
+                  <div className="row-actions">
+                    <button className="icon-btn" onClick={() => { setEditingSymptomId(symptom.id); setSymptomForm(symptom); }}><Edit3 size={16}/></button>
+                    <button className="icon-btn danger" onClick={() => handleDeleteSymptom(symptom.id)}><Trash2 size={16}/></button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       <section className="panel history-panel">
-        <h2><History/> Historial de diagnósticos</h2>
+        <h2><History/> Historial de diagnosticos</h2>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>ID</th><th>Fecha</th><th>Usuario</th><th>Diagnóstico</th><th>Síntomas</th><th>Telegram</th><th></th></tr></thead>
+            <thead><tr><th>ID</th><th>Fecha</th><th>Usuario</th><th>Diagnostico</th><th>Sintomas</th><th>Telegram</th><th></th></tr></thead>
             <tbody>
               {history.map((h) => <tr key={h.id}>
                 <td>{h.id}</td><td>{new Date(h.created_at).toLocaleString()}</td><td>{h.user_name}</td><td>{h.top_diagnosis}</td>
                 <td>{h.selected_symptoms.join(', ')}</td><td>{h.telegram_sent}</td>
-                <td><button className="icon-btn" onClick={() => handleDelete(h.id)}><Trash2 size={16}/></button></td>
+                <td><button className="icon-btn danger" onClick={() => handleDeleteHistory(h.id)}><Trash2 size={16}/></button></td>
               </tr>)}
             </tbody>
           </table>

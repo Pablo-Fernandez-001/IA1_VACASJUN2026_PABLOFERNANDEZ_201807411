@@ -1,0 +1,539 @@
+{
+  "symptoms": [
+    {
+      "id": "no_enciende",
+      "name": "La computadora no enciende",
+      "category": "energia",
+      "weight": 5
+    },
+    {
+      "id": "sin_led",
+      "name": "No encienden luces LED",
+      "category": "energia",
+      "weight": 4
+    },
+    {
+      "id": "ventiladores_giran",
+      "name": "Los ventiladores giran pero no hay imagen",
+      "category": "hardware",
+      "weight": 4
+    },
+    {
+      "id": "pantalla_negra",
+      "name": "Pantalla negra al iniciar",
+      "category": "video",
+      "weight": 5
+    },
+    {
+      "id": "beeps_arranque",
+      "name": "Pitidos durante el arranque",
+      "category": "hardware",
+      "weight": 5
+    },
+    {
+      "id": "reinicios_inesperados",
+      "name": "Reinicios inesperados",
+      "category": "estabilidad",
+      "weight": 4
+    },
+    {
+      "id": "apagones_repentinos",
+      "name": "Apagones repentinos",
+      "category": "energia",
+      "weight": 5
+    },
+    {
+      "id": "sobrecalentamiento",
+      "name": "Equipo muy caliente",
+      "category": "temperatura",
+      "weight": 5
+    },
+    {
+      "id": "ruido_ventilador",
+      "name": "Ventilador con ruido excesivo",
+      "category": "temperatura",
+      "weight": 3
+    },
+    {
+      "id": "lentitud_general",
+      "name": "Sistema demasiado lento",
+      "category": "rendimiento",
+      "weight": 3
+    },
+    {
+      "id": "disco_100",
+      "name": "Uso de disco al 100%",
+      "category": "almacenamiento",
+      "weight": 4
+    },
+    {
+      "id": "pantalla_azul",
+      "name": "Pantalla azul o error critico",
+      "category": "sistema",
+      "weight": 5
+    },
+    {
+      "id": "no_detecta_disco",
+      "name": "No detecta disco duro o SSD",
+      "category": "almacenamiento",
+      "weight": 5
+    },
+    {
+      "id": "error_sistema_operativo",
+      "name": "Error al cargar sistema operativo",
+      "category": "sistema",
+      "weight": 4
+    },
+    {
+      "id": "no_conecta_wifi",
+      "name": "No conecta a WiFi",
+      "category": "red",
+      "weight": 3
+    },
+    {
+      "id": "internet_lento",
+      "name": "Internet lento o inestable",
+      "category": "red",
+      "weight": 2
+    },
+    {
+      "id": "usb_no_funciona",
+      "name": "Puertos USB no funcionan",
+      "category": "perifericos",
+      "weight": 3
+    },
+    {
+      "id": "teclado_no_responde",
+      "name": "Teclado no responde",
+      "category": "perifericos",
+      "weight": 3
+    },
+    {
+      "id": "mouse_no_responde",
+      "name": "Mouse no responde",
+      "category": "perifericos",
+      "weight": 3
+    },
+    {
+      "id": "sonido_no_funciona",
+      "name": "No hay sonido",
+      "category": "multimedia",
+      "weight": 2
+    },
+    {
+      "id": "programas_se_cierran",
+      "name": "Programas se cierran solos",
+      "category": "software",
+      "weight": 4
+    },
+    {
+      "id": "virus_popups",
+      "name": "Ventanas emergentes o comportamiento extrano",
+      "category": "seguridad",
+      "weight": 4
+    },
+    {
+      "id": "actualizacion_fallida",
+      "name": "Actualizacion fallida del sistema",
+      "category": "sistema",
+      "weight": 3
+    },
+    {
+      "id": "bateria_no_carga",
+      "name": "Bateria no carga",
+      "category": "energia",
+      "weight": 4
+    },
+    {
+      "id": "fecha_hora_se_reinicia",
+      "name": "Fecha y hora se reinician",
+      "category": "motherboard",
+      "weight": 3
+    }
+  ],
+  "diagnosis_rules": [
+    {
+      "id": "fuente_poder_danada",
+      "name": "Fuente de poder danada o sin energia",
+      "message": "El equipo no recibe energia suficiente para iniciar.",
+      "category": "hardware",
+      "severity": "critica",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "no_enciende",
+        "sin_led"
+      ],
+      "support_symptoms": [
+        "apagones_repentinos",
+        "bateria_no_carga"
+      ],
+      "recommendations": [
+        "Verificar cable de poder y tomacorriente.",
+        "Probar con otro cable o cargador compatible.",
+        "Revisar fuente de poder con multimetro o reemplazarla si no entrega voltaje."
+      ],
+      "solution_steps": [
+        "Confirmar que el tomacorriente funcione.",
+        "Probar cable, cargador o fuente alternativa.",
+        "Medir voltajes de salida.",
+        "Reemplazar fuente/cargador si no cumple valores."
+      ]
+    },
+    {
+      "id": "falla_ram",
+      "name": "Memoria RAM defectuosa o mal instalada",
+      "message": "La memoria puede impedir el arranque estable del sistema.",
+      "category": "hardware",
+      "severity": "alta",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "beeps_arranque"
+      ],
+      "support_symptoms": [
+        "pantalla_azul",
+        "reinicios_inesperados",
+        "pantalla_negra"
+      ],
+      "recommendations": [
+        "Apagar el equipo, retirar y volver a colocar los modulos RAM.",
+        "Probar cada modulo por separado.",
+        "Ejecutar MemTest86 o diagnostico de memoria."
+      ],
+      "solution_steps": [
+        "Apagar y desconectar el equipo.",
+        "Reinstalar los modulos RAM.",
+        "Probar un modulo a la vez.",
+        "Ejecutar prueba de memoria y reemplazar modulo defectuoso."
+      ]
+    },
+    {
+      "id": "falla_video_gpu",
+      "name": "Problema de tarjeta grafica o salida de video",
+      "message": "El equipo inicia, pero la ruta de video no entrega imagen correctamente.",
+      "category": "hardware",
+      "severity": "alta",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "pantalla_negra",
+        "ventiladores_giran"
+      ],
+      "support_symptoms": [
+        "beeps_arranque"
+      ],
+      "recommendations": [
+        "Probar otro cable HDMI/VGA/DisplayPort y otro monitor.",
+        "Limpiar y reinstalar la tarjeta grafica si es de escritorio.",
+        "Actualizar o reinstalar drivers de video si logra iniciar en modo seguro."
+      ],
+      "solution_steps": [
+        "Probar monitor y cable alterno.",
+        "Cambiar puerto de salida de video.",
+        "Reinstalar GPU o limpiar contactos.",
+        "Iniciar en modo seguro y reinstalar controlador."
+      ]
+    },
+    {
+      "id": "sobrecalentamiento_cpu",
+      "name": "Sobrecalentamiento de CPU o ventilacion deficiente",
+      "message": "La temperatura alta puede causar reinicios, apagones y bajo rendimiento.",
+      "category": "hardware",
+      "severity": "alta",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "sobrecalentamiento"
+      ],
+      "support_symptoms": [
+        "ruido_ventilador",
+        "apagones_repentinos",
+        "reinicios_inesperados"
+      ],
+      "recommendations": [
+        "Limpiar polvo de ventiladores y disipador.",
+        "Verificar que el ventilador gire correctamente.",
+        "Cambiar pasta termica si el equipo tiene mucho tiempo sin mantenimiento."
+      ],
+      "solution_steps": [
+        "Medir temperatura en BIOS o software.",
+        "Limpiar ventiladores y rejillas.",
+        "Verificar giro de ventiladores.",
+        "Cambiar pasta termica y probar carga."
+      ]
+    },
+    {
+      "id": "disco_danado",
+      "name": "Disco duro o SSD danado",
+      "message": "El almacenamiento puede tener errores fisicos o logicos.",
+      "category": "hardware",
+      "severity": "alta",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "no_detecta_disco"
+      ],
+      "support_symptoms": [
+        "lentitud_general",
+        "disco_100",
+        "error_sistema_operativo"
+      ],
+      "recommendations": [
+        "Respaldar informacion inmediatamente si el disco aun responde.",
+        "Revisar estado SMART con CrystalDiskInfo o herramienta equivalente.",
+        "Cambiar disco si hay sectores reasignados o errores criticos."
+      ],
+      "solution_steps": [
+        "Respaldar datos importantes.",
+        "Revisar cables o ranura del disco.",
+        "Leer estado SMART.",
+        "Clonar o reemplazar la unidad si hay fallas."
+      ]
+    },
+    {
+      "id": "sistema_operativo_corrupto",
+      "name": "Sistema operativo corrupto o arranque danado",
+      "message": "El sistema operativo puede tener archivos de arranque danados.",
+      "category": "software",
+      "severity": "media",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "error_sistema_operativo"
+      ],
+      "support_symptoms": [
+        "pantalla_azul",
+        "actualizacion_fallida",
+        "programas_se_cierran"
+      ],
+      "recommendations": [
+        "Intentar reparacion de inicio del sistema operativo.",
+        "Restaurar a un punto anterior si esta disponible.",
+        "Reinstalar sistema operativo si la corrupcion persiste."
+      ],
+      "solution_steps": [
+        "Ejecutar reparacion de inicio.",
+        "Desinstalar actualizacion reciente si aplica.",
+        "Restaurar punto anterior.",
+        "Respaldar datos y reinstalar si persiste."
+      ]
+    },
+    {
+      "id": "malware",
+      "name": "Infeccion por malware o software no deseado",
+      "message": "El comportamiento anomalo puede venir de software malicioso.",
+      "category": "seguridad",
+      "severity": "alta",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "virus_popups"
+      ],
+      "support_symptoms": [
+        "lentitud_general",
+        "programas_se_cierran",
+        "internet_lento"
+      ],
+      "recommendations": [
+        "Desconectar de internet temporalmente.",
+        "Ejecutar analisis con antivirus actualizado.",
+        "Eliminar programas sospechosos y revisar extensiones del navegador."
+      ],
+      "solution_steps": [
+        "Desconectar de internet si hay actividad sospechosa.",
+        "Ejecutar antivirus y antimalware.",
+        "Eliminar extensiones/programas desconocidos.",
+        "Cambiar contrasenas si hubo robo de sesion."
+      ]
+    },
+    {
+      "id": "driver_red",
+      "name": "Controlador o configuracion de red defectuosa",
+      "message": "La conectividad puede fallar por controlador o configuracion local.",
+      "category": "software",
+      "severity": "media",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "no_conecta_wifi"
+      ],
+      "support_symptoms": [
+        "internet_lento",
+        "actualizacion_fallida"
+      ],
+      "recommendations": [
+        "Reiniciar router y equipo.",
+        "Olvidar la red WiFi y volver a conectarse.",
+        "Reinstalar controlador de red desde el fabricante."
+      ],
+      "solution_steps": [
+        "Reiniciar router y equipo.",
+        "Olvidar red y reconectar.",
+        "Probar otra red.",
+        "Reinstalar controlador de red."
+      ]
+    },
+    {
+      "id": "puertos_usb_danados",
+      "name": "Puertos USB o controlador USB con falla",
+      "message": "Los puertos o el controlador USB pueden estar fallando.",
+      "category": "hardware",
+      "severity": "media",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "usb_no_funciona"
+      ],
+      "support_symptoms": [
+        "teclado_no_responde",
+        "mouse_no_responde"
+      ],
+      "recommendations": [
+        "Probar el dispositivo en otro puerto y en otra computadora.",
+        "Reinstalar controladores USB desde Administrador de dispositivos.",
+        "Revisar dano fisico o suciedad en los puertos."
+      ],
+      "solution_steps": [
+        "Probar otro dispositivo USB.",
+        "Probar el mismo dispositivo en otro equipo.",
+        "Reinstalar controladores USB.",
+        "Revisar dano fisico del puerto."
+      ]
+    },
+    {
+      "id": "perifericos_defectuosos",
+      "name": "Perifericos desconectados o defectuosos",
+      "message": "El problema puede estar en teclado, mouse o receptor.",
+      "category": "perifericos",
+      "severity": "baja",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "teclado_no_responde"
+      ],
+      "support_symptoms": [
+        "mouse_no_responde",
+        "usb_no_funciona"
+      ],
+      "recommendations": [
+        "Verificar conexion del teclado o mouse.",
+        "Probar con otro periferico.",
+        "Cambiar baterias si el dispositivo es inalambrico."
+      ],
+      "solution_steps": [
+        "Revisar cable o receptor.",
+        "Cambiar baterias si aplica.",
+        "Probar otro puerto.",
+        "Sustituir periferico si falla en otro equipo."
+      ]
+    },
+    {
+      "id": "audio_driver",
+      "name": "Controlador de audio incorrecto o dispositivo deshabilitado",
+      "message": "El audio puede estar deshabilitado o usando un controlador incorrecto.",
+      "category": "software",
+      "severity": "baja",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "sonido_no_funciona"
+      ],
+      "support_symptoms": [
+        "actualizacion_fallida"
+      ],
+      "recommendations": [
+        "Verificar dispositivo de salida seleccionado.",
+        "Reinstalar controlador de audio.",
+        "Revisar que el audio no este silenciado en sistema o aplicacion."
+      ],
+      "solution_steps": [
+        "Revisar volumen y salida activa.",
+        "Probar audifonos o bocinas.",
+        "Reinstalar controlador de audio.",
+        "Revisar servicios de audio."
+      ]
+    },
+    {
+      "id": "bateria_cargador",
+      "name": "Bateria o cargador con falla",
+      "message": "La bateria o cargador pueden no entregar carga estable.",
+      "category": "hardware",
+      "severity": "media",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "bateria_no_carga"
+      ],
+      "support_symptoms": [
+        "apagones_repentinos",
+        "no_enciende"
+      ],
+      "recommendations": [
+        "Probar otro cargador compatible.",
+        "Revisar el puerto de carga.",
+        "Generar reporte de bateria y evaluar reemplazo."
+      ],
+      "solution_steps": [
+        "Probar cargador compatible.",
+        "Revisar puerto de carga.",
+        "Generar reporte de bateria.",
+        "Reemplazar bateria o cargador segun prueba."
+      ]
+    },
+    {
+      "id": "pila_cmos",
+      "name": "Pila CMOS agotada",
+      "message": "La placa madre puede estar perdiendo configuracion por pila agotada.",
+      "category": "motherboard",
+      "severity": "baja",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "fecha_hora_se_reinicia"
+      ],
+      "support_symptoms": [
+        "error_sistema_operativo"
+      ],
+      "recommendations": [
+        "Cambiar pila CR2032 de la placa madre.",
+        "Configurar fecha y hora en BIOS/UEFI.",
+        "Guardar configuracion del BIOS despues del cambio."
+      ],
+      "solution_steps": [
+        "Apagar y desconectar equipo.",
+        "Cambiar pila CR2032.",
+        "Configurar fecha/hora en BIOS.",
+        "Guardar cambios y verificar reinicio."
+      ]
+    },
+    {
+      "id": "bajo_rendimiento_general",
+      "name": "Bajo rendimiento por saturacion de recursos",
+      "message": "El sistema puede estar saturado por procesos, disco o memoria.",
+      "category": "rendimiento",
+      "severity": "media",
+      "enabled": true,
+      "min_score": 0,
+      "required_symptoms": [
+        "lentitud_general"
+      ],
+      "support_symptoms": [
+        "disco_100",
+        "programas_se_cierran",
+        "virus_popups"
+      ],
+      "recommendations": [
+        "Revisar procesos de inicio y consumo de recursos.",
+        "Liberar espacio en disco y desinstalar software innecesario.",
+        "Considerar aumentar RAM o cambiar a SSD si el equipo usa disco mecanico."
+      ],
+      "solution_steps": [
+        "Abrir administrador de tareas.",
+        "Deshabilitar programas de inicio innecesarios.",
+        "Liberar espacio en disco.",
+        "Evaluar ampliacion de RAM o SSD."
+      ]
+    }
+  ]
+}

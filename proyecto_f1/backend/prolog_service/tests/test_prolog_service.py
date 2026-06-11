@@ -47,12 +47,16 @@ def test_diagnose_gpu_failure():
     assert len(top["recommendations"]) >= 1
 
 
-def test_diagnose_fallback_when_no_rule_matches():
+def test_diagnose_returns_ranked_alternatives_for_partial_match():
     response = client.post("/diagnose", json={"symptoms": ["internet_lento"]})
     assert response.status_code == 200
 
-    top = response.json()["diagnostics"][0]
-    assert top["id"] == "sin_diagnostico_concluyente"
+    diagnostics = response.json()["diagnostics"]
+    assert len(diagnostics) > 1
+    assert diagnostics[0]["id"] == "driver_red"
+    assert "problem_percentage" in diagnostics[0]
+    assert "effectiveness_probability" in diagnostics[0]
+    assert "solution_steps" in diagnostics[0]
 
 
 @pytest.mark.parametrize(("symptoms", "expected_id"), DIAGNOSIS_CASES)

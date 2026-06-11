@@ -1,190 +1,110 @@
 :- use_module(library(http/json)).
 
-% =============================================================
-% Doctor Byte - Base de conocimiento Prolog
-% Autor: Pablo Daniel Fernández Chacón - 201807411
-% =============================================================
+% Doctor Byte - motor de inferencia editable.
+% Los hechos se cargan desde doctor_byte_data.json y las reglas de
+% diagnostico se evalúan en Prolog para mantener la logica declarativa.
 
-% -----------------------------
-% Síntomas disponibles
-% sintoma(ID, Nombre, Categoria, Peso).
-% -----------------------------
-sintoma(no_enciende, 'La computadora no enciende', energia, 5).
-sintoma(sin_led, 'No encienden luces LED', energia, 4).
-sintoma(ventiladores_giran, 'Los ventiladores giran pero no hay imagen', hardware, 4).
-sintoma(pantalla_negra, 'Pantalla negra al iniciar', video, 5).
-sintoma(beeps_arranque, 'Pitidos durante el arranque', hardware, 5).
-sintoma(reinicios_inesperados, 'Reinicios inesperados', estabilidad, 4).
-sintoma(apagones_repentinos, 'Apagones repentinos', energia, 5).
-sintoma(sobrecalentamiento, 'Equipo muy caliente', temperatura, 5).
-sintoma(ruido_ventilador, 'Ventilador con ruido excesivo', temperatura, 3).
-sintoma(lentitud_general, 'Sistema demasiado lento', rendimiento, 3).
-sintoma(disco_100, 'Uso de disco al 100%', almacenamiento, 4).
-sintoma(pantalla_azul, 'Pantalla azul o error crítico', sistema, 5).
-sintoma(no_detecta_disco, 'No detecta disco duro o SSD', almacenamiento, 5).
-sintoma(error_sistema_operativo, 'Error al cargar sistema operativo', sistema, 4).
-sintoma(no_conecta_wifi, 'No conecta a WiFi', red, 3).
-sintoma(internet_lento, 'Internet lento o inestable', red, 2).
-sintoma(usb_no_funciona, 'Puertos USB no funcionan', perifericos, 3).
-sintoma(teclado_no_responde, 'Teclado no responde', perifericos, 3).
-sintoma(mouse_no_responde, 'Mouse no responde', perifericos, 3).
-sintoma(sonido_no_funciona, 'No hay sonido', multimedia, 2).
-sintoma(programas_se_cierran, 'Programas se cierran solos', software, 4).
-sintoma(virus_popups, 'Ventanas emergentes o comportamiento extraño', seguridad, 4).
-sintoma(actualizacion_fallida, 'Actualización fallida del sistema', sistema, 3).
-sintoma(bateria_no_carga, 'Batería no carga', energia, 4).
-sintoma(fecha_hora_se_reinicia, 'Fecha y hora se reinician', motherboard, 3).
+leer_conocimiento(Path, Data) :-
+    open(Path, read, Stream, [encoding(utf8)]),
+    json_read_dict(Stream, Data, [value_string_as(atom)]),
+    close(Stream).
 
-% -----------------------------
-% Fallas diagnosticables
-% falla(ID, Nombre, Categoria, Severidad, SintomasRequeridos, SintomasApoyo).
-% -----------------------------
-falla(fuente_poder_danada, 'Fuente de poder dañada o sin energía', hardware, critica,
-      [no_enciende, sin_led], [apagones_repentinos, bateria_no_carga]).
-falla(falla_ram, 'Memoria RAM defectuosa o mal instalada', hardware, alta,
-      [beeps_arranque], [pantalla_azul, reinicios_inesperados, pantalla_negra]).
-falla(falla_video_gpu, 'Problema de tarjeta gráfica o salida de video', hardware, alta,
-      [pantalla_negra, ventiladores_giran], [beeps_arranque]).
-falla(sobrecalentamiento_cpu, 'Sobrecalentamiento de CPU o ventilación deficiente', hardware, alta,
-      [sobrecalentamiento], [ruido_ventilador, apagones_repentinos, reinicios_inesperados]).
-falla(disco_danado, 'Disco duro o SSD dañado', hardware, alta,
-      [no_detecta_disco], [lentitud_general, disco_100, error_sistema_operativo]).
-falla(sistema_operativo_corrupto, 'Sistema operativo corrupto o arranque dañado', software, media,
-      [error_sistema_operativo], [pantalla_azul, actualizacion_fallida, programas_se_cierran]).
-falla(malware, 'Infección por malware o software no deseado', seguridad, alta,
-      [virus_popups], [lentitud_general, programas_se_cierran, internet_lento]).
-falla(driver_red, 'Controlador o configuración de red defectuosa', software, media,
-      [no_conecta_wifi], [internet_lento, actualizacion_fallida]).
-falla(puertos_usb_danados, 'Puertos USB o controlador USB con falla', hardware, media,
-      [usb_no_funciona], [teclado_no_responde, mouse_no_responde]).
-falla(perifericos_defectuosos, 'Periféricos desconectados o defectuosos', perifericos, baja,
-      [teclado_no_responde], [mouse_no_responde, usb_no_funciona]).
-falla(audio_driver, 'Controlador de audio incorrecto o dispositivo deshabilitado', software, baja,
-      [sonido_no_funciona], [actualizacion_fallida]).
-falla(bateria_cargador, 'Batería o cargador con falla', hardware, media,
-      [bateria_no_carga], [apagones_repentinos, no_enciende]).
-falla(pila_cmos, 'Pila CMOS agotada', motherboard, baja,
-      [fecha_hora_se_reinicia], [error_sistema_operativo]).
-falla(bajo_rendimiento_general, 'Bajo rendimiento por saturación de recursos', rendimiento, media,
-      [lentitud_general], [disco_100, programas_se_cierran, virus_popups]).
-
-% -----------------------------
-% Recomendaciones asociadas
-% -----------------------------
-recomendacion(fuente_poder_danada, [
-  'Verificar cable de poder y tomacorriente.',
-  'Probar con otro cable o cargador compatible.',
-  'Revisar fuente de poder con multímetro o reemplazarla si no entrega voltaje.'
-]).
-recomendacion(falla_ram, [
-  'Apagar el equipo, retirar y volver a colocar los módulos RAM.',
-  'Probar cada módulo por separado.',
-  'Ejecutar MemTest86 o diagnóstico de memoria.'
-]).
-recomendacion(falla_video_gpu, [
-  'Probar otro cable HDMI/VGA/DisplayPort y otro monitor.',
-  'Limpiar y reinstalar la tarjeta gráfica si es de escritorio.',
-  'Actualizar o reinstalar drivers de video si logra iniciar en modo seguro.'
-]).
-recomendacion(sobrecalentamiento_cpu, [
-  'Limpiar polvo de ventiladores y disipador.',
-  'Verificar que el ventilador gire correctamente.',
-  'Cambiar pasta térmica si el equipo tiene mucho tiempo sin mantenimiento.'
-]).
-recomendacion(disco_danado, [
-  'Respaldar información inmediatamente si el disco aún responde.',
-  'Revisar estado SMART con CrystalDiskInfo o herramienta equivalente.',
-  'Cambiar disco si hay sectores reasignados o errores críticos.'
-]).
-recomendacion(sistema_operativo_corrupto, [
-  'Intentar reparación de inicio del sistema operativo.',
-  'Restaurar a un punto anterior si está disponible.',
-  'Reinstalar sistema operativo si la corrupción persiste.'
-]).
-recomendacion(malware, [
-  'Desconectar de internet temporalmente.',
-  'Ejecutar análisis con antivirus actualizado.',
-  'Eliminar programas sospechosos y revisar extensiones del navegador.'
-]).
-recomendacion(driver_red, [
-  'Reiniciar router y equipo.',
-  'Olvidar la red WiFi y volver a conectarse.',
-  'Reinstalar controlador de red desde el fabricante.'
-]).
-recomendacion(puertos_usb_danados, [
-  'Probar el dispositivo en otro puerto y en otra computadora.',
-  'Reinstalar controladores USB desde Administrador de dispositivos.',
-  'Revisar daño físico o suciedad en los puertos.'
-]).
-recomendacion(perifericos_defectuosos, [
-  'Verificar conexión del teclado o mouse.',
-  'Probar con otro periférico.',
-  'Cambiar baterías si el dispositivo es inalámbrico.'
-]).
-recomendacion(audio_driver, [
-  'Verificar dispositivo de salida seleccionado.',
-  'Reinstalar controlador de audio.',
-  'Revisar que el audio no esté silenciado en sistema o aplicación.'
-]).
-recomendacion(bateria_cargador, [
-  'Probar otro cargador compatible.',
-  'Revisar el puerto de carga.',
-  'Generar reporte de batería y evaluar reemplazo.'
-]).
-recomendacion(pila_cmos, [
-  'Cambiar pila CR2032 de la placa madre.',
-  'Configurar fecha y hora en BIOS/UEFI.',
-  'Guardar configuración del BIOS después del cambio.'
-]).
-recomendacion(bajo_rendimiento_general, [
-  'Revisar procesos de inicio y consumo de recursos.',
-  'Liberar espacio en disco y desinstalar software innecesario.',
-  'Considerar aumentar RAM o cambiar a SSD si el equipo usa disco mecánico.'
-]).
-
-% -----------------------------
-% Uso de variables, listas y corte (!)
-% -----------------------------
 severidad_peso(critica, 4) :- !.
 severidad_peso(alta, 3) :- !.
 severidad_peso(media, 2) :- !.
-severidad_peso(baja, 1).
+severidad_peso(baja, 1) :- !.
+severidad_peso(_, 1).
 
-contiene_todos([], _).
-contiene_todos([S|Resto], SintomasUsuario) :-
-    member(S, SintomasUsuario),
-    contiene_todos(Resto, SintomasUsuario).
+regla_habilitada(Regla) :-
+    ( get_dict(enabled, Regla, Estado) -> Estado \== false, Estado \== @(false) ; true ).
 
-coincidencias([], _, 0).
-coincidencias([S|Resto], SintomasUsuario, Total) :-
-    member(S, SintomasUsuario), !,
-    coincidencias(Resto, SintomasUsuario, Parcial),
-    Total is Parcial + 1.
-coincidencias([_|Resto], SintomasUsuario, Total) :-
-    coincidencias(Resto, SintomasUsuario, Total).
+campo(Regla, Llave, Defecto, Valor) :-
+    ( get_dict(Llave, Regla, Valor) -> true ; Valor = Defecto ).
 
-crear_diagnostico(SintomasUsuario, Dict) :-
-    falla(ID, Nombre, Categoria, Severidad, Requeridos, Apoyo),
-    contiene_todos(Requeridos, SintomasUsuario),
-    append(Requeridos, Apoyo, SintomasBase),
-    coincidencias(SintomasBase, SintomasUsuario, Match),
-    length(SintomasBase, Cantidad),
-    Cantidad > 0,
-    Score is round((Match * 100) / Cantidad),
-    Score >= 45,
-    recomendacion(ID, Recomendaciones),
-    severidad_peso(Severidad, Peso),
+peso_sintoma(Catalogo, ID, Peso) :-
+    member(Sintoma, Catalogo),
+    Sintoma.id == ID,
+    Peso = Sintoma.weight, !.
+peso_sintoma(_, _, 1).
+
+puntuar_sintomas([], _, _, _, 0, 0, []).
+puntuar_sintomas([S|Resto], Usuario, Catalogo, Multiplicador, Puntaje, Posible, Coincidentes) :-
+    peso_sintoma(Catalogo, S, PesoBase),
+    Peso is PesoBase * Multiplicador,
+    puntuar_sintomas(Resto, Usuario, Catalogo, Multiplicador, PuntajeResto, PosibleResto, CoincidentesResto),
+    Posible is PosibleResto + Peso,
+    ( member(S, Usuario)
+      -> Puntaje is PuntajeResto + Peso,
+         Coincidentes = [S|CoincidentesResto]
+      ;  Puntaje = PuntajeResto,
+         Coincidentes = CoincidentesResto
+    ).
+
+faltantes([], _, []).
+faltantes([S|Resto], Usuario, Faltantes) :-
+    faltantes(Resto, Usuario, FaltantesResto),
+    ( member(S, Usuario)
+      -> Faltantes = FaltantesResto
+      ;  Faltantes = [S|FaltantesResto]
+    ).
+
+unir_unicos([], Lista, Lista).
+unir_unicos([S|Resto], Lista, Resultado) :-
+    ( member(S, Lista)
+      -> unir_unicos(Resto, Lista, Resultado)
+      ;  unir_unicos(Resto, [S|Lista], Resultado)
+    ).
+
+clamp(Min, Max, Valor, Resultado) :-
+    ( Valor < Min -> Resultado = Min
+    ; Valor > Max -> Resultado = Max
+    ; Resultado = Valor
+    ).
+
+crear_diagnostico(SintomasUsuario, Data, Regla, Dict) :-
+    regla_habilitada(Regla),
+    Catalogo = Data.symptoms,
+    campo(Regla, required_symptoms, [], Requeridos),
+    campo(Regla, support_symptoms, [], Apoyo),
+    puntuar_sintomas(Requeridos, SintomasUsuario, Catalogo, 2, PuntajeReq, PosibleReq, MatchReq),
+    puntuar_sintomas(Apoyo, SintomasUsuario, Catalogo, 1, PuntajeApoyo, PosibleApoyo, MatchApoyo),
+    PosibleTotal is PosibleReq + PosibleApoyo,
+    PuntajeTotal is PuntajeReq + PuntajeApoyo,
+    ( PosibleTotal =:= 0 -> Score = 0 ; Score is round((PuntajeTotal * 100) / PosibleTotal) ),
+    campo(Regla, severity, baja, Severidad),
+    severidad_peso(Severidad, PesoSeveridad),
+    RiesgoCrudo is round((Score * PesoSeveridad) / 4),
+    clamp(0, 100, RiesgoCrudo, PorcentajeProblema),
+    EfectividadCruda is round((Score * 0.80) + ((5 - PesoSeveridad) * 5)),
+    clamp(5, 95, EfectividadCruda, ProbabilidadEfectividad),
+    unir_unicos(MatchReq, MatchApoyo, Coincidentes),
+    length(Coincidentes, CantCoincidentes),
+    faltantes(Requeridos, SintomasUsuario, FaltantesReq),
+    campo(Regla, min_score, 0, MinScore),
+    campo(Regla, recommendations, [], Recomendaciones),
+    campo(Regla, solution_steps, [], RutaSolucion),
+    campo(Regla, message, '', Mensaje),
+    ( Score >= MinScore -> SuperaUmbral = true ; SuperaUmbral = false ),
     Dict = _{
-        id: ID,
-        name: Nombre,
-        category: Categoria,
+        id: Regla.id,
+        name: Regla.name,
+        message: Mensaje,
+        category: Regla.category,
         severity: Severidad,
-        severity_weight: Peso,
+        severity_weight: PesoSeveridad,
         score: Score,
-        matched_symptoms: Match,
+        probability: Score,
+        problem_percentage: PorcentajeProblema,
+        effectiveness_probability: ProbabilidadEfectividad,
+        matched_symptoms: CantCoincidentes,
+        matched_symptom_ids: Coincidentes,
+        missing_required_symptoms: FaltantesReq,
         required_symptoms: Requeridos,
         support_symptoms: Apoyo,
-        recommendations: Recomendaciones
+        recommendations: Recomendaciones,
+        solution_steps: RutaSolucion,
+        min_score: MinScore,
+        passes_threshold: SuperaUmbral
     }.
 
 comparar_diagnosticos(Orden, A, B) :-
@@ -192,50 +112,40 @@ comparar_diagnosticos(Orden, A, B) :-
     ScoreB = B.score,
     PesoA = A.severity_weight,
     PesoB = B.severity_weight,
-    ValorA is ScoreA + PesoA,
-    ValorB is ScoreB + PesoB,
+    ValorA is (ScoreA * 10) + PesoA,
+    ValorB is (ScoreB * 10) + PesoB,
     ( ValorA > ValorB -> Orden = '<'
     ; ValorA < ValorB -> Orden = '>'
-    ; Orden = '='
+    ; compare(Orden, A.id, B.id)
     ).
 
-fallback_diagnostico([_{
-    id: sin_diagnostico_concluyente,
-    name: 'Sin diagnóstico concluyente',
-    category: general,
-    severity: baja,
-    severity_weight: 1,
-    score: 0,
-    matched_symptoms: 0,
-    required_symptoms: [],
-    support_symptoms: [],
-    recommendations: ['Seleccione más síntomas o consulte con un técnico si la falla persiste.']
-}]).
+diagnosticar(SintomasUsuario, Data, DiagnosticosOrdenados) :-
+    Reglas = Data.diagnosis_rules,
+    findall(D, (member(Regla, Reglas), crear_diagnostico(SintomasUsuario, Data, Regla, D)), Diagnosticos),
+    predsort(comparar_diagnosticos, Diagnosticos, DiagnosticosOrdenados), !.
 
-diagnosticar(SintomasUsuario, DiagnosticosOrdenados) :-
-    findall(D, crear_diagnostico(SintomasUsuario, D), Diagnosticos),
-    ( Diagnosticos == []
-      -> fallback_diagnostico(DiagnosticosOrdenados)
-      ; predsort(comparar_diagnosticos, Diagnosticos, DiagnosticosOrdenados)
-    ), !.
+responder_sintomas(Data) :-
+    json_write_dict(current_output, _{symptoms:Data.symptoms}, [width(0)]).
 
-catalogo_sintomas(Sintomas) :-
-    findall(_{id:ID, name:Nombre, category:Categoria, weight:Peso}, sintoma(ID, Nombre, Categoria, Peso), Sintomas).
+responder_reglas(Data) :-
+    json_write_dict(current_output, _{diagnosis_rules:Data.diagnosis_rules}, [width(0)]).
 
-responder_sintomas :-
-    catalogo_sintomas(Sintomas),
-    json_write_dict(current_output, _{symptoms:Sintomas}, [width(0)]).
+responder_conocimiento(Data) :-
+    json_write_dict(current_output, Data, [width(0)]).
 
-responder_diagnostico(SintomasUsuario) :-
-    diagnosticar(SintomasUsuario, Diagnosticos),
+responder_diagnostico(SintomasUsuario, Data) :-
+    diagnosticar(SintomasUsuario, Data, Diagnosticos),
     json_write_dict(current_output, _{diagnostics:Diagnosticos}, [width(0)]).
 
 doctor_byte_cli :-
     read_string(user_input, _, Entrada),
-    atom_json_dict(Entrada, Data, [value_string_as(atom)]),
-    Mode = Data.mode,
-    ( Mode == symptoms -> responder_sintomas
-    ; Mode == diagnose -> responder_diagnostico(Data.symptoms)
+    atom_json_dict(Entrada, Payload, [value_string_as(atom)]),
+    leer_conocimiento(Payload.knowledge_path, Data),
+    Mode = Payload.mode,
+    ( Mode == symptoms -> responder_sintomas(Data)
+    ; Mode == rules -> responder_reglas(Data)
+    ; Mode == knowledge -> responder_conocimiento(Data)
+    ; Mode == diagnose -> responder_diagnostico(Payload.symptoms, Data)
     ; json_write_dict(current_output, _{error:'Modo no soportado'}, [width(0)])
     ),
     halt.

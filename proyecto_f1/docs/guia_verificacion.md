@@ -1,6 +1,6 @@
-# Guía de verificación - Doctor Byte
+# Guia de verificacion - Doctor Byte
 
-Esta guía verifica que el proyecto cumple el enunciado de Fase 1: Prolog, backend Python, frontend, Telegram, historial y documentación.
+Esta guia verifica que el proyecto cumple el enunciado de Fase 1: Prolog, backend Python, frontend, Telegram, historial, Docker y base de conocimiento editable.
 
 ## 1. Entrar al proyecto
 
@@ -8,7 +8,7 @@ Esta guía verifica que el proyecto cumple el enunciado de Fase 1: Prolog, backe
 cd C:\Users\pabda\Desktop\IA1_VACASJUN2026_PABLOFERNANDEZ_201807411\proyecto_f1
 ```
 
-Ejecuta los comandos desde esta raíz salvo que un paso indique otra carpeta.
+Ejecuta los comandos desde esta raiz salvo que un paso indique otra carpeta.
 
 ## 2. Verificar herramientas
 
@@ -20,7 +20,7 @@ npm --version
 docker --version
 ```
 
-Resultado usado en esta verificación: Python 3.14.3, SWI-Prolog 10.0.2, Node 22.18.0, npm 11.6.3 y Docker 29.2.0.
+Resultado usado en esta verificacion: Python 3.14.3, SWI-Prolog 10.0.2, Node 22.18.0, npm 11.6.3 y Docker 29.2.0.
 
 ## 3. Configurar dependencias
 
@@ -39,7 +39,7 @@ TELEGRAM_DEFAULT_CHAT_ID=
 
 Sin token, el sistema sigue funcionando y marca Telegram como no configurado.
 
-Para encontrar y guardar el `chat_id`, abre el bot en Telegram, envía `/start` y ejecuta:
+Para encontrar y guardar el `chat_id`, abre el bot en Telegram, envia `/start` y ejecuta:
 
 ```powershell
 .\scripts\telegram_chat_id_windows.ps1 -SaveFirst
@@ -53,17 +53,19 @@ Para probar un mensaje directo:
 
 ## 4. Verificar motor Prolog directo
 
-```powershell
-'{"mode":"symptoms"}' | swipl -q -s '.\backend\prolog_service\knowledge_base\doctor_byte.pl' -g doctor_byte_cli
-```
-
-Debe devolver un JSON con 25 síntomas.
+El motor Prolog carga los datos editables desde `backend/prolog_service/knowledge_base/doctor_byte_data.json`.
 
 ```powershell
-'{"mode":"diagnose","symptoms":["pantalla_negra","ventiladores_giran"]}' | swipl -q -s '.\backend\prolog_service\knowledge_base\doctor_byte.pl' -g doctor_byte_cli
+'{"mode":"symptoms","knowledge_path":"backend/prolog_service/knowledge_base/doctor_byte_data.json"}' | swipl -q -s '.\backend\prolog_service\knowledge_base\doctor_byte.pl' -g doctor_byte_cli
 ```
 
-Debe devolver `falla_video_gpu`.
+Debe devolver un JSON con 25 sintomas.
+
+```powershell
+'{"mode":"diagnose","knowledge_path":"backend/prolog_service/knowledge_base/doctor_byte_data.json","symptoms":["pantalla_negra","ventiladores_giran"]}' | swipl -q -s '.\backend\prolog_service\knowledge_base\doctor_byte.pl' -g doctor_byte_cli
+```
+
+Debe devolver una lista `diagnostics` con mas de un diagnostico. El primero debe ser `falla_video_gpu` y debe incluir `probability`, `problem_percentage`, `effectiveness_probability`, `recommendations` y `solution_steps`.
 
 ## 5. Ejecutar pruebas automatizadas
 
@@ -88,7 +90,7 @@ npm run build
 
 Resultado esperado: Vite genera `dist/` sin errores.
 
-Volver a la raíz:
+Volver a la raiz:
 
 ```powershell
 cd ..
@@ -96,7 +98,7 @@ cd ..
 
 ## 6. Levantar servicios sin Docker
 
-Desde la raíz:
+Desde la raiz:
 
 ```powershell
 .\scripts\start_dev_windows.ps1
@@ -126,7 +128,7 @@ Detener servicios:
 .\scripts\stop_services_windows.ps1
 ```
 
-## 7. Verificar endpoints
+## 7. Verificar endpoints base
 
 ```powershell
 curl.exe http://127.0.0.1:8001/health
@@ -144,21 +146,107 @@ Resultados esperados:
 curl.exe http://127.0.0.1:8000/api/symptoms
 ```
 
-Debe listar 25 síntomas.
+Debe listar 25 sintomas.
 
 ```powershell
 curl.exe --% -X POST http://127.0.0.1:8000/api/diagnose -H "Content-Type: application/json; charset=utf-8" -d "{\"symptoms\":[\"pantalla_negra\",\"ventiladores_giran\"],\"user_name\":\"Prueba\",\"notify_telegram\":false}"
 ```
 
-Debe devolver `falla_video_gpu`, confianza 67 y `telegram_sent: "no"`.
+Debe devolver `falla_video_gpu` como primer diagnostico, con lista completa de alternativas y `telegram_sent: "no"`.
 
 ```powershell
 curl.exe http://127.0.0.1:8000/api/history
 ```
 
-Debe mostrar el diagnóstico creado en historial.
+Debe mostrar el diagnostico creado en historial.
 
-## 8. Verificar con Docker
+## 8. Verificar CRUD editable
+
+Estos pasos crean datos temporales, prueban que Prolog los use y luego los eliminan.
+
+Crear sintoma:
+
+```powershell
+$body = @{
+  id = "prueba_codex"
+  name = "Sintoma temporal Codex"
+  category = "prueba"
+  weight = 4
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/symptoms" -ContentType "application/json; charset=utf-8" -Body $body
+```
+
+Editar sintoma:
+
+```powershell
+$body = @{
+  id = "prueba_codex"
+  name = "Sintoma temporal Codex editado"
+  category = "prueba_editada"
+  weight = 5
+} | ConvertTo-Json
+Invoke-RestMethod -Method Put -Uri "http://127.0.0.1:8000/api/symptoms/prueba_codex" -ContentType "application/json; charset=utf-8" -Body $body
+```
+
+Crear regla diagnostica:
+
+```powershell
+$body = @{
+  id = "regla_codex"
+  name = "Regla temporal Codex"
+  message = "Prueba editable"
+  category = "prueba"
+  severity = "media"
+  enabled = $true
+  min_score = 0
+  required_symptoms = @("prueba_codex")
+  support_symptoms = @()
+  recommendations = @("Recomendacion temporal")
+  solution_steps = @("Paso temporal")
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/diagnosis-rules" -ContentType "application/json; charset=utf-8" -Body $body
+```
+
+Editar regla diagnostica:
+
+```powershell
+$body = @{
+  id = "regla_codex"
+  name = "Regla temporal Codex editada"
+  message = "Prueba editable actualizada"
+  category = "prueba_editada"
+  severity = "alta"
+  enabled = $true
+  min_score = 0
+  required_symptoms = @("prueba_codex")
+  support_symptoms = @()
+  recommendations = @("Recomendacion temporal editada")
+  solution_steps = @("Paso temporal editado")
+} | ConvertTo-Json
+Invoke-RestMethod -Method Put -Uri "http://127.0.0.1:8000/api/diagnosis-rules/regla_codex" -ContentType "application/json; charset=utf-8" -Body $body
+```
+
+Diagnosticar usando el nuevo sintoma:
+
+```powershell
+$body = @{
+  symptoms = @("prueba_codex")
+  user_name = "Verificacion CRUD"
+  notify_telegram = $false
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/diagnose" -ContentType "application/json; charset=utf-8" -Body $body
+```
+
+Resultado esperado: `regla_codex` aparece como primer diagnostico y se muestran porcentajes/ruta de solucion.
+
+Limpiar datos temporales:
+
+```powershell
+Invoke-RestMethod -Method Delete -Uri "http://127.0.0.1:8000/api/diagnosis-rules/regla_codex"
+Invoke-RestMethod -Method Delete -Uri "http://127.0.0.1:8000/api/symptoms/prueba_codex"
+```
+
+## 9. Verificar con Docker
 
 ```powershell
 .\scripts\start_docker_windows.ps1
@@ -167,7 +255,7 @@ Debe mostrar el diagnóstico creado en historial.
 El script construye, levanta y espera los servicios. Al finalizar debe mostrar:
 
 ```text
-todo está subido en:
+todo esta subido en:
 Frontend:          http://localhost:8081
 API Gateway docs:  http://localhost:8000/docs
 API health:        http://localhost:8000/api/health
@@ -183,22 +271,43 @@ Para detener:
 
 El puerto del frontend Docker se controla con `FRONTEND_PORT` en `.env`. Por defecto queda en `8081`.
 
-## 9. Errores comunes y solución
+## 10. Verificar frontend
 
-| Error | Causa | Solución |
+Abrir:
+
+```text
+http://localhost:8081
+```
+
+Comprobar:
+
+- El panel de diagnostico permite seleccionar sintomas.
+- Los resultados muestran mas de un diagnostico posible.
+- Cada diagnostico muestra probabilidad, porcentaje del problema, efectividad, recomendaciones y ruta de solucion.
+- La seccion editable permite crear, editar y eliminar sintomas.
+- La seccion editable permite crear, editar y eliminar reglas diagnosticas.
+- Al editar una regla, el cambio se refleja en el siguiente diagnostico.
+- El historial registra cada diagnostico ejecutado.
+
+## 11. Errores comunes y solucion
+
+| Error | Causa | Solucion |
 |---|---|---|
-| `Unable to copy ... venvlauncher.exe` | El `.venv` ya existe o está en uso por un servicio corriendo. | Ejecutar `.\scripts\stop_services_windows.ps1` y luego `.\scripts\setup_windows.ps1`. |
-| `[WinError 10013]` | El puerto ya está ocupado. | Ejecutar `.\scripts\start_dev_windows.ps1 -StopExisting`. |
-| `uvicorn no se reconoce` | No está activado el venv o estás en una carpeta incorrecta. | Usar `.\scripts\start_dev_windows.ps1` desde la raíz. |
-| `Cannot find path ... frontend\backend\...` | Se intentó hacer `cd backend\...` desde `frontend`. | Volver a la raíz con `cd ..` o usar los scripts. |
+| `Unable to copy ... venvlauncher.exe` | El `.venv` ya existe o esta en uso por un servicio corriendo. | Ejecutar `.\scripts\stop_services_windows.ps1` y luego `.\scripts\setup_windows.ps1`. |
+| `[WinError 10013]` | El puerto ya esta ocupado. | Ejecutar `.\scripts\start_dev_windows.ps1 -StopExisting`. |
+| `uvicorn no se reconoce` | No esta activado el venv o estas en una carpeta incorrecta. | Usar `.\scripts\start_dev_windows.ps1` desde la raiz. |
+| `Cannot find path ... frontend\backend\...` | Se intento hacer `cd backend\...` desde `frontend`. | Volver a la raiz con `cd ..` o usar los scripts. |
+| `Telegram todavia no devolvio ningun chat_id` | El bot no recibio mensajes nuevos. | Abrir el bot, enviar `/start` o cualquier mensaje, y volver a ejecutar `.\scripts\telegram_chat_id_windows.ps1 -SaveFirst`. |
 
-## 10. Evidencias para entregar
+## 12. Evidencias para entregar
 
 Capturar:
 
-- Pantalla principal en `http://localhost:5173`.
-- Diagnóstico GPU con `pantalla_negra` y `ventiladores_giran`.
+- Pantalla principal en `http://localhost:8081` o `http://localhost:5173`.
+- Diagnostico GPU con `pantalla_negra` y `ventiladores_giran`.
+- Lista de diagnosticos alternativos con porcentajes.
+- CRUD creando y editando una regla temporal.
 - Historial mostrando el registro creado.
 - Swagger en `http://localhost:8000/docs`.
 - Telegram recibido, si se configura token y chat ID.
-- Ejecución de `pytest` y `npm run build`.
+- Ejecucion de `pytest` y `npm run build`.

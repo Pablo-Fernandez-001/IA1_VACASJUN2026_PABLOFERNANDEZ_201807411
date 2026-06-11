@@ -1,7 +1,7 @@
 $ErrorActionPreference = "SilentlyContinue"
 
 $Ports = 8000, 8001, 8002, 5173
-$Connections = Get-NetTCPConnection -LocalPort $Ports -State Listen
+$Connections = Get-NetTCPConnection -LocalPort $Ports -State Listen -ErrorAction SilentlyContinue
 
 if (-not $Connections) {
     Write-Host "No hay servicios de Doctor Byte escuchando en 8000, 8001, 8002 o 5173." -ForegroundColor Green
