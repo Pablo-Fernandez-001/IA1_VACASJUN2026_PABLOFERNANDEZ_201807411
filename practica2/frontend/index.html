@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmartBot IA1 - Panel Administrativo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>SmartBot IA1</h1>
+      <p>FAQ + Telegram + Diagnóstico dinámico con Prolog</p>
+    </div>
+    <button id="logoutBtn" class="secondary hidden">Cerrar sesión</button>
+  </header>
+
+  <main>
+    <section id="loginSection" class="card login-card">
+      <h2>Ingreso administrativo</h2>
+      <p>Usuario preconfigurado del enunciado.</p>
+      <label>Usuario<input id="username" value="IA1-User" /></label>
+      <label>Contraseña<input id="password" type="password" value="IA1-password@_new" /></label>
+      <button id="loginBtn">Entrar</button>
+      <p id="loginMsg" class="msg"></p>
+    </section>
+
+    <section id="appSection" class="hidden">
+      <nav class="tabs">
+        <button data-tab="dashboard" class="active">Dashboard</button>
+        <button data-tab="faqs">Preguntas</button>
+        <button data-tab="categories">Categorías</button>
+        <button data-tab="symptoms">Síntomas</button>
+        <button data-tab="diagnoses">Diagnósticos</button>
+        <button data-tab="rules">Reglas</button>
+        <button data-tab="test">Probar diagnóstico</button>
+        <button data-tab="settings">Configuración</button>
+      </nav>
+
+      <section id="dashboard" class="tab card">
+        <h2>Estadísticas</h2>
+        <button onclick="loadStats()">Actualizar estadísticas</button>
+        <div id="statsBox" class="grid"></div>
+        <h3>Últimas consultas</h3>
+        <div class="table-wrap"><table id="logsTable"></table></div>
+      </section>
+
+      <section id="faqs" class="tab card hidden">
+        <h2>CRUD de preguntas frecuentes</h2>
+        <form id="faqForm" class="form-grid">
+          <input type="hidden" id="faqId" />
+          <label>Pregunta<textarea id="faqQuestion" required></textarea></label>
+          <label>Respuesta<textarea id="faqAnswer" required></textarea></label>
+          <label>Keywords<input id="faqKeywords" /></label>
+          <label>Categoría<select id="faqCategory"></select></label>
+          <label class="check"><input id="faqActive" type="checkbox" checked /> Activa</label>
+          <button>Guardar pregunta</button><button type="button" class="secondary" onclick="clearFaqForm()">Limpiar</button>
+        </form>
+        <div class="search-row"><input id="faqSearch" placeholder="Probar búsqueda de FAQ"/><button onclick="testFaqSearch()">Buscar</button></div>
+        <p id="faqSearchResult" class="msg"></p>
+        <div class="table-wrap"><table id="faqsTable"></table></div>
+      </section>
+
+      <section id="categories" class="tab card hidden">
+        <h2>CRUD de categorías</h2>
+        <form id="categoryForm" class="form-grid small">
+          <input type="hidden" id="categoryId" />
+          <label>Nombre<input id="categoryName" required /></label>
+          <label>Descripción<input id="categoryDescription" /></label>
+          <button>Guardar categoría</button><button type="button" class="secondary" onclick="clearCategoryForm()">Limpiar</button>
+        </form>
+        <div class="table-wrap"><table id="categoriesTable"></table></div>
+      </section>
+
+      <section id="symptoms" class="tab card hidden">
+        <h2>CRUD de síntomas</h2>
+        <form id="symptomForm" class="form-grid">
+          <input type="hidden" id="symptomId" />
+          <label>Código<input id="symptomCode" placeholder="ej: api_caida" required /></label>
+          <label>Nombre<input id="symptomName" required /></label>
+          <label>Categoría<input id="symptomCategory" value="General" /></label>
+          <label>Severidad<input id="symptomSeverity" type="number" value="1" min="1" max="5" step="0.1" /></label>
+          <label>Descripción<textarea id="symptomDescription"></textarea></label>
+          <label class="check"><input id="symptomActive" type="checkbox" checked /> Activo</label>
+          <button>Guardar síntoma</button><button type="button" class="secondary" onclick="clearSymptomForm()">Limpiar</button>
+        </form>
+        <div class="table-wrap"><table id="symptomsTable"></table></div>
+      </section>
+
+      <section id="diagnoses" class="tab card hidden">
+        <h2>CRUD de diagnósticos</h2>
+        <form id="diagnosisForm" class="form-grid">
+          <input type="hidden" id="diagnosisId" />
+          <label>Código<input id="diagnosisCode" required /></label>
+          <label>Nombre<input id="diagnosisName" required /></label>
+          <label>Categoría<input id="diagnosisCategory" /></label>
+          <label>Probabilidad base<input id="diagnosisBase" type="number" value="100" min="1" max="100" /></label>
+          <label>Mensaje<textarea id="diagnosisMessage" required></textarea></label>
+          <label>Ruta de solución, un paso por línea<textarea id="diagnosisRoute"></textarea></label>
+          <label class="check"><input id="diagnosisActive" type="checkbox" checked /> Activo</label>
+          <button>Guardar diagnóstico</button><button type="button" class="secondary" onclick="clearDiagnosisForm()">Limpiar</button>
+        </form>
+        <div class="table-wrap"><table id="diagnosesTable"></table></div>
+      </section>
+
+      <section id="rules" class="tab card hidden">
+        <h2>CRUD de reglas Prolog</h2>
+        <p>Al cambiar estas reglas no sólo cambian los hechos: cambia la lógica que Prolog evaluará.</p>
+        <form id="ruleForm" class="form-grid">
+          <input type="hidden" id="ruleId" />
+          <label>Nombre<input id="ruleName" required /></label>
+          <label>Diagnóstico<select id="ruleDiagnosis"></select></label>
+          <label>Peso %<input id="ruleWeight" type="number" value="100" min="1" max="100" /></label>
+          <label>Explicación<textarea id="ruleExplanation"></textarea></label>
+          <label>Síntomas de la regla<select id="ruleSymptoms" multiple size="8"></select></label>
+          <label class="check"><input id="ruleActive" type="checkbox" checked /> Activa</label>
+          <button>Guardar regla</button><button type="button" class="secondary" onclick="clearRuleForm()">Limpiar</button>
+        </form>
+        <div class="table-wrap"><table id="rulesTable"></table></div>
+      </section>
+
+      <section id="test" class="tab card hidden">
+        <h2>Probar diagnóstico</h2>
+        <p>Selecciona varios síntomas. SmartBot debe devolver más de un diagnóstico cuando existan coincidencias.</p>
+        <div id="symptomChecklist" class="checks"></div>
+        <button onclick="runDiagnosis()">Ejecutar diagnóstico Prolog</button>
+        <div id="diagnosisResult" class="result"></div>
+      </section>
+
+      <section id="settings" class="tab card hidden">
+        <h2>Configuración</h2>
+        <p>Aquí se puede configurar el chat o grupo de Telegram y mensajes del sistema.</p>
+        <div id="settingsBox"></div>
+      </section>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

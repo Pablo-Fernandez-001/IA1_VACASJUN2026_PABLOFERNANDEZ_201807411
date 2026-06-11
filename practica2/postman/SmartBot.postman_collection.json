@@ -1,0 +1,49 @@
+{
+  "info": {
+    "name": "SmartBot IA1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8000/api/health"
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"IA1-User\",\"password\":\"IA1-password@_new\"}"
+        },
+        "url": "http://localhost:8000/api/auth/login"
+      }
+    },
+    {
+      "name": "Diagnose",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"symptom_codes\":[\"no_responde\",\"token_vacio\",\"chat_id_malo\"]}"
+        },
+        "url": "http://localhost:8000/api/diagnostics/diagnose"
+      }
+    }
+  ]
+}
