@@ -53,6 +53,10 @@ export function getHistory() {
   return request('/api/history');
 }
 
+export function getHistoryItem(id) {
+  return request(`/api/history/${id}`);
+}
+
 export function deleteHistory(id) {
   return request(`/api/history/${id}`, { method: 'DELETE' });
 }

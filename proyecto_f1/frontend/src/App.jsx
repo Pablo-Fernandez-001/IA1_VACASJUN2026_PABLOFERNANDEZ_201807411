@@ -3,8 +3,11 @@ import { createRoot } from 'react-dom/client';
 import {
   Activity,
   BrainCircuit,
+  ChevronDown,
+  ChevronRight,
   Cpu,
   Edit3,
+  FolderOpen,
   History,
   Plus,
   Route,
@@ -24,21 +27,22 @@ import {
   diagnose,
   getDiagnosisRules,
   getHistory,
+  getHistoryItem,
   getSymptoms,
   updateDiagnosisRule,
   updateSymptom,
 } from './api';
 import './styles.css';
 
-const emptySymptom = { id: '', name: '', category: 'general', weight: 3 };
+const emptySymptom = { id: '', name: '', category: '', weight: '' };
 const emptyRule = {
   id: '',
   name: '',
   message: '',
-  category: 'general',
+  category: '',
   severity: 'media',
   enabled: true,
-  min_score: 0,
+  min_score: '',
   required_symptoms: '',
   support_symptoms: '',
   recommendations: '',
@@ -107,6 +111,7 @@ function App() {
   const [editingSymptomId, setEditingSymptomId] = useState('');
   const [ruleForm, setRuleForm] = useState(emptyRule);
   const [editingRuleId, setEditingRuleId] = useState('');
+  const [expandedDiagnosisId, setExpandedDiagnosisId] = useState('');
 
   async function loadCatalogs() {
     const [symptomData, ruleData] = await Promise.all([getSymptoms(), getDiagnosisRules()]);
@@ -126,6 +131,12 @@ function App() {
   const categories = useMemo(() => ['todas', ...new Set(symptoms.map((s) => s.category))], [symptoms]);
   const diagnostics = result?.result?.diagnostics || [];
   const top = diagnostics[0];
+
+  useEffect(() => {
+    if (top?.id) {
+      setExpandedDiagnosisId(top.id);
+    }
+  }, [top?.id]);
 
   const symptomName = useMemo(() => {
     return symptoms.reduce((acc, symptom) => ({ ...acc, [symptom.id]: symptom.name }), {});
@@ -172,7 +183,7 @@ function App() {
     event.preventDefault();
     setError('');
     try {
-      const payload = { ...symptomForm, id: symptomForm.id.trim(), name: symptomForm.name.trim(), category: symptomForm.category.trim(), weight: Number(symptomForm.weight) };
+      const payload = { ...symptomForm, id: symptomForm.id.trim(), name: symptomForm.name.trim(), category: symptomForm.category.trim(), weight: Number(symptomForm.weight || 3) };
       if (editingSymptomId) {
         await updateSymptom(editingSymptomId, payload);
       } else {
@@ -220,6 +231,21 @@ function App() {
     setHistory(await getHistory());
   }
 
+  async function handleLoadHistory(id) {
+    setError('');
+    try {
+      const record = await getHistoryItem(id);
+      setResult(record);
+      setSelected(record.selected_symptoms || []);
+      setUserName(record.user_name || 'Usuario');
+      setNotifyTelegram(false);
+      setChatId('');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
     <div className="page-shell">
       <header className="hero">
@@ -256,10 +282,38 @@ function App() {
           <h4>Diagnosticos posibles</h4>
           <div className="diagnostic-list">
             {diagnostics.map((d) => (
-              <div key={d.id} className="diagnostic-card">
-                <b>{d.name}</b>
-                <span>{d.probability ?? d.score}% probabilidad | {d.problem_percentage}% problema | {d.effectiveness_probability}% efectividad</span>
-                <small>Coinciden: {(d.matched_symptom_ids || []).join(', ') || 'ninguno'}</small>
+              <div key={d.id} className={`diagnostic-card ${expandedDiagnosisId === d.id ? 'open' : ''}`}>
+                <button
+                  className="diagnostic-toggle"
+                  type="button"
+                  onClick={() => setExpandedDiagnosisId((current) => (current === d.id ? '' : d.id))}
+                  aria-expanded={expandedDiagnosisId === d.id}
+                >
+                  <span className="diagnostic-title">
+                    <b>{d.name}</b>
+                    <small>Coinciden: {(d.matched_symptom_ids || []).join(', ') || 'ninguno'}</small>
+                  </span>
+                  <span className="diagnostic-score">
+                    <strong>{d.probability ?? d.score}%</strong>
+                    <small>probabilidad</small>
+                  </span>
+                  {expandedDiagnosisId === d.id ? <ChevronDown size={18}/> : <ChevronRight size={18}/>}
+                </button>
+                <div className="diagnostic-metrics">
+                  <span>{d.problem_percentage}% problema</span>
+                  <span>{d.effectiveness_probability}% efectividad</span>
+                  <span>{d.severity}</span>
+                </div>
+                {expandedDiagnosisId === d.id && (
+                  <div className="diagnostic-route">
+                    <h5><Route size={16}/> Ruta posible de solucion</h5>
+                    {d.solution_steps?.length ? (
+                      <ol>{d.solution_steps.map((step) => <li key={step}>{step}</li>)}</ol>
+                    ) : (
+                      <p>No hay pasos registrados para esta regla.</p>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -319,24 +373,24 @@ function App() {
             <form className="editor-form" onSubmit={handleSaveRule}>
               <h3>{editingRuleId ? 'Editar regla' : 'Nueva regla'}</h3>
               <label>ID</label>
-              <input value={ruleForm.id} onChange={(e) => setRuleForm({ ...ruleForm, id: e.target.value })} required />
+              <input value={ruleForm.id} onChange={(e) => setRuleForm({ ...ruleForm, id: e.target.value })} placeholder="falla_gpu_temporal" required />
               <label>Nombre</label>
-              <input value={ruleForm.name} onChange={(e) => setRuleForm({ ...ruleForm, name: e.target.value })} required />
+              <input value={ruleForm.name} onChange={(e) => setRuleForm({ ...ruleForm, name: e.target.value })} placeholder="Problema de tarjeta grafica" required />
               <label>Mensaje</label>
-              <textarea value={ruleForm.message} onChange={(e) => setRuleForm({ ...ruleForm, message: e.target.value })} />
+              <textarea value={ruleForm.message} onChange={(e) => setRuleForm({ ...ruleForm, message: e.target.value })} placeholder="El equipo inicia, pero no entrega imagen correctamente." />
               <div className="form-row">
-                <div><label>Categoria</label><input value={ruleForm.category} onChange={(e) => setRuleForm({ ...ruleForm, category: e.target.value })} required /></div>
+                <div><label>Categoria</label><input value={ruleForm.category} onChange={(e) => setRuleForm({ ...ruleForm, category: e.target.value })} placeholder="hardware" required /></div>
                 <div><label>Severidad</label><select value={ruleForm.severity} onChange={(e) => setRuleForm({ ...ruleForm, severity: e.target.value })}><option>baja</option><option>media</option><option>alta</option><option>critica</option></select></div>
-                <div><label>Min %</label><input type="number" min="0" max="100" value={ruleForm.min_score} onChange={(e) => setRuleForm({ ...ruleForm, min_score: e.target.value })} /></div>
+                <div><label>Min %</label><input type="number" min="0" max="100" value={ruleForm.min_score} onChange={(e) => setRuleForm({ ...ruleForm, min_score: e.target.value })} placeholder="60" /></div>
               </div>
               <label>Sintomas requeridos</label>
               <textarea value={ruleForm.required_symptoms} onChange={(e) => setRuleForm({ ...ruleForm, required_symptoms: e.target.value })} placeholder="pantalla_negra, ventiladores_giran" />
               <label>Sintomas de apoyo</label>
-              <textarea value={ruleForm.support_symptoms} onChange={(e) => setRuleForm({ ...ruleForm, support_symptoms: e.target.value })} />
+              <textarea value={ruleForm.support_symptoms} onChange={(e) => setRuleForm({ ...ruleForm, support_symptoms: e.target.value })} placeholder="beeps_arranque, reinicios_inesperados" />
               <label>Recomendaciones</label>
-              <textarea value={ruleForm.recommendations} onChange={(e) => setRuleForm({ ...ruleForm, recommendations: e.target.value })} />
+              <textarea value={ruleForm.recommendations} onChange={(e) => setRuleForm({ ...ruleForm, recommendations: e.target.value })} placeholder={'Probar otro cable de video\nReinstalar o limpiar la tarjeta grafica\nActualizar el controlador'} />
               <label>Ruta de solucion</label>
-              <textarea value={ruleForm.solution_steps} onChange={(e) => setRuleForm({ ...ruleForm, solution_steps: e.target.value })} />
+              <textarea value={ruleForm.solution_steps} onChange={(e) => setRuleForm({ ...ruleForm, solution_steps: e.target.value })} placeholder={'Probar monitor y cable alterno\nCambiar puerto de salida de video\nReinstalar GPU o limpiar contactos'} />
               <div className="switch-row">
                 <input type="checkbox" checked={ruleForm.enabled} onChange={(e) => setRuleForm({ ...ruleForm, enabled: e.target.checked })} />
                 <span>Regla activa</span>
@@ -363,12 +417,12 @@ function App() {
             <form className="editor-form" onSubmit={handleSaveSymptom}>
               <h3>{editingSymptomId ? 'Editar sintoma' : 'Nuevo sintoma'}</h3>
               <label>ID</label>
-              <input value={symptomForm.id} onChange={(e) => setSymptomForm({ ...symptomForm, id: e.target.value })} required />
+              <input value={symptomForm.id} onChange={(e) => setSymptomForm({ ...symptomForm, id: e.target.value })} placeholder="pantalla_parpadea" required />
               <label>Nombre</label>
-              <input value={symptomForm.name} onChange={(e) => setSymptomForm({ ...symptomForm, name: e.target.value })} required />
+              <input value={symptomForm.name} onChange={(e) => setSymptomForm({ ...symptomForm, name: e.target.value })} placeholder="La pantalla parpadea constantemente" required />
               <div className="form-row">
-                <div><label>Categoria</label><input value={symptomForm.category} onChange={(e) => setSymptomForm({ ...symptomForm, category: e.target.value })} required /></div>
-                <div><label>Peso</label><input type="number" min="1" max="5" value={symptomForm.weight} onChange={(e) => setSymptomForm({ ...symptomForm, weight: e.target.value })} /></div>
+                <div><label>Categoria</label><input value={symptomForm.category} onChange={(e) => setSymptomForm({ ...symptomForm, category: e.target.value })} placeholder="video" required /></div>
+                <div><label>Peso</label><input type="number" min="1" max="5" value={symptomForm.weight} onChange={(e) => setSymptomForm({ ...symptomForm, weight: e.target.value })} placeholder="3" /></div>
               </div>
               <button className="primary" type="submit"><Plus size={17}/> Guardar sintoma</button>
               {editingSymptomId && <button className="secondary" type="button" onClick={() => { setEditingSymptomId(''); setSymptomForm(emptySymptom); }}>Cancelar edicion</button>}
@@ -392,12 +446,17 @@ function App() {
         <h2><History/> Historial de diagnosticos</h2>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>ID</th><th>Fecha</th><th>Usuario</th><th>Diagnostico</th><th>Sintomas</th><th>Telegram</th><th></th></tr></thead>
+            <thead><tr><th>ID</th><th>Fecha</th><th>Usuario</th><th>Diagnostico</th><th>Sintomas</th><th>Telegram</th><th>Acciones</th></tr></thead>
             <tbody>
               {history.map((h) => <tr key={h.id}>
                 <td>{h.id}</td><td>{new Date(h.created_at).toLocaleString()}</td><td>{h.user_name}</td><td>{h.top_diagnosis}</td>
                 <td>{h.selected_symptoms.join(', ')}</td><td>{h.telegram_sent}</td>
-                <td><button className="icon-btn danger" onClick={() => handleDeleteHistory(h.id)}><Trash2 size={16}/></button></td>
+                <td>
+                  <div className="row-actions">
+                    <button className="icon-btn" title="Cargar diagnostico" aria-label={`Cargar diagnostico ${h.id}`} onClick={() => handleLoadHistory(h.id)}><FolderOpen size={16}/></button>
+                    <button className="icon-btn danger" title="Eliminar diagnostico" aria-label={`Eliminar diagnostico ${h.id}`} onClick={() => handleDeleteHistory(h.id)}><Trash2 size={16}/></button>
+                  </div>
+                </td>
               </tr>)}
             </tbody>
           </table>

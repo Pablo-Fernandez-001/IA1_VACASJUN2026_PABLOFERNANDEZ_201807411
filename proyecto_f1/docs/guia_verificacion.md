@@ -283,11 +283,12 @@ Comprobar:
 
 - El panel de diagnostico permite seleccionar sintomas.
 - Los resultados muestran mas de un diagnostico posible.
-- Cada diagnostico muestra probabilidad, porcentaje del problema, efectividad, recomendaciones y ruta de solucion.
+- Al hacer clic en cada diagnostico posible, se despliega su ruta de solucion.
 - La seccion editable permite crear, editar y eliminar sintomas.
 - La seccion editable permite crear, editar y eliminar reglas diagnosticas.
 - Al editar una regla, el cambio se refleja en el siguiente diagnostico.
 - El historial registra cada diagnostico ejecutado.
+- Cada registro del historial se puede cargar nuevamente desde el boton de carpeta.
 
 ## 11. Errores comunes y solucion
 
