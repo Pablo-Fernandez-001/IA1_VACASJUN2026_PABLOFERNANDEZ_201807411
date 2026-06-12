@@ -5,7 +5,8 @@ class Settings(BaseSettings):
     jwt_secret: str = "smartbot-secret-cambiar-en-produccion"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 480
-    prolog_service_url: str = "http://localhost:8001"
+    prolog_service_url: str = "http://localhost:8101"
+    telegram_bot_token: str = ""
 
     class Config:
         env_file = ".env"

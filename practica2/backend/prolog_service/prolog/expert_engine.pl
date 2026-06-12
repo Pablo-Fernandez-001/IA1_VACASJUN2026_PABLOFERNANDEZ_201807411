@@ -55,4 +55,5 @@ diagnostic_result(json([
 
 main :-
     findall(Result, diagnostic_result(Result), Results),
-    reply_json(json([diagnostics=Results])).
+    json_write(current_output, json([diagnostics=Results])),
+    nl.

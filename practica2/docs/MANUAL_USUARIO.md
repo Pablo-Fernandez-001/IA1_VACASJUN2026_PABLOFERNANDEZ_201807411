@@ -12,7 +12,7 @@ docker compose up --build
 Abrir el panel:
 
 ```text
-http://localhost:8080
+http://localhost:8090
 ```
 
 ## 2. Iniciar sesión
@@ -40,10 +40,11 @@ Contraseña: IA1-password@_new
 
 ## 5. Configurar Telegram
 
-1. Crear bot en `@BotFather`.
+1. Crear un bot nuevo en `@BotFather` solo para Practica 2.
 2. Copiar token en `.env` como `TELEGRAM_BOT_TOKEN`.
 3. Enviar `/start` al bot.
 4. Guardar el chat ID desde la pestaña **Configuración**.
+5. En Windows, se puede abrir el bot y obtener el chat con `scripts/open_telegram_bot_windows.ps1` y `scripts/telegram_chat_id_windows.ps1`.
 
 ## 6. Usar el bot
 

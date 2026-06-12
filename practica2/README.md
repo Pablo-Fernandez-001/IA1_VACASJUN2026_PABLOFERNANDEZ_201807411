@@ -36,10 +36,10 @@ docker compose up --build
 Abrir:
 
 ```text
-Panel:              http://localhost:8080
-API Gateway docs:   http://localhost:8000/docs
-Prolog Service:     http://localhost:8001/docs
-Health:             http://localhost:8000/api/health
+Panel:              http://localhost:8090
+API Gateway docs:   http://localhost:8100/docs
+Prolog Service:     http://localhost:8101/docs
+Health:             http://localhost:8100/api/health
 ```
 
 ## Ejecución local sin Docker
@@ -52,7 +52,7 @@ python -m venv .venv
 source .venv/bin/activate   # Linux/WSL
 # .\.venv\Scripts\Activate.ps1  # Windows PowerShell
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8100
 ```
 
 ### 2. Prolog Service
@@ -64,19 +64,19 @@ cd backend/prolog_service
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8001
+uvicorn app.main:app --reload --port 8101
 ```
 
 ### 3. Frontend
 
 ```bash
 cd frontend
-python -m http.server 8080
+python -m http.server 8090
 ```
 
 ## Bot de Telegram
 
-1. Crear bot con `@BotFather`.
+1. Crear un bot nuevo para Practica 2 con `@BotFather`, usando un token distinto al del proyecto.
 2. Copiar el token en `.env`:
 
 ```env
@@ -85,7 +85,8 @@ TELEGRAM_BOT_TOKEN=tu_token_real
 
 3. Levantar con Docker Compose.
 4. Enviar `/start` al bot.
-5. Desde el panel se puede configurar el `telegram_chat_id`.
+5. Desde el panel se puede configurar el `telegram_chat_id` de este chat separado.
+6. Opcional: usar `scripts/open_telegram_bot_windows.ps1`, `scripts/telegram_chat_id_windows.ps1` y `scripts/telegram_test_windows.ps1` para abrir el bot, detectar el chat y enviar una prueba.
 
 Sin token el sistema sigue funcionando: API, panel, CRUD, diagnósticos y estadísticas.
 

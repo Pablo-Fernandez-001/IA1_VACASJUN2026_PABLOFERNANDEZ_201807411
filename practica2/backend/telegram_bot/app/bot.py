@@ -3,7 +3,7 @@ import time
 import requests
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-API_BASE = os.getenv("API_BASE_URL", "http://localhost:8000").rstrip("/")
+API_BASE = os.getenv("API_BASE_URL", "http://localhost:8100").rstrip("/")
 POLL_SECONDS = float(os.getenv("TELEGRAM_POLL_SECONDS", "2"))
 
 def tg(method, **params):

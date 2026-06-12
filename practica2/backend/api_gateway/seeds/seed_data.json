@@ -38,13 +38,13 @@
     },
     {
       "question": "¿Dónde veo la API?",
-      "answer": "La documentación automática está en http://localhost:8000/docs.",
+      "answer": "La documentación automática está en http://localhost:8100/docs.",
       "keywords": "api docs swagger fastapi",
       "category": "Soporte técnico"
     },
     {
       "question": "¿Dónde abro el panel?",
-      "answer": "El panel administrativo se abre en http://localhost:8080.",
+      "answer": "El panel administrativo se abre en http://localhost:8090.",
       "keywords": "frontend panel administrativo",
       "category": "Administrativo"
     },

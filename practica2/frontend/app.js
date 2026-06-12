@@ -1,4 +1,5 @@
-const API = location.origin.includes('8080') ? location.origin : 'http://localhost:8000';
+const apiParam = new URLSearchParams(location.search).get('api');
+const API = (apiParam || window.SMARTBOT_API_URL || (location.protocol === 'file:' ? 'http://localhost:8100' : location.origin)).replace(/\/$/, '');
 let token = localStorage.getItem('smartbot_token') || '';
 let categories = [], symptoms = [], diagnoses = [], rules = [];
 
@@ -67,8 +68,21 @@ function clearRuleForm(){ $('ruleId').value=''; $('ruleForm').reset(); $('ruleAc
 
 async function runDiagnosis(){ const symptom_codes=[...document.querySelectorAll('#symptomChecklist input:checked')].map(i=>i.value); const data=await req('/api/diagnostics/diagnose',{method:'POST', body:JSON.stringify({symptom_codes})}); $('diagnosisResult').innerHTML = data.diagnostics.length ? data.diagnostics.map(d=>`<div class="diag"><h3>${d.name} <span class="badge">${d.probability}%</span></h3><p>${d.message}</p><p><b>Categoría:</b> ${d.category} · <b>Nivel:</b> ${d.problem_level}</p><p><b>Coincidencias:</b> ${d.matched}/${d.total_required}</p><p><b>Ruta de solución:</b> ${(d.solution_route||[]).join(' → ')}</p><p><b>Faltantes:</b> ${(d.missing_symptoms||[]).join(', ') || 'ninguno'}</p></div>`).join('') : '<p class="msg">No hay diagnósticos posibles.</p>'; }
 
-async function loadSettings(){ const items=await req('/api/settings'); $('settingsBox').innerHTML = items.map(s=>`<div class="card"><label>${s.key}<input id="set_${s.key}" value="${s.value||''}"></label><p>${s.description||''}</p><button onclick="saveSetting('${s.key}')">Guardar</button></div>`).join(''); }
+async function loadSettings(){
+  const items=await req('/api/settings');
+  const settingCards = items.map(s=>`<div class="setting-panel"><label>${s.key}<input id="set_${s.key}" value="${s.value||''}"></label><p>${s.description||''}</p><button onclick="saveSetting('${s.key}')">Guardar</button></div>`).join('');
+  const telegramCard = `<div class="setting-panel"><label>Mensaje de prueba Telegram<textarea id="telegramTestText">SmartBot Practica 2: mensaje de prueba.</textarea></label><button onclick="sendTelegramTest()">Enviar prueba</button><p id="telegramTestResult" class="msg"></p></div>`;
+  $('settingsBox').innerHTML = settingCards + telegramCard;
+}
 async function saveSetting(key){ await req(`/api/settings/${key}`,{method:'PUT', body:JSON.stringify({value:$(`set_${key}`).value, description:''})}); await loadSettings(); }
+async function sendTelegramTest(){
+  try{
+    const data = await req('/api/settings/telegram/test',{method:'POST', body:JSON.stringify({text:$('telegramTestText').value})});
+    $('telegramTestResult').textContent = data.sent ? 'Mensaje enviado al chat configurado.' : `No enviado: ${data.reason || 'revisa token y chat_id'}`;
+  }catch(e){
+    $('telegramTestResult').textContent = 'No se pudo enviar: '+e.message;
+  }
+}
 async function loadStats(){ try{ const s=await req('/api/stats'); $('statsBox').innerHTML = `<div class="stat"><strong>${s.total_queries}</strong> consultas</div><div class="stat"><strong>${s.unique_users}</strong> usuarios</div>` + s.by_type.map(x=>`<div class="stat"><strong>${x.total}</strong>${x.type}</div>`).join(''); const logs=await req('/api/stats/logs'); $('logsTable').innerHTML = `<tr><th>Fecha</th><th>Usuario</th><th>Consulta</th><th>Respuesta</th><th>Tipo</th></tr>` + logs.map(l=>`<tr><td>${l.created_at}</td><td>${l.telegram_user}</td><td>${l.query_text}</td><td>${l.response_text}</td><td>${l.matched_type}</td></tr>`).join(''); }catch(e){ console.warn(e); } }
 
 if(token) showApp(); else showLogin();

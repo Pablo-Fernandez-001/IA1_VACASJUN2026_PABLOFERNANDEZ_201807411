@@ -124,6 +124,14 @@ frontend
 smartbot_data volume
 ```
 
+Puertos publicados en host para no chocar con `proyecto_f1`:
+
+```text
+frontend:       http://localhost:8090
+api-gateway:    http://localhost:8100
+prolog-service: http://localhost:8101
+```
+
 ## Mejores futuras
 
 - Migrar SQLite a PostgreSQL.
