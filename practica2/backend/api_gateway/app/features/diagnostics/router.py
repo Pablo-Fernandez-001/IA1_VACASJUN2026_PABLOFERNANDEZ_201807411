@@ -1,6 +1,9 @@
 import json
+import re
+import unicodedata
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.security import get_current_admin
 from app.db.models import Diagnosis, DiagnosticRule, QueryLog, RuleSymptom, Symptom
@@ -38,9 +41,68 @@ class DiagnoseRequest(BaseModel):
     symptom_codes: list[str]
     telegram_user: str = "panel"
 
+class CustomSymptomIn(BaseModel):
+    name: str
+    telegram_user: str = "telegram"
+    selected_codes: list[str] = Field(default_factory=list)
+
+def build_custom_code(name: str, db: Session) -> str:
+    normalized = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
+    base = re.sub(r"[^a-zA-Z0-9]+", "_", normalized.lower()).strip("_") or "otro_sintoma"
+    base = f"custom_{base[:70]}".strip("_")
+    candidate = base
+    counter = 2
+    while db.query(Symptom).filter_by(code=candidate).first():
+        candidate = f"{base[:78]}_{counter}"
+        counter += 1
+    return candidate
+
 @router.get("/symptoms")
 def list_symptoms(db: Session = Depends(get_db)):
     return db.query(Symptom).order_by(Symptom.name).all()
+
+@router.post("/custom-symptoms")
+def create_custom_symptom(payload: CustomSymptomIn, db: Session = Depends(get_db)):
+    clean_name = " ".join(payload.name.strip().split())
+    if len(clean_name) < 3:
+        raise HTTPException(400, "El sintoma debe tener al menos 3 caracteres")
+    if len(clean_name) > 150:
+        clean_name = clean_name[:150]
+
+    obj = db.query(Symptom).filter(func.lower(Symptom.name) == clean_name.lower()).first()
+    created = False
+    if not obj:
+        obj = Symptom(
+            code=build_custom_code(clean_name, db),
+            name=clean_name,
+            description="Sintoma agregado desde Telegram con el boton Otro.",
+            category="Personalizado",
+            severity=1.0,
+            is_active=True,
+        )
+        db.add(obj)
+        db.flush()
+        created = True
+
+    selected_codes = list(dict.fromkeys([*payload.selected_codes, obj.code]))
+    action = "agregado" if created else "ya existia"
+    db.add(QueryLog(
+        telegram_user=payload.telegram_user,
+        query_text=clean_name,
+        response_text=f"Sintoma personalizado {action}: {obj.code}",
+        matched_type="custom_symptom",
+        category="Personalizado",
+    ))
+    db.commit()
+    db.refresh(obj)
+    return {
+        "id": obj.id,
+        "code": obj.code,
+        "name": obj.name,
+        "category": obj.category,
+        "created": created,
+        "selected_codes": selected_codes,
+    }
 
 @router.post("/symptoms", dependencies=[Depends(get_current_admin)])
 def create_symptom(payload: SymptomIn, db: Session = Depends(get_db)):

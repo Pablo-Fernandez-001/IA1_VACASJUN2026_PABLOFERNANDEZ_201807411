@@ -48,6 +48,13 @@ Contraseña: IA1-password@_new
 
 ## 6. Usar el bot
 
+Al enviar `/start`, el bot muestra un menu con botones para seleccionar varios sintomas.
+
+- `Diagnosticar`: ejecuta Prolog con los sintomas seleccionados.
+- `Otro sintoma`: permite escribir un sintoma nuevo; el sistema lo guarda en la base de datos, lo deja seleccionado y registra la accion en el historial.
+- `Limpiar/Reiniciar chat`: borra la seleccion actual y vuelve al menu inicial.
+- `Seleccionar todos` y `Quitar todos`: ayudan a preparar la seleccion sin escribir codigos.
+
 Preguntar normalmente:
 
 ```text
