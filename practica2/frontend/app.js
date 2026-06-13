@@ -9,17 +9,33 @@ const $ = (id) => document.getElementById(id);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const authHeaders = () => token ? { Authorization: `Bearer ${token}` } : {};
 
+async function getErrorMessage(response) {
+  try {
+    const data = await response.json();
+    return data?.detail || JSON.stringify(data);
+  } catch (_) {
+    const text = await response.text();
+    return text || `Error ${response.status}`;
+  }
+}
+
 async function req(path, options = {}) {
+  const shouldSendAuth = !path.startsWith('/api/auth/login');
   const response = await fetch(`${API}${path}`, {
     ...options,
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}), ...authHeaders() },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+      ...(shouldSendAuth ? authHeaders() : {}),
+    },
   });
   if (response.status === 401) {
     localStorage.removeItem('smartbot_token');
     token = '';
     showLogin();
+    throw new Error('Sesion expirada o token invalido. Inicia sesion nuevamente.');
   }
-  if (!response.ok) throw new Error(await response.text());
+  if (!response.ok) throw new Error(await getErrorMessage(response));
   return response.json();
 }
 
@@ -28,7 +44,7 @@ function actions(editCall, deleteCall) { return `<div class="actions"><button on
 function showLogin() { $('loginSection').classList.remove('hidden'); $('appSection').classList.add('hidden'); $('logoutBtn').classList.add('hidden'); }
 async function showApp() {
   $('loginSection').classList.add('hidden'); $('appSection').classList.remove('hidden'); $('logoutBtn').classList.remove('hidden');
-  try { await initData(); } catch (error) { message(`No se pudieron cargar los datos: ${error.message}`); }
+  try { await initData(); message(''); } catch (error) { message(error.message); }
 }
 
 $('loginBtn').onclick = async () => {
