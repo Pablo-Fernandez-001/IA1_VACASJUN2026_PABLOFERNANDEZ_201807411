@@ -9,7 +9,21 @@ if (Test-Path $EnvPath) {
 }
 
 $BaseUrl = "http://localhost:$ApiPort"
-$body = @{ username = "IA1-User"; password = "IA1-password@_new" } | ConvertTo-Json
-$login = Invoke-RestMethod -Method Post -Uri "$BaseUrl/api/auth/login" -ContentType "application/json" -Body $body
+$loginBody = @{ username = "IA1-User"; password = "IA1-password@_new" } | ConvertTo-Json
+$login = Invoke-RestMethod -Method Post -Uri "$BaseUrl/api/auth/login" -ContentType "application/json" -Body $loginBody
 $headers = @{ Authorization = "Bearer $($login.access_token)" }
-Invoke-RestMethod -Uri "$BaseUrl/api/stats" -Headers $headers
+$categories = Invoke-RestMethod -Uri "$BaseUrl/api/categories"
+$questions = Invoke-RestMethod -Uri "$BaseUrl/api/questions"
+$answers = Invoke-RestMethod -Uri "$BaseUrl/api/answers"
+$search = Invoke-RestMethod -Uri "$BaseUrl/api/search?q=como%20levanto%20el%20proyecto&telegram_user=script"
+$stats = Invoke-RestMethod -Uri "$BaseUrl/api/stats" -Headers $headers
+
+[pscustomobject]@{
+    health = (Invoke-RestMethod -Uri "$BaseUrl/api/health").status
+    login = [bool]$login.access_token
+    categories = $categories.Count
+    questions = $questions.Count
+    answers = $answers.Count
+    search_found = $search.found
+    logged_queries = $stats.total_queries
+} | Format-List

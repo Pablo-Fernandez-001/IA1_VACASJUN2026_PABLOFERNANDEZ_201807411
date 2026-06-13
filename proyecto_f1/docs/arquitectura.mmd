@@ -1,8 +1,15 @@
 flowchart LR
-  U[Usuario] --> F[Frontend React]
-  F -->|REST /api| G[API Gateway FastAPI]
-  G -->|REST /diagnose| P[Prolog Service FastAPI]
-  P -->|subprocess| SWI[SWI-Prolog doctor_byte.pl]
-  G -->|SQLite| DB[(Historial de diagnósticos)]
-  G -->|REST /notify| T[Telegram Service FastAPI]
-  T -->|Telegram Bot API| TG[Telegram]
+    U[Usuario Web] --> F[React + Nginx]
+    A[Administrador] --> F
+    T[Usuario Telegram] <--> TS[Telegram Service]
+    F -->|REST| G[API Gateway Python]
+    TS -->|REST| G
+    G -->|REST| P[Prolog Service Python]
+    P -->|subprocess| SWI[SWI-Prolog]
+    SWI --> KB[(doctor_byte_knowledge.pl)]
+    G --> DB[(SQLite auxiliar)]
+
+    note1[SQLite: historial y configuracion]
+    note2[Prolog: sintomas fallas recomendaciones reglas e inferencia]
+    DB --- note1
+    KB --- note2

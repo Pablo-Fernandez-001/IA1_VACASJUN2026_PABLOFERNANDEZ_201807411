@@ -20,16 +20,26 @@ import {
 } from 'lucide-react';
 import {
   createDiagnosisRule,
+  createFailure,
+  createRecommendation,
   createSymptom,
   deleteDiagnosisRule,
+  deleteFailure,
   deleteHistory,
+  deleteRecommendation,
   deleteSymptom,
   diagnose,
+  getConfig,
   getDiagnosisRules,
+  getFailures,
   getHistory,
   getHistoryItem,
+  getRecommendations,
   getSymptoms,
+  updateConfig,
   updateDiagnosisRule,
+  updateFailure,
+  updateRecommendation,
   updateSymptom,
 } from './api';
 import './styles.css';
@@ -37,16 +47,19 @@ import './styles.css';
 const emptySymptom = { id: '', name: '', category: '', weight: '' };
 const emptyRule = {
   id: '',
-  name: '',
-  message: '',
-  category: '',
-  severity: 'media',
+  failure_id: '',
   enabled: true,
   min_score: '',
   required_symptoms: '',
   support_symptoms: '',
-  recommendations: '',
-  solution_steps: '',
+};
+const emptyFailure = { id: '', name: '', message: '', category: '', severity: 'media', solution_steps: '' };
+const emptyRecommendation = { id: '', failure_id: '', text: '', order: 1 };
+const defaultConfig = {
+  bot_id: '', bot_active: true,
+  welcome_message: 'Hola, soy Doctor Byte. Usa /sintomas para consultar el catalogo.',
+  diagnosis_message: 'Analice tus sintomas con el motor experto Prolog.',
+  no_diagnosis_message: 'No encontre un diagnostico concluyente.',
 };
 
 function Badge({ children }) {
@@ -72,29 +85,24 @@ function ruleToForm(rule) {
     ...rule,
     required_symptoms: (rule.required_symptoms || []).join(', '),
     support_symptoms: (rule.support_symptoms || []).join(', '),
-    recommendations: (rule.recommendations || []).join('\n'),
-    solution_steps: (rule.solution_steps || []).join('\n'),
   };
 }
 
 function formToRule(form) {
   return {
     id: form.id.trim(),
-    name: form.name.trim(),
-    message: form.message.trim(),
-    category: form.category.trim(),
-    severity: form.severity,
+    failure_id: form.failure_id,
     enabled: Boolean(form.enabled),
     min_score: Number(form.min_score || 0),
     required_symptoms: splitList(form.required_symptoms),
     support_symptoms: splitList(form.support_symptoms),
-    recommendations: lines(form.recommendations),
-    solution_steps: lines(form.solution_steps),
   };
 }
 
 function App() {
   const [symptoms, setSymptoms] = useState([]);
+  const [failures, setFailures] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [rules, setRules] = useState([]);
   const [selected, setSelected] = useState([]);
   const [query, setQuery] = useState('');
@@ -111,12 +119,22 @@ function App() {
   const [editingSymptomId, setEditingSymptomId] = useState('');
   const [ruleForm, setRuleForm] = useState(emptyRule);
   const [editingRuleId, setEditingRuleId] = useState('');
+  const [failureForm, setFailureForm] = useState(emptyFailure);
+  const [editingFailureId, setEditingFailureId] = useState('');
+  const [recommendationForm, setRecommendationForm] = useState(emptyRecommendation);
+  const [editingRecommendationId, setEditingRecommendationId] = useState('');
+  const [systemConfig, setSystemConfig] = useState(defaultConfig);
   const [expandedDiagnosisId, setExpandedDiagnosisId] = useState('');
 
   async function loadCatalogs() {
-    const [symptomData, ruleData] = await Promise.all([getSymptoms(), getDiagnosisRules()]);
+    const [symptomData, failureData, recommendationData, ruleData, configData] = await Promise.all([
+      getSymptoms(), getFailures(), getRecommendations(), getDiagnosisRules(), getConfig(),
+    ]);
     setSymptoms(symptomData.symptoms);
+    setFailures(failureData.failures);
+    setRecommendations(recommendationData.recommendations);
     setRules(ruleData.diagnosis_rules);
+    setSystemConfig(configData);
   }
 
   async function loadAll() {
@@ -221,8 +239,59 @@ function App() {
     }
   }
 
+  async function handleSaveFailure(event) {
+    event.preventDefault();
+    setError('');
+    try {
+      const payload = {
+        ...failureForm,
+        id: failureForm.id.trim(),
+        name: failureForm.name.trim(),
+        message: failureForm.message.trim(),
+        category: failureForm.category.trim(),
+        solution_steps: lines(failureForm.solution_steps),
+      };
+      if (editingFailureId) await updateFailure(editingFailureId, payload);
+      else await createFailure(payload);
+      setFailureForm(emptyFailure);
+      setEditingFailureId('');
+      await loadCatalogs();
+    } catch (err) { setError(err.message); }
+  }
+
+  async function handleSaveRecommendation(event) {
+    event.preventDefault();
+    setError('');
+    try {
+      const payload = { ...recommendationForm, id: recommendationForm.id.trim(), text: recommendationForm.text.trim(), order: Number(recommendationForm.order || 1) };
+      if (editingRecommendationId) await updateRecommendation(editingRecommendationId, payload);
+      else await createRecommendation(payload);
+      setRecommendationForm(emptyRecommendation);
+      setEditingRecommendationId('');
+      await loadCatalogs();
+    } catch (err) { setError(err.message); }
+  }
+
+  async function handleSaveConfig(event) {
+    event.preventDefault();
+    setError('');
+    try { setSystemConfig(await updateConfig(systemConfig)); }
+    catch (err) { setError(err.message); }
+  }
+
   async function handleDeleteRule(id) {
     await deleteDiagnosisRule(id);
+    await loadCatalogs();
+  }
+
+  async function handleDeleteFailure(id) {
+    if (!window.confirm('Eliminar la falla tambien eliminara sus reglas y recomendaciones. ¿Continuar?')) return;
+    await deleteFailure(id);
+    await loadCatalogs();
+  }
+
+  async function handleDeleteRecommendation(id) {
+    await deleteRecommendation(id);
     await loadCatalogs();
   }
 
@@ -254,7 +323,7 @@ function App() {
           <h1>Doctor Byte</h1>
           <p>Diagnostico de fallas comunes con sintomas, reglas, probabilidades y rutas de solucion editables.</p>
           <div className="hero-actions">
-            <Badge>{symptoms.length} sintomas</Badge><Badge>{rules.length} reglas</Badge><Badge>Prolog</Badge><Badge>CRUD</Badge><Badge>Telegram</Badge>
+            <Badge>{symptoms.length} sintomas</Badge><Badge>{failures.length} fallas</Badge><Badge>{recommendations.length} recomendaciones</Badge><Badge>{rules.length} reglas Prolog</Badge>
           </div>
         </div>
         <div className="hero-card">
@@ -366,6 +435,9 @@ function App() {
         <div className="tabs">
           <button className={adminTab === 'rules' ? 'active' : ''} onClick={() => setAdminTab('rules')}>Reglas diagnosticas</button>
           <button className={adminTab === 'symptoms' ? 'active' : ''} onClick={() => setAdminTab('symptoms')}>Sintomas</button>
+          <button className={adminTab === 'failures' ? 'active' : ''} onClick={() => setAdminTab('failures')}>Fallas</button>
+          <button className={adminTab === 'recommendations' ? 'active' : ''} onClick={() => setAdminTab('recommendations')}>Recomendaciones</button>
+          <button className={adminTab === 'config' ? 'active' : ''} onClick={() => setAdminTab('config')}>Configuracion</button>
         </div>
 
         {adminTab === 'rules' && (
@@ -373,24 +445,18 @@ function App() {
             <form className="editor-form" onSubmit={handleSaveRule}>
               <h3>{editingRuleId ? 'Editar regla' : 'Nueva regla'}</h3>
               <label>ID</label>
-              <input value={ruleForm.id} onChange={(e) => setRuleForm({ ...ruleForm, id: e.target.value })} placeholder="falla_gpu_temporal" required />
-              <label>Nombre</label>
-              <input value={ruleForm.name} onChange={(e) => setRuleForm({ ...ruleForm, name: e.target.value })} placeholder="Problema de tarjeta grafica" required />
-              <label>Mensaje</label>
-              <textarea value={ruleForm.message} onChange={(e) => setRuleForm({ ...ruleForm, message: e.target.value })} placeholder="El equipo inicia, pero no entrega imagen correctamente." />
-              <div className="form-row">
-                <div><label>Categoria</label><input value={ruleForm.category} onChange={(e) => setRuleForm({ ...ruleForm, category: e.target.value })} placeholder="hardware" required /></div>
-                <div><label>Severidad</label><select value={ruleForm.severity} onChange={(e) => setRuleForm({ ...ruleForm, severity: e.target.value })}><option>baja</option><option>media</option><option>alta</option><option>critica</option></select></div>
-                <div><label>Min %</label><input type="number" min="0" max="100" value={ruleForm.min_score} onChange={(e) => setRuleForm({ ...ruleForm, min_score: e.target.value })} placeholder="60" /></div>
-              </div>
+              <input value={ruleForm.id} onChange={(e) => setRuleForm({ ...ruleForm, id: e.target.value })} placeholder="regla_gpu_temporal" required />
+              <label>Falla diagnosticada</label>
+              <select value={ruleForm.failure_id} onChange={(e) => setRuleForm({ ...ruleForm, failure_id: e.target.value })} required>
+                <option value="">Selecciona una falla</option>
+                {failures.map((failure) => <option key={failure.id} value={failure.id}>{failure.name}</option>)}
+              </select>
+              <label>Puntaje minimo</label>
+              <input type="number" min="0" max="100" value={ruleForm.min_score} onChange={(e) => setRuleForm({ ...ruleForm, min_score: e.target.value })} placeholder="30" />
               <label>Sintomas requeridos</label>
               <textarea value={ruleForm.required_symptoms} onChange={(e) => setRuleForm({ ...ruleForm, required_symptoms: e.target.value })} placeholder="pantalla_negra, ventiladores_giran" />
               <label>Sintomas de apoyo</label>
               <textarea value={ruleForm.support_symptoms} onChange={(e) => setRuleForm({ ...ruleForm, support_symptoms: e.target.value })} placeholder="beeps_arranque, reinicios_inesperados" />
-              <label>Recomendaciones</label>
-              <textarea value={ruleForm.recommendations} onChange={(e) => setRuleForm({ ...ruleForm, recommendations: e.target.value })} placeholder={'Probar otro cable de video\nReinstalar o limpiar la tarjeta grafica\nActualizar el controlador'} />
-              <label>Ruta de solucion</label>
-              <textarea value={ruleForm.solution_steps} onChange={(e) => setRuleForm({ ...ruleForm, solution_steps: e.target.value })} placeholder={'Probar monitor y cable alterno\nCambiar puerto de salida de video\nReinstalar GPU o limpiar contactos'} />
               <div className="switch-row">
                 <input type="checkbox" checked={ruleForm.enabled} onChange={(e) => setRuleForm({ ...ruleForm, enabled: e.target.checked })} />
                 <span>Regla activa</span>
@@ -401,7 +467,7 @@ function App() {
             <div className="admin-list">
               {rules.map((rule) => (
                 <div key={rule.id} className="admin-item">
-                  <div><b>{rule.name}</b><span>{rule.id} | {rule.category} | {rule.severity}</span></div>
+                  <div><b>{failures.find((failure) => failure.id === rule.failure_id)?.name || rule.failure_id}</b><span>{rule.id} | minimo {rule.min_score}% | {rule.enabled ? 'activa' : 'inactiva'}</span></div>
                   <div className="row-actions">
                     <button className="icon-btn" onClick={() => { setEditingRuleId(rule.id); setRuleForm(ruleToForm(rule)); }}><Edit3 size={16}/></button>
                     <button className="icon-btn danger" onClick={() => handleDeleteRule(rule.id)}><Trash2 size={16}/></button>
@@ -439,6 +505,68 @@ function App() {
               ))}
             </div>
           </div>
+        )}
+
+        {adminTab === 'failures' && (
+          <div className="admin-grid">
+            <form className="editor-form" onSubmit={handleSaveFailure}>
+              <h3>{editingFailureId ? 'Editar falla' : 'Nueva falla'}</h3>
+              <label>ID</label><input value={failureForm.id} onChange={(e) => setFailureForm({ ...failureForm, id: e.target.value })} placeholder="falla_nueva" required />
+              <label>Nombre</label><input value={failureForm.name} onChange={(e) => setFailureForm({ ...failureForm, name: e.target.value })} required />
+              <label>Mensaje de diagnostico</label><textarea value={failureForm.message} onChange={(e) => setFailureForm({ ...failureForm, message: e.target.value })} required />
+              <div className="form-row">
+                <div><label>Categoria</label><input value={failureForm.category} onChange={(e) => setFailureForm({ ...failureForm, category: e.target.value })} required /></div>
+                <div><label>Severidad</label><select value={failureForm.severity} onChange={(e) => setFailureForm({ ...failureForm, severity: e.target.value })}><option>baja</option><option>media</option><option>alta</option><option>critica</option></select></div>
+              </div>
+              <label>Ruta de solucion, un paso por linea</label><textarea value={failureForm.solution_steps} onChange={(e) => setFailureForm({ ...failureForm, solution_steps: e.target.value })} />
+              <button className="primary" type="submit"><Save size={17}/> Guardar falla</button>
+              {editingFailureId && <button className="secondary" type="button" onClick={() => { setEditingFailureId(''); setFailureForm(emptyFailure); }}>Cancelar edicion</button>}
+            </form>
+            <div className="admin-list">
+              {failures.map((failure) => <div key={failure.id} className="admin-item">
+                <div><b>{failure.name}</b><span>{failure.id} | {failure.category} | {failure.severity}</span></div>
+                <div className="row-actions">
+                  <button className="icon-btn" onClick={() => { setEditingFailureId(failure.id); setFailureForm({ ...failure, solution_steps: (failure.solution_steps || []).map((step) => step.text).join('\n') }); }}><Edit3 size={16}/></button>
+                  <button className="icon-btn danger" onClick={() => handleDeleteFailure(failure.id)}><Trash2 size={16}/></button>
+                </div>
+              </div>)}
+            </div>
+          </div>
+        )}
+
+        {adminTab === 'recommendations' && (
+          <div className="admin-grid">
+            <form className="editor-form" onSubmit={handleSaveRecommendation}>
+              <h3>{editingRecommendationId ? 'Editar recomendacion' : 'Nueva recomendacion'}</h3>
+              <label>ID</label><input value={recommendationForm.id} onChange={(e) => setRecommendationForm({ ...recommendationForm, id: e.target.value })} placeholder="rec_nueva_1" required />
+              <label>Falla asociada</label><select value={recommendationForm.failure_id} onChange={(e) => setRecommendationForm({ ...recommendationForm, failure_id: e.target.value })} required><option value="">Selecciona una falla</option>{failures.map((failure) => <option key={failure.id} value={failure.id}>{failure.name}</option>)}</select>
+              <label>Texto</label><textarea value={recommendationForm.text} onChange={(e) => setRecommendationForm({ ...recommendationForm, text: e.target.value })} required />
+              <label>Orden</label><input type="number" min="1" value={recommendationForm.order} onChange={(e) => setRecommendationForm({ ...recommendationForm, order: e.target.value })} />
+              <button className="primary" type="submit"><Save size={17}/> Guardar recomendacion</button>
+              {editingRecommendationId && <button className="secondary" type="button" onClick={() => { setEditingRecommendationId(''); setRecommendationForm(emptyRecommendation); }}>Cancelar edicion</button>}
+            </form>
+            <div className="admin-list">
+              {recommendations.map((item) => <div key={item.id} className="admin-item">
+                <div><b>{item.text}</b><span>{item.id} | {failures.find((failure) => failure.id === item.failure_id)?.name || item.failure_id}</span></div>
+                <div className="row-actions">
+                  <button className="icon-btn" onClick={() => { setEditingRecommendationId(item.id); setRecommendationForm(item); }}><Edit3 size={16}/></button>
+                  <button className="icon-btn danger" onClick={() => handleDeleteRecommendation(item.id)}><Trash2 size={16}/></button>
+                </div>
+              </div>)}
+            </div>
+          </div>
+        )}
+
+        {adminTab === 'config' && (
+          <form className="editor-form config-form" onSubmit={handleSaveConfig}>
+            <h3>Configuracion auxiliar del bot</h3>
+            <label>ID del chat o grupo</label><input value={systemConfig.bot_id || ''} onChange={(e) => setSystemConfig({ ...systemConfig, bot_id: e.target.value })} placeholder="-1001234567890" />
+            <div className="switch-row"><input type="checkbox" checked={Boolean(systemConfig.bot_active)} onChange={(e) => setSystemConfig({ ...systemConfig, bot_active: e.target.checked })} /><span>Bot activo</span></div>
+            <label>Mensaje de bienvenida</label><textarea value={systemConfig.welcome_message || ''} onChange={(e) => setSystemConfig({ ...systemConfig, welcome_message: e.target.value })} required />
+            <label>Mensaje antes del diagnostico</label><textarea value={systemConfig.diagnosis_message || ''} onChange={(e) => setSystemConfig({ ...systemConfig, diagnosis_message: e.target.value })} required />
+            <label>Mensaje sin diagnostico</label><textarea value={systemConfig.no_diagnosis_message || ''} onChange={(e) => setSystemConfig({ ...systemConfig, no_diagnosis_message: e.target.value })} required />
+            <button className="primary" type="submit"><Save size={17}/> Guardar configuracion</button>
+          </form>
         )}
       </section>
 

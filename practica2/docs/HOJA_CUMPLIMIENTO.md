@@ -1,27 +1,37 @@
-# Hoja de cumplimiento - Práctica 2 SmartBot
+# Hoja de Cumplimiento - SmartBot
 
-| Requisito | Estado | Implementación |
-|---|---:|---|
-| Bot funcional en Telegram | ✅ | Servicio `backend/telegram_bot` con polling y comandos `/start` y `/diagnostico`. |
-| Backend en Python | ✅ | `backend/api_gateway` y `backend/prolog_service` desarrollados con FastAPI. |
-| API REST | ✅ | Endpoints bajo `/api/*` para auth, FAQ, categorías, configuración, estadísticas y diagnósticos. |
-| Base de datos | ✅ | SQLite persistente en volumen Docker. Modelos SQLAlchemy. |
-| 20 preguntas frecuentes | ✅ | Archivo `backend/api_gateway/seeds/seed_data.json` carga 20 FAQs iniciales. |
-| CRUD preguntas/respuestas | ✅ | Panel y API `/api/faqs`. |
-| CRUD categorías | ✅ | Panel y API `/api/categories`. |
-| Panel administrativo | ✅ | `frontend/index.html`, `app.js`, `style.css`. |
-| Autenticación | ✅ | JWT con usuario `IA1-User` y contraseña `IA1-password@_new`. |
-| Mensaje si no hay respuesta | ✅ | Configuración `unknown_message`. |
-| Docker Compose | ✅ | `docker-compose.yml` levanta API, Prolog, bot y frontend. |
-| Configurar chat ID Telegram | ✅ | CRUD settings, clave `telegram_chat_id`. |
-| Registro de consultas | ✅ | Tabla `query_logs`. |
-| Estadísticas | ✅ | `/api/stats` y dashboard. |
-| Al menos 3 categorías | ✅ | Seed inicial incluye 4 categorías. |
-| Sin respuestas estáticas en código | ✅ | FAQs y reglas iniciales se cargan desde JSON de datos, no desde funciones hardcodeadas. |
-| Lógica principal editable | ✅ | CRUD de síntomas, diagnósticos y reglas. Prolog recibe reglas dinámicas desde la DB. |
-| Más de un diagnóstico | ✅ | Prolog devuelve todas las reglas con coincidencias, ordenadas por probabilidad. |
-| Ruta de solución | ✅ | Cada diagnóstico incluye `solution_route`. |
-| Porcentaje de problema | ✅ | Prolog calcula probabilidad y nivel bajo/medio/alto. |
-| Manual técnico y usuario | ✅ | `docs/MANUAL_TECNICO.md` y `docs/MANUAL_USUARIO.md`. |
-| Diagrama ER | ✅ | `docs/ER.md`. |
-| Patrón de arquitectura | ✅ | `docs/ARQUITECTURA.md`. |
+| Criterio | Estado | Evidencia |
+|---|---|---|
+| API REST funcional | Cumple | FastAPI y Swagger en `/docs`. |
+| Endpoints organizados | Cumple | Módulos `features/*`. |
+| Patrón de arquitectura | Cumple | `docs/ARQUITECTURA.md`. |
+| Manejo de errores | Cumple | 401, 404, 409 y 422 controlados. |
+| Base de datos conectada | Cumple | SQLite persistente en volumen. |
+| Modelo correcto | Cumple | ER con categorías, preguntas y respuestas separadas. |
+| Persistencia real | Cumple | SQLAlchemy y `seed.sql`; sin FAQ JSON/código. |
+| Login funcional | Cumple | JWT y usuario exigido. |
+| CRUD preguntas | Cumple | `/api/questions` y panel. |
+| CRUD respuestas | Cumple | `/api/answers` y panel. |
+| CRUD categorías | Cumple | `/api/categories` y panel. |
+| Configuración chat ID | Cumple | `settings.telegram_chat_id`. |
+| Bot recibe mensajes | Cumple | Polling `getUpdates`. |
+| Bot consulta API | Cumple | `GET /api/search`. |
+| Respuesta desde BD | Cumple | JOIN lógico Question/Answer en SQLite. |
+| Consulta desconocida | Cumple | `unknown_message` configurable. |
+| Docker Compose | Cumple | API, bot, frontend y volumen. |
+| Manuales y diagramas | Cumple | Carpeta `docs`. |
+| 20 FAQ / 3 categorías | Cumple | 20 preguntas, 20 respuestas y 4 categorías. |
+| Registro de consultas | Cumple | Tabla `query_logs`. |
+| Estadísticas | Cumple | Usuarios, frecuencia y categorías. |
+
+## Penalizaciones Evitadas
+
+- Backend exclusivamente Python.
+- Base SQL real y persistente.
+- Ninguna pregunta o respuesta almacenada en JSON o código Python/JavaScript.
+- API, panel, autenticación, bot y Docker Compose presentes.
+- Token, JWT y rutas configurables por variables de entorno.
+
+## Condiciones Externas
+
+El estudiante todavía debe verificar acceso al repositorio para el auxiliar, entrega en UEDI, puntualidad y un historial real de al menos cinco commits progresivos.

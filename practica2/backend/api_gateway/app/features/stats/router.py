@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.security import get_current_admin
-from app.db.models import Category, Faq, QueryLog
+from app.db.models import QueryLog
 from app.db.session import get_db
 
 router = APIRouter(prefix="/api/stats", tags=["stats"])

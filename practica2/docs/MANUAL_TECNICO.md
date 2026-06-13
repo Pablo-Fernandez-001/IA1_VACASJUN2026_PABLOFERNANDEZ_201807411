@@ -1,141 +1,71 @@
 # Manual Técnico - SmartBot
 
-## Objetivo técnico
+## Objetivo
 
-Implementar un sistema SmartBot con bot de Telegram, API REST, base de datos, panel administrativo y motor lógico Prolog para respuestas frecuentes y diagnósticos dinámicos.
+Implementar un bot de Telegram conectado a una API REST Python y una base SQL. El contenido del bot puede administrarse sin modificar código.
 
 ## Tecnologías
 
 | Tecnología | Uso |
 |---|---|
-| Python 3.11 | Backend y servicios. |
-| FastAPI | API Gateway y Prolog Service. |
-| SQLAlchemy | ORM y persistencia. |
-| SQLite | Base de datos local persistente. |
-| SWI-Prolog | Motor lógico experto. |
-| Docker Compose | Orquestación de servicios. |
-| HTML/CSS/JS | Panel administrativo. |
-| Telegram Bot API | Bot conversacional. |
+| Python 3.11 | Backend y bot. |
+| FastAPI | API REST y OpenAPI. |
+| SQLAlchemy | Modelado y acceso a datos. |
+| SQLite | Persistencia SQL en volumen Docker. |
+| JWT + bcrypt | Sesión administrativa y contraseñas con hash. |
+| Nginx | Panel web y proxy `/api`. |
+| Docker Compose | Ejecución reproducible. |
 
-## Estructura técnica
+## Estructura
 
 ```text
 backend/api_gateway/app
-  core/          configuración y seguridad JWT
+  core/          configuración y seguridad
   db/            sesión, modelos e inicialización
-  features/      módulos por funcionalidad
-  services/      cliente HTTP hacia Prolog
-
-backend/prolog_service
-  app/main.py    genera hechos dinámicos y ejecuta SWI-Prolog
-  prolog/expert_engine.pl  reglas de inferencia
-
-backend/telegram_bot
-  app/bot.py     polling de Telegram y consumo de API REST
+  features/      auth, categories, questions, answers, search, settings, stats
+backend/api_gateway/seeds/seed.sql
+backend/telegram_bot/app/bot.py
+frontend/
+docs/
 ```
-
-## API Gateway
-
-El API Gateway concentra la entrada principal del sistema.
-
-### Módulos
-
-| Módulo | Endpoint base | Responsabilidad |
-|---|---|---|
-| Auth | `/api/auth` | Login y usuario actual. |
-| Categories | `/api/categories` | CRUD de categorías. |
-| FAQs | `/api/faqs` | CRUD y búsqueda de preguntas. |
-| Diagnostics | `/api/diagnostics` | CRUD de síntomas, diagnósticos, reglas y diagnóstico. |
-| Settings | `/api/settings` | Configuración del sistema. |
-| Stats | `/api/stats` | Estadísticas y logs. |
-
-## Prolog Service
-
-El servicio Prolog recibe desde API Gateway:
-
-- Síntomas seleccionados.
-- Diagnósticos activos.
-- Reglas activas.
-- Síntomas requeridos por cada regla.
-
-Luego construye un programa temporal Prolog y consulta `expert_engine.pl`.
-
-### Fórmula usada
-
-```text
-probabilidad = (síntomas_coincidentes / síntomas_requeridos) * peso_regla * probabilidad_base
-```
-
-El resultado se redondea y se clasifica:
-
-| Rango | Nivel |
-|---|---|
-| 0 - 34 | bajo |
-| 35 - 69 | medio |
-| 70 - 100 | alto |
-
-## Archivo Prolog
-
-`backend/prolog_service/prolog/expert_engine.pl` contiene reglas generales, no conocimiento estático de un caso específico.
-
-Predicados principales:
-
-| Predicado | Uso |
-|---|---|
-| `selected/1` | Síntoma seleccionado por el usuario. |
-| `diagnosis/6` | Diagnóstico recibido dinámicamente. |
-| `rule/5` | Regla diagnóstica recibida dinámicamente. |
-| `required_symptom/2` | Relación regla-síntoma. |
-| `count_matched/3` | Cuenta coincidencias. |
-| `missing_symptoms/2` | Calcula síntomas faltantes. |
-| `problem_level/2` | Clasifica el porcentaje. |
-| `diagnostic_result/1` | Construye el JSON final. |
 
 ## Base de datos
 
-La base guarda conocimiento editable:
+La base se configura con `DATABASE_URL`. En Docker usa `sqlite:////data/smartbot.db` y el volumen `smartbot_data`. SQLite está justificado porque la práctica se ejecuta en un solo nodo y no requiere un servidor de base de datos adicional.
 
-- `categories`
-- `faqs`
-- `symptoms`
-- `diagnoses`
-- `diagnostic_rules`
-- `rule_symptoms`
-- `settings`
-- `query_logs`
-- `admin_users`
+No se usan archivos JSON, listas ni diccionarios como almacenamiento de preguntas y respuestas. Los datos iniciales son sentencias `INSERT` en `seed.sql`.
+
+## Búsqueda
+
+`GET /api/search` normaliza mayúsculas y tildes, compara tokens contra el texto y las palabras clave de preguntas activas, selecciona la respuesta activa de mayor prioridad y registra la consulta. Si no hay coincidencia devuelve `unknown_message` desde `settings`.
 
 ## Seguridad
 
-- Login por JWT.
-- Contraseña con hash bcrypt.
-- Endpoints de escritura protegidos.
-- CORS habilitado para facilitar evaluación local.
+- El login entrega un JWT con expiración.
+- Las contraseñas se almacenan con bcrypt.
+- CRUD de escritura, configuración, logs y estadísticas requieren JWT.
+- Token de Telegram, secreto JWT y URL de base de datos se leen de `.env`.
+- `.env` está excluido mediante `.gitignore`.
 
-## Docker Compose
+## Docker
 
-Servicios definidos:
-
-```text
-api-gateway
-prolog-service
-telegram-bot
-frontend
-smartbot_data volume
+```powershell
+Copy-Item .env.example .env
+docker compose up -d --build
+docker compose ps
 ```
 
-Puertos publicados en host para no chocar con `proyecto_f1`:
+Servicios: `api-gateway`, `telegram-bot` y `frontend`. La API tiene healthcheck y los demás servicios esperan a que esté saludable.
 
-```text
-frontend:       http://localhost:8090
-api-gateway:    http://localhost:8100
-prolog-service: http://localhost:8101
+## Respaldo
+
+```powershell
+docker compose exec api-gateway sh -c "cp /data/smartbot.db /data/smartbot-backup.db"
 ```
 
-## Mejores futuras
+## Mejoras futuras
 
-- Migrar SQLite a PostgreSQL.
-- Añadir roles de administrador.
-- Integrar WebSocket para estadísticas en tiempo real.
-- Importar y exportar reglas Prolog desde archivos `.pl`.
-- Agregar pruebas E2E con Playwright.
+- Migraciones Alembic.
+- PostgreSQL para múltiples réplicas.
+- Refresh tokens y rotación de secretos.
+- Índice de búsqueda de texto completo.

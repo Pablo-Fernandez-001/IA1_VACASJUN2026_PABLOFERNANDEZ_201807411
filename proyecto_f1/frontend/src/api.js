@@ -29,6 +29,16 @@ export function deleteSymptom(id) {
   return request(`/api/symptoms/${id}`, { method: 'DELETE' });
 }
 
+export function getFailures() { return request('/api/failures'); }
+export function createFailure(payload) { return request('/api/failures', { method: 'POST', body: JSON.stringify(payload) }); }
+export function updateFailure(id, payload) { return request(`/api/failures/${id}`, { method: 'PUT', body: JSON.stringify(payload) }); }
+export function deleteFailure(id) { return request(`/api/failures/${id}`, { method: 'DELETE' }); }
+
+export function getRecommendations() { return request('/api/recommendations'); }
+export function createRecommendation(payload) { return request('/api/recommendations', { method: 'POST', body: JSON.stringify(payload) }); }
+export function updateRecommendation(id, payload) { return request(`/api/recommendations/${id}`, { method: 'PUT', body: JSON.stringify(payload) }); }
+export function deleteRecommendation(id) { return request(`/api/recommendations/${id}`, { method: 'DELETE' }); }
+
 export function getDiagnosisRules() {
   return request('/api/diagnosis-rules');
 }
@@ -60,3 +70,6 @@ export function getHistoryItem(id) {
 export function deleteHistory(id) {
   return request(`/api/history/${id}`, { method: 'DELETE' });
 }
+
+export function getConfig() { return request('/api/config'); }
+export function updateConfig(payload) { return request('/api/config', { method: 'PUT', body: JSON.stringify(payload) }); }

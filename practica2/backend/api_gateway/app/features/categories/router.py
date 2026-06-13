@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.core.security import get_current_admin
 from app.db.models import Category
 from app.db.session import get_db
@@ -17,7 +18,13 @@ def list_categories(db: Session = Depends(get_db)):
 @router.post("", dependencies=[Depends(get_current_admin)])
 def create_category(payload: CategoryIn, db: Session = Depends(get_db)):
     obj = Category(**payload.model_dump())
-    db.add(obj); db.commit(); db.refresh(obj)
+    db.add(obj)
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "Ya existe una categoria con ese nombre") from exc
+    db.refresh(obj)
     return obj
 
 @router.put("/{category_id}", dependencies=[Depends(get_current_admin)])
@@ -25,10 +32,21 @@ def update_category(category_id: int, payload: CategoryIn, db: Session = Depends
     obj = db.get(Category, category_id)
     if not obj: raise HTTPException(404, "Categoría no encontrada")
     for k,v in payload.model_dump().items(): setattr(obj,k,v)
-    db.commit(); db.refresh(obj); return obj
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "Ya existe una categoria con ese nombre") from exc
+    db.refresh(obj); return obj
 
 @router.delete("/{category_id}", dependencies=[Depends(get_current_admin)])
 def delete_category(category_id: int, db: Session = Depends(get_db)):
     obj = db.get(Category, category_id)
     if not obj: raise HTTPException(404, "Categoría no encontrada")
-    db.delete(obj); db.commit(); return {"ok": True}
+    db.delete(obj)
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "No se puede eliminar una categoria con preguntas asociadas") from exc
+    return {"ok": True}

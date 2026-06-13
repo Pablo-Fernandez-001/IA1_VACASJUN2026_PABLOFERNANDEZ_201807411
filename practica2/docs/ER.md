@@ -4,55 +4,28 @@
 erDiagram
     ADMIN_USERS {
         int id PK
-        string username
+        string username UK
         string password_hash
         boolean is_active
     }
     CATEGORIES {
         int id PK
-        string name
+        string name UK
         text description
     }
-    FAQS {
+    QUESTIONS {
         int id PK
-        text question
-        text answer
+        text text UK
         text keywords
         int category_id FK
         boolean is_active
     }
-    SYMPTOMS {
+    ANSWERS {
         int id PK
-        string code
-        string name
-        text description
-        string category
-        float severity
+        int question_id FK
+        text text
+        int priority
         boolean is_active
-    }
-    DIAGNOSES {
-        int id PK
-        string code
-        string name
-        string category
-        text message
-        text solution_route
-        float base_probability
-        boolean is_active
-    }
-    DIAGNOSTIC_RULES {
-        int id PK
-        string name
-        int diagnosis_id FK
-        float weight
-        text explanation
-        boolean is_active
-    }
-    RULE_SYMPTOMS {
-        int id PK
-        int rule_id FK
-        int symptom_id FK
-        boolean required
     }
     SETTINGS {
         string key PK
@@ -68,9 +41,8 @@ erDiagram
         string matched_type
         string category
     }
-
-    CATEGORIES ||--o{ FAQS : organiza
-    DIAGNOSES ||--o{ DIAGNOSTIC_RULES : posee
-    DIAGNOSTIC_RULES ||--o{ RULE_SYMPTOMS : requiere
-    SYMPTOMS ||--o{ RULE_SYMPTOMS : participa
+    CATEGORIES ||--o{ QUESTIONS : clasifica
+    QUESTIONS ||--o{ ANSWERS : posee
 ```
+
+`QUERY_LOGS` conserva una copia histórica de la consulta y respuesta, por lo que no depende de que una pregunta sea editada o eliminada después.

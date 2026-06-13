@@ -19,3 +19,11 @@ class DiagnosisRecord(BaseModel):
 class TelegramMessage(BaseModel):
     chat_id: str | None = None
     text: str
+
+
+class SystemConfigPayload(BaseModel):
+    bot_id: str = ""
+    bot_active: bool = True
+    welcome_message: str = Field(min_length=2)
+    diagnosis_message: str = Field(min_length=2)
+    no_diagnosis_message: str = Field(min_length=2)

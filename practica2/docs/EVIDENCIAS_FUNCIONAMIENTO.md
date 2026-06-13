@@ -1,20 +1,16 @@
-# Evidencias de funcionamiento
+# Evidencias de Funcionamiento
 
-Esta carpeta incluye una guía de capturas esperadas para la entrega.
+Capturas recomendadas para la entrega:
 
-## Capturas recomendadas
+1. `docker compose ps` con tres servicios activos.
+2. Login exitoso.
+3. Tablas con 20 preguntas y 20 respuestas.
+4. Crear, editar y eliminar una pregunta.
+5. Crear, editar y eliminar una respuesta.
+6. CRUD de categorías.
+7. Configuración de `telegram_chat_id`.
+8. Consulta encontrada y consulta desconocida.
+9. Mensaje enviado y respondido por Telegram.
+10. Dashboard con historial y estadísticas.
 
-1. Login del panel con usuario `IA1-User`.
-2. Dashboard de estadísticas.
-3. CRUD de preguntas frecuentes con 20 registros.
-4. CRUD de categorías.
-5. CRUD de síntomas.
-6. CRUD de diagnósticos.
-7. CRUD de reglas con síntomas asociados.
-8. Prueba de diagnóstico mostrando más de un resultado con porcentajes.
-9. Configuración de `telegram_chat_id`.
-10. Consulta desde Telegram.
-11. Swagger en `/docs`.
-12. Docker Compose corriendo.
-
-Las capturas deben guardarse en la carpeta `evidencias/`.
+El script `scripts/test_api.ps1` genera evidencia textual de health, login, cantidades, búsqueda y logs.

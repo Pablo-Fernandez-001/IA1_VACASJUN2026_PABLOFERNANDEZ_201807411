@@ -15,7 +15,7 @@ class TelegramTestIn(BaseModel):
     text: str = "SmartBot Practica 2: mensaje de prueba."
     chat_id: str | None = None
 
-@router.get("")
+@router.get("", dependencies=[Depends(get_current_admin)])
 def list_settings(db: Session = Depends(get_db)):
     return db.query(Setting).order_by(Setting.key).all()
 

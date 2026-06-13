@@ -1,49 +1,23 @@
 {
   "info": {
-    "name": "SmartBot IA1",
+    "name": "SmartBot IA1 - Practica 2",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [{ "key": "baseUrl", "value": "http://localhost:8100" }],
   "item": [
-    {
-      "name": "Health",
-      "request": {
-        "method": "GET",
-        "url": "http://localhost:8100/api/health"
-      }
-    },
+    { "name": "Health", "request": { "method": "GET", "url": "{{baseUrl}}/api/health" } },
     {
       "name": "Login",
       "request": {
         "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"username\":\"IA1-User\",\"password\":\"IA1-password@_new\"}"
-        },
-        "url": "http://localhost:8100/api/auth/login"
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"username\":\"IA1-User\",\"password\":\"IA1-password@_new\"}" },
+        "url": "{{baseUrl}}/api/auth/login"
       }
     },
-    {
-      "name": "Diagnose",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"symptom_codes\":[\"no_responde\",\"token_vacio\",\"chat_id_malo\"]}"
-        },
-        "url": "http://localhost:8100/api/diagnostics/diagnose"
-      }
-    }
+    { "name": "Listar categorias", "request": { "method": "GET", "url": "{{baseUrl}}/api/categories" } },
+    { "name": "Listar preguntas", "request": { "method": "GET", "url": "{{baseUrl}}/api/questions" } },
+    { "name": "Listar respuestas", "request": { "method": "GET", "url": "{{baseUrl}}/api/answers" } },
+    { "name": "Buscar respuesta", "request": { "method": "GET", "url": "{{baseUrl}}/api/search?q=como%20levanto%20el%20proyecto&telegram_user=postman" } }
   ]
 }

@@ -1,58 +1,43 @@
 # Arquitectura de SmartBot
 
-La práctica utiliza una **arquitectura orientada a servicios**, para evitar un sistema monolítico.
-
 ```mermaid
 flowchart LR
-    U[Usuario Telegram] --> B[telegram-bot]
-    A[Administrador Web] --> F[frontend-web]
-    F --> G[api-gateway]
-    B --> G
-    G --> DB[(SQLite)]
-    G --> P[prolog-service]
-    P --> PL[expert_engine.pl]
+    U[Usuario Telegram] --> T[telegram-bot Python]
+    A[Administrador] --> F[Panel HTML CSS JS]
+    T -->|HTTP REST| API[FastAPI API Gateway]
+    F -->|HTTP REST + JWT| API
+    API --> AUTH[Auth y seguridad]
+    API --> FAQ[Preguntas, respuestas y búsqueda]
+    API --> STATS[Logs y estadísticas]
+    AUTH --> DB[(SQLite)]
+    FAQ --> DB
+    STATS --> DB
 ```
 
-## Responsabilidades
+## Patrón
 
-| Servicio | Responsabilidad |
+La solución usa arquitectura por capas y módulos por funcionalidad:
+
+| Capa | Responsabilidad |
 |---|---|
-| `frontend-web` | Panel administrativo, CRUD y pruebas visuales. |
-| `api-gateway` | Autenticación, CRUD, base de datos, logs, estadísticas y orquestación. |
-| `prolog-service` | Cálculo lógico de diagnósticos, porcentajes y rutas de solución. |
-| `telegram-bot` | Recibir mensajes reales desde Telegram y consumir la API REST. |
-| `SQLite` | Persistencia de preguntas, respuestas, categorías, síntomas, reglas, diagnósticos, usuarios, configuración y logs. |
+| Presentación | Panel administrativo y Telegram. |
+| API | Endpoints, validación Pydantic y manejo HTTP. |
+| Dominio | Autenticación, búsqueda, CRUD y estadísticas. |
+| Persistencia | Modelos SQLAlchemy y SQLite. |
 
-## Flujo de una pregunta FAQ
-
-```mermaid
-sequenceDiagram
-    participant T as Telegram
-    participant B as Bot
-    participant G as API Gateway
-    participant D as SQLite
-    T->>B: Mensaje del usuario
-    B->>G: GET /api/faqs/search?q=...
-    G->>D: Buscar FAQ activa
-    D-->>G: Respuesta o vacío
-    G-->>B: JSON con respuesta
-    B-->>T: Mensaje automático
-```
-
-## Flujo de diagnóstico Prolog
+## Flujo de consulta
 
 ```mermaid
 sequenceDiagram
-    participant F as Frontend/Bot
-    participant G as API Gateway
+    participant U as Usuario
+    participant B as Bot Telegram
+    participant A as API REST
     participant D as SQLite
-    participant P as Prolog Service
-    participant E as SWI-Prolog
-    F->>G: POST /api/diagnostics/diagnose
-    G->>D: Lee síntomas, diagnósticos y reglas
-    G->>P: Envía conocimiento dinámico
-    P->>E: Ejecuta expert_engine.pl + hechos dinámicos
-    E-->>P: Diagnósticos con porcentaje
-    P-->>G: JSON ordenado
-    G-->>F: Diagnósticos + ruta de solución
+    U->>B: Pregunta libre
+    B->>A: GET /api/search?q=...
+    A->>D: Busca preguntas y respuestas activas
+    D-->>A: Coincidencia y respuesta
+    A->>D: Registra usuario, consulta, respuesta y fecha
+    A-->>B: Respuesta JSON
+    B-->>U: Mensaje automático
 ```

@@ -1,149 +1,100 @@
-# Práctica 2 IA1 - SmartBot Diagnóstico Dinámico
+# Práctica 2 IA1 - SmartBot
 
 **Autor:** Pablo Daniel Fernández Chacón  
-**Carnet:** 201807411  
-**Curso:** Inteligencia Artificial 1 - Vacaciones Junio 2026
+**Carnet:** 201807411
 
-SmartBot es un sistema de atención automatizada con bot de Telegram, API REST, base de datos, panel administrativo y motor lógico en Prolog.
-
-La solución se hizo parecida a la Práctica 1 y al proyecto Doctor Byte Fase 1: no es monolítica, tiene servicios separados y la lógica de diagnóstico vive en Prolog. El administrador puede modificar preguntas frecuentes, categorías, síntomas, diagnósticos, reglas, mensajes, categorías, pesos y configuración del chat de Telegram sin tocar código fuente.
+SmartBot responde preguntas frecuentes desde Telegram mediante una API REST desarrollada exclusivamente en Python. Categorías, preguntas, respuestas, administradores, configuración y consultas se almacenan en SQLite; no existen FAQ en JSON ni en el código fuente.
 
 ## Servicios
 
 ```text
-frontend-web       -> Panel administrativo HTML/CSS/JS
-api-gateway        -> FastAPI principal, auth, CRUD, DB, logs y estadísticas
-prolog-service     -> FastAPI + SWI-Prolog para inferencia diagnóstica
-telegram-bot       -> Bot de Telegram que consume la API REST
-sqlite             -> Base persistente en volumen Docker
+frontend (Nginx) -> api-gateway (FastAPI) -> SQLite
+telegram-bot -----------------------------> API REST
 ```
 
-## Credenciales del panel
+SQLite se eligió por ser una base SQL válida, liviana y suficiente para una práctica de un solo nodo. El archivo vive en el volumen Docker `smartbot_data`.
 
-```text
-Usuario: IA1-User
-Contraseña: IA1-password@_new
-```
+## Inicio
 
-## Ejecución con Docker Compose
-
-```bash
-cp .env.example .env
-# opcional: coloca TELEGRAM_BOT_TOKEN en .env
-docker compose up --build
+```powershell
+Copy-Item .env.example .env
+docker compose up -d --build
 ```
 
 Abrir:
 
-```text
-Panel:              http://localhost:8090
-API Gateway docs:   http://localhost:8100/docs
-Prolog Service:     http://localhost:8101/docs
-Health:             http://localhost:8100/api/health
-```
+- Panel: `http://localhost:8090`
+- Swagger: `http://localhost:8100/docs`
+- Health: `http://localhost:8100/api/health`
 
-## Ejecución local sin Docker
-
-### 1. API Gateway
-
-```bash
-cd backend/api_gateway
-python -m venv .venv
-source .venv/bin/activate   # Linux/WSL
-# .\.venv\Scripts\Activate.ps1  # Windows PowerShell
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8100
-```
-
-### 2. Prolog Service
-
-Instalar SWI-Prolog antes de iniciar.
-
-```bash
-cd backend/prolog_service
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8101
-```
-
-### 3. Frontend
-
-```bash
-cd frontend
-python -m http.server 8090
-```
-
-## Bot de Telegram
-
-1. Crear un bot nuevo para Practica 2 con `@BotFather`, usando un token distinto al del proyecto.
-2. Copiar el token en `.env`:
-
-```env
-TELEGRAM_BOT_TOKEN=tu_token_real
-```
-
-3. Levantar con Docker Compose.
-4. Enviar `/start` al bot.
-5. Desde el panel se puede configurar el `telegram_chat_id` de este chat separado.
-6. Opcional: usar `scripts/open_telegram_bot_windows.ps1`, `scripts/telegram_chat_id_windows.ps1` y `scripts/telegram_test_windows.ps1` para abrir el bot, detectar el chat y enviar una prueba.
-
-Sin token el sistema sigue funcionando: API, panel, CRUD, diagnósticos y estadísticas.
-
-## Funcionalidades principales
-
-- Login con JWT.
-- CRUD de categorías.
-- CRUD de preguntas frecuentes y respuestas.
-- CRUD de síntomas.
-- CRUD de diagnósticos.
-- CRUD de reglas diagnósticas.
-- Asociación dinámica de síntomas a reglas.
-- Consulta de FAQ desde bot y panel.
-- Diagnóstico por síntomas usando Prolog.
-- Más de un diagnóstico posible con porcentaje.
-- Ruta de solución por diagnóstico.
-- Porcentaje de problema detectado.
-- Registro de consultas.
-- Estadísticas de uso.
-- Configuración del chat o grupo de Telegram.
-- Documentación técnica, usuario, ER y arquitectura.
-
-## Estructura
+Credenciales exigidas:
 
 ```text
-practica2_smartbot_201807411/
-  backend/
-    api_gateway/
-    prolog_service/
-    telegram_bot/
-  frontend/
-  docs/
-  scripts/
-  postman/
-  docker-compose.yml
-  README.md
+Usuario: IA1-User
+Password: IA1-password@_new
 ```
+
+## Telegram
+
+1. Crear un bot con `@BotFather`.
+2. Colocar el token en `TELEGRAM_BOT_TOKEN` dentro de `.env`.
+3. Reiniciar con `docker compose up -d`.
+4. Enviar `/start` o una pregunta al bot.
+
+El token no se incluye en el repositorio. Sin token, API y panel siguen funcionando.
+
+## Datos iniciales
+
+`backend/api_gateway/seeds/seed.sql` registra:
+
+- 4 categorías.
+- 20 preguntas.
+- 20 respuestas asociadas.
+- Configuración inicial del bot.
+
+La semilla se ejecuta solo cuando la tabla `questions` está vacía.
+
+## API principal
+
+| Recurso | Endpoints |
+|---|---|
+| Autenticación | `POST /api/auth/login`, `GET /api/auth/me` |
+| Categorías | `GET/POST /api/categories`, `PUT/DELETE /api/categories/{id}` |
+| Preguntas | `GET/POST /api/questions`, `PUT/DELETE /api/questions/{id}` |
+| Respuestas | `GET/POST /api/answers`, `PUT/DELETE /api/answers/{id}` |
+| Consulta | `GET /api/search?q=...&telegram_user=...` |
+| Configuración | `GET /api/settings`, `PUT /api/settings/{key}` |
+| Estadísticas | `GET /api/stats`, `GET /api/stats/logs` |
+
+Las operaciones de escritura, configuración y estadísticas requieren JWT.
+
+## Pruebas
+
+```powershell
+.\scripts\test_api.ps1
+docker compose config -q
+node --check frontend\app.js
+```
+
+Prueba rápida:
+
+```powershell
+Invoke-RestMethod 'http://localhost:8100/api/search?q=como%20levanto%20el%20proyecto&telegram_user=manual'
+```
+
+Detener servicios:
+
+```powershell
+docker compose down
+```
+
+No usar `-v` si se desea conservar la base de datos.
 
 ## Documentación
 
 - `docs/MANUAL_TECNICO.md`
 - `docs/MANUAL_USUARIO.md`
-- `docs/REQUERIMIENTOS.md`
 - `docs/ARQUITECTURA.md`
 - `docs/ER.md`
-- `docs/CASOS_PRUEBA.md`
-- `docs/EXPLICACION_CODIGO.md`
 - `docs/HOJA_CUMPLIMIENTO.md`
-
-## Commits sugeridos
-
-```bash
-git init
-git add .
-git commit -m "feat: estructura base no monolitica de SmartBot"
-git commit --allow-empty -m "feat: api gateway con autenticacion y base de datos"
-git commit --allow-empty -m "feat: motor prolog dinamico para diagnosticos"
-git commit --allow-empty -m "feat: panel administrativo y crud completo"
-git commit --allow-empty -m "docs: manuales tecnicos usuario y evidencias"
-```
+- `docs/CASOS_PRUEBA.md`

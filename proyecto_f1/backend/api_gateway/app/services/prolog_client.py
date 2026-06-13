@@ -32,6 +32,30 @@ class PrologClient:
     async def delete_symptom(self, symptom_id: str) -> dict:
         return await self._request("DELETE", f"/symptoms/{symptom_id}")
 
+    async def failures(self) -> list[dict]:
+        return (await self._request("GET", "/failures"))["failures"]
+
+    async def create_failure(self, payload: dict) -> dict:
+        return await self._request("POST", "/failures", json=payload)
+
+    async def update_failure(self, failure_id: str, payload: dict) -> dict:
+        return await self._request("PUT", f"/failures/{failure_id}", json=payload)
+
+    async def delete_failure(self, failure_id: str) -> dict:
+        return await self._request("DELETE", f"/failures/{failure_id}")
+
+    async def recommendations(self) -> list[dict]:
+        return (await self._request("GET", "/recommendations"))["recommendations"]
+
+    async def create_recommendation(self, payload: dict) -> dict:
+        return await self._request("POST", "/recommendations", json=payload)
+
+    async def update_recommendation(self, recommendation_id: str, payload: dict) -> dict:
+        return await self._request("PUT", f"/recommendations/{recommendation_id}", json=payload)
+
+    async def delete_recommendation(self, recommendation_id: str) -> dict:
+        return await self._request("DELETE", f"/recommendations/{recommendation_id}")
+
     async def diagnosis_rules(self) -> list[dict]:
         return (await self._request("GET", "/diagnosis-rules"))["diagnosis_rules"]
 
