@@ -1,12 +1,14 @@
 import json
+import re
 import shutil
 import subprocess
+import unicodedata
 from pathlib import Path
 from threading import Lock
 from typing import Callable
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 ENGINE_PATH = BASE_DIR / "knowledge_base" / "doctor_byte.pl"
@@ -54,6 +56,18 @@ class DiagnosisRulePayload(BaseModel):
     support_symptoms: list[str] = Field(default_factory=list)
     min_score: int = Field(default=20, ge=0, le=100)
     enabled: bool = True
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def normalize_id(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+        normalized = unicodedata.normalize("NFKD", value.strip().lower())
+        normalized = "".join(char for char in normalized if not unicodedata.combining(char))
+        normalized = re.sub(r"[^a-z0-9]+", "_", normalized).strip("_")
+        if normalized and normalized[0].isdigit():
+            normalized = f"regla_{normalized}"
+        return normalized
 
 
 def run_prolog(payload: dict) -> dict:

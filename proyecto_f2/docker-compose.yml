@@ -1,0 +1,44 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: smartwarehouse-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: sqlite:////data/warehouse.db
+      PROLOG_PATH: /app/prolog/warehouse.pl
+    volumes:
+      - smartwarehouse_data:/data
+    ports:
+      - "${BACKEND_PORT:-8400}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - smartwarehouse-net
+
+  frontend:
+    image: nginx:1.27-alpine
+    container_name: smartwarehouse-frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${FRONTEND_PORT:-8401}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - smartwarehouse-net
+
+networks:
+  smartwarehouse-net:
+    driver: bridge
+
+volumes:
+  smartwarehouse_data:

@@ -239,10 +239,11 @@ async def diagnose(payload: DiagnoseRequest, db: Session = Depends(get_db)):
             telegram_sent = "bot_inactivo"
         else:
             try:
+                chat_id = payload.telegram_chat_id or config.bot_id or settings.telegram_default_chat_id or None
                 text = build_telegram_text(payload.user_name, payload.symptoms, result)
                 response = await TelegramClient().send_message(
                     text=text,
-                    chat_id=payload.telegram_chat_id or config.bot_id or None,
+                    chat_id=chat_id,
                 )
                 telegram_sent = "yes" if response.get("sent") else "no_configurado"
             except Exception:

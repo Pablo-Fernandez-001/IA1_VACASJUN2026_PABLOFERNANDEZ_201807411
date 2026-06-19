@@ -1,0 +1,1 @@
+"""SmartInvoice backend package."""

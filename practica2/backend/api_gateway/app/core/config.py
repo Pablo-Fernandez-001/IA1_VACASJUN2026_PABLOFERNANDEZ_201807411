@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     admin_username: str = "IA1-User"
     admin_password: str = "IA1-password@_new"
     telegram_bot_token: str = ""
+    telegram_default_chat_id: str = ""
     cors_origins: str = "http://localhost:8090,http://127.0.0.1:8090"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

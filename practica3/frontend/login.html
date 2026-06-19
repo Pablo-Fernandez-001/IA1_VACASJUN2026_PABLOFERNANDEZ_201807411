@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SmartInvoice - Login</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="login-wrap">
+    <section class="login-panel">
+      <h1>SmartInvoice</h1>
+      <p class="muted">Procesamiento inteligente de facturas con OCR, CV y RPA.</p>
+      <form id="loginForm" class="grid">
+        <label>Usuario<input id="username" autocomplete="username" value="admin"></label>
+        <label>Contrasena<input id="password" type="password" autocomplete="current-password" value="admin123"></label>
+        <button type="submit">Ingresar</button>
+      </form>
+      <hr>
+      <h2>Crear usuario</h2>
+      <form id="registerForm" class="grid">
+        <label>Usuario<input id="r_username"></label>
+        <label>Correo<input id="r_email" type="email"></label>
+        <label>Nombre<input id="r_full_name"></label>
+        <label>Contrasena<input id="r_password" type="password"></label>
+        <button class="secondary" type="submit">Registrar</button>
+      </form>
+      <p id="message" class="message"></p>
+    </section>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

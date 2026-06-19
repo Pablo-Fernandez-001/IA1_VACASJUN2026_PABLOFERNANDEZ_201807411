@@ -1,0 +1,9 @@
+# Local runtime artifacts
+*.db
+*.sqlite
+*.sqlite3
+uploads/
+reports/
+
+# Large local evidence videos. Keep them on disk, not in GitHub.
+proyecto_f1/docs/videos/

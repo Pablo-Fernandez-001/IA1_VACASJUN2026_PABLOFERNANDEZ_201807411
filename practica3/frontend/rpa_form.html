@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SmartInvoice - Formulario RPA</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="content">
+    <section class="panel">
+      <h1>Formulario simulado RPA</h1>
+      <form id="rpaForm" class="form-grid">
+        <label>No. factura<input id="invoice_number"></label>
+        <label>Proveedor<input id="provider_name"></label>
+        <label>NIT<input id="provider_nit"></label>
+        <label>Total<input id="total"></label>
+        <label>Estado<select id="status"><option>Procesado</option><option>Pendiente</option><option>Error</option><option>Rechazado</option></select></label>
+        <button id="submit_rpa" type="submit">Registrar</button>
+      </form>
+      <p id="rpa_result" class="message"></p>
+    </section>
+  </main>
+  <script>
+    document.querySelector("#rpaForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const data = {
+        invoice_number: invoice_number.value,
+        provider_name: provider_name.value,
+        provider_nit: provider_nit.value,
+        total: total.value,
+        status: status.value,
+      };
+      localStorage.setItem("smartinvoice_rpa_last", JSON.stringify(data));
+      rpa_result.classList.add("ready");
+      rpa_result.textContent = `Registro simulado completado: ${data.invoice_number} - ${data.provider_name} - Q ${data.total}`;
+    });
+  </script>
+</body>
+</html>

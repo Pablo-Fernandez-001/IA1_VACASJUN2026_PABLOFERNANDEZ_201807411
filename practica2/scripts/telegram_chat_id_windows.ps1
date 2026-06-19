@@ -84,5 +84,5 @@ if ($SaveFirst -and $ChatList.Count -gt 0) {
     if (-not $Preferred) { $Preferred = $ChatList | Select-Object -First 1 }
     Write-Host "Chat elegido para Practica 2: $($Preferred.chat_id)" -ForegroundColor Green
     Write-Host "Guarda este valor en el panel, Configuracion, clave telegram_chat_id." -ForegroundColor Cyan
-    Set-EnvValue "TELEGRAM_SMARTBOT_LAST_CHAT_ID" $Preferred.chat_id
+    Set-EnvValue "TELEGRAM_DEFAULT_CHAT_ID" $Preferred.chat_id
 }

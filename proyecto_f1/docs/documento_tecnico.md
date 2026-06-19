@@ -1,5 +1,7 @@
 # Documento Técnico - Doctor Byte
 
+> La explicación completa de arquitectura, tecnologías, flujos y cada archivo del proyecto está en el [Manual Técnico](manual_tecnico.md).
+
 ## Objetivo
 
 Diagnosticar fallas de computadoras mediante reglas declarativas reales en SWI-Prolog e integrar el resultado con Python, web y Telegram.

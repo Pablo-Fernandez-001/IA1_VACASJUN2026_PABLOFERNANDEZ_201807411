@@ -5,8 +5,17 @@ async function request(path, options = {}) {
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const detail = data?.detail;
+    const message = typeof detail === 'string'
+      ? detail
+      : Array.isArray(detail)
+        ? detail.map((item) => item.msg || JSON.stringify(item)).join('; ')
+        : JSON.stringify(detail || data || `Error HTTP ${res.status}`);
+    throw new Error(message);
+  }
+  return data;
 }
 
 export function getKnowledge() {

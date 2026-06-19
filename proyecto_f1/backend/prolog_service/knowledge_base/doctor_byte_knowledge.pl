@@ -25,6 +25,7 @@ symptom(virus_popups, 'Ventanas emergentes o comportamiento extrano', seguridad,
 symptom(actualizacion_fallida, 'Actualizacion fallida del sistema', sistema, 3).
 symptom(bateria_no_carga, 'Bateria no carga', energia, 4).
 symptom(fecha_hora_se_reinicia, 'Fecha y hora se reinician', motherboard, 3).
+symptom(pantalla_parpadea, 'parpadeos constantes', video, 2).
 
 failure(fuente_poder_danada, 'Fuente de poder danada o sin energia', hardware, critica, 'El equipo no recibe energia estable desde la fuente.').
 failure(falla_ram, 'Memoria RAM defectuosa o mal instalada', hardware, alta, 'Los errores de memoria impiden un arranque estable.').
@@ -39,6 +40,7 @@ failure(audio_driver, 'Controlador de audio incorrecto', software, baja, 'El dis
 failure(bateria_cargador, 'Bateria o cargador con falla', hardware, media, 'La bateria o el cargador no entregan carga estable.').
 failure(pila_cmos, 'Pila CMOS agotada', motherboard, baja, 'La placa madre pierde fecha y configuracion al apagarse.').
 failure(bajo_rendimiento_general, 'Bajo rendimiento por saturacion de recursos', rendimiento, media, 'Procesos, memoria o almacenamiento estan saturados.').
+failure(falla_tpu, 'falla el tpu', hardware, baja, 'el tpu anda falladno').
 
 recommendation(rec_fuente_1, fuente_poder_danada, 'Verificar cable, toma electrica y regulador.', 1).
 recommendation(rec_fuente_2, fuente_poder_danada, 'Probar una fuente compatible conocida.', 2).
@@ -61,11 +63,11 @@ recommendation(rec_usb_2, puertos_usb_danados, 'Reinstalar controladores USB del
 recommendation(rec_audio_1, audio_driver, 'Verificar salida y volumen seleccionados.', 1).
 recommendation(rec_audio_2, audio_driver, 'Reinstalar el controlador de audio.', 2).
 recommendation(rec_bateria_1, bateria_cargador, 'Probar un cargador compatible.', 1).
-recommendation(rec_bateria_2, bateria_cargador, 'Evaluar bateria y puerto de carga.', 2).
 recommendation(rec_cmos_1, pila_cmos, 'Cambiar la pila CR2032.', 1).
 recommendation(rec_cmos_2, pila_cmos, 'Configurar fecha y guardar cambios en BIOS.', 2).
 recommendation(rec_perf_1, bajo_rendimiento_general, 'Revisar procesos de inicio y uso de recursos.', 1).
 recommendation(rec_perf_2, bajo_rendimiento_general, 'Liberar espacio y evaluar ampliacion de RAM o SSD.', 2).
+recommendation(rec_bateria_2, bateria_cargador, 'Evaluar bateria y puerto de carga. cambio', 2).
 
 solution_step(fuente_poder_danada, 1, 'Desconectar el equipo y revisar conexiones de energia.').
 solution_step(fuente_poder_danada, 2, 'Probar toma, cable y fuente compatible.').
@@ -93,6 +95,7 @@ solution_step(pila_cmos, 1, 'Apagar y desconectar el equipo.').
 solution_step(pila_cmos, 2, 'Cambiar CR2032 y configurar BIOS.').
 solution_step(bajo_rendimiento_general, 1, 'Abrir el administrador de tareas.').
 solution_step(bajo_rendimiento_general, 2, 'Reducir inicio, liberar espacio y evaluar mejoras.').
+solution_step(falla_tpu, 1, 'reiniciar el servidor').
 
 diagnosis_rule(regla_fuente, fuente_poder_danada, [no_enciende, sin_led], [apagones_repentinos], 30, true).
 diagnosis_rule(regla_ram, falla_ram, [beeps_arranque, pantalla_azul], [reinicios_inesperados, programas_se_cierran], 25, true).
@@ -107,3 +110,4 @@ diagnosis_rule(regla_audio, audio_driver, [sonido_no_funciona], [actualizacion_f
 diagnosis_rule(regla_bateria, bateria_cargador, [bateria_no_carga], [apagones_repentinos, no_enciende], 20, true).
 diagnosis_rule(regla_cmos, pila_cmos, [fecha_hora_se_reinicia], [error_sistema_operativo], 20, true).
 diagnosis_rule(regla_rendimiento, bajo_rendimiento_general, [lentitud_general], [disco_100, programas_se_cierran, virus_popups], 20, true).
+diagnosis_rule(fallo_tpu_2, falla_tpu, [no_enciende, ventiladores_giran], [sin_led], 25, true).

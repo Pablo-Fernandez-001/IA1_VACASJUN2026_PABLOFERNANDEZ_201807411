@@ -80,6 +80,17 @@ function lines(value) {
     .filter(Boolean);
 }
 
+function normalizeId(value, prefix = 'regla') {
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return /^\d/.test(normalized) ? `${prefix}_${normalized}` : normalized;
+}
+
 function ruleToForm(rule) {
   return {
     ...rule,
@@ -90,7 +101,7 @@ function ruleToForm(rule) {
 
 function formToRule(form) {
   return {
-    id: form.id.trim(),
+    id: normalizeId(form.id),
     failure_id: form.failure_id,
     enabled: Boolean(form.enabled),
     min_score: Number(form.min_score || 0),
@@ -173,6 +184,20 @@ function App() {
     setSelected((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
   }
 
+  function setRuleSymptomRole(id, role) {
+    setRuleForm((current) => {
+      const required = splitList(current.required_symptoms).filter((item) => item !== id);
+      const support = splitList(current.support_symptoms).filter((item) => item !== id);
+      if (role === 'required') required.push(id);
+      if (role === 'support') support.push(id);
+      return {
+        ...current,
+        required_symptoms: required.join(', '),
+        support_symptoms: support.join(', '),
+      };
+    });
+  }
+
   async function handleDiagnose() {
     setError('');
     if (selected.length === 0) {
@@ -226,6 +251,10 @@ function App() {
     setError('');
     try {
       const payload = formToRule(ruleForm);
+      if (!payload.id) throw new Error('Escribe un ID valido para la regla.');
+      if (payload.required_symptoms.length + payload.support_symptoms.length === 0) {
+        throw new Error('Selecciona al menos un sintoma requerido o de apoyo.');
+      }
       if (editingRuleId) {
         await updateDiagnosisRule(editingRuleId, payload);
       } else {
@@ -445,7 +474,14 @@ function App() {
             <form className="editor-form" onSubmit={handleSaveRule}>
               <h3>{editingRuleId ? 'Editar regla' : 'Nueva regla'}</h3>
               <label>ID</label>
-              <input value={ruleForm.id} onChange={(e) => setRuleForm({ ...ruleForm, id: e.target.value })} placeholder="regla_gpu_temporal" required />
+              <input
+                value={ruleForm.id}
+                onChange={(e) => setRuleForm({ ...ruleForm, id: e.target.value })}
+                onBlur={() => setRuleForm((current) => ({ ...current, id: normalizeId(current.id) }))}
+                placeholder="regla_gpu_temporal"
+                required
+              />
+              <small className="field-help">Se permiten palabras normales; el ID se convierte automaticamente a minusculas y guiones bajos.</small>
               <label>Falla diagnosticada</label>
               <select value={ruleForm.failure_id} onChange={(e) => setRuleForm({ ...ruleForm, failure_id: e.target.value })} required>
                 <option value="">Selecciona una falla</option>
@@ -453,10 +489,20 @@ function App() {
               </select>
               <label>Puntaje minimo</label>
               <input type="number" min="0" max="100" value={ruleForm.min_score} onChange={(e) => setRuleForm({ ...ruleForm, min_score: e.target.value })} placeholder="30" />
-              <label>Sintomas requeridos</label>
-              <textarea value={ruleForm.required_symptoms} onChange={(e) => setRuleForm({ ...ruleForm, required_symptoms: e.target.value })} placeholder="pantalla_negra, ventiladores_giran" />
-              <label>Sintomas de apoyo</label>
-              <textarea value={ruleForm.support_symptoms} onChange={(e) => setRuleForm({ ...ruleForm, support_symptoms: e.target.value })} placeholder="beeps_arranque, reinicios_inesperados" />
+              <label>Sintomas de la regla</label>
+              <div className="rule-symptom-picker">
+                {symptoms.map((symptom) => {
+                  const required = splitList(ruleForm.required_symptoms).includes(symptom.id);
+                  const support = splitList(ruleForm.support_symptoms).includes(symptom.id);
+                  return (
+                    <div className="rule-symptom-row" key={symptom.id}>
+                      <div><b>{symptom.name}</b><small>{symptom.id}</small></div>
+                      <button className={required ? 'active required' : ''} type="button" onClick={() => setRuleSymptomRole(symptom.id, required ? 'none' : 'required')}>Requerido</button>
+                      <button className={support ? 'active support' : ''} type="button" onClick={() => setRuleSymptomRole(symptom.id, support ? 'none' : 'support')}>Apoyo</button>
+                    </div>
+                  );
+                })}
+              </div>
               <div className="switch-row">
                 <input type="checkbox" checked={ruleForm.enabled} onChange={(e) => setRuleForm({ ...ruleForm, enabled: e.target.checked })} />
                 <span>Regla activa</span>

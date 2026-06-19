@@ -1,0 +1,81 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: smartinvoice-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-smartinvoice}
+      POSTGRES_USER: ${POSTGRES_USER:-smartinvoice}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartinvoice}
+    volumes:
+      - smartinvoice_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - smartinvoice-net
+
+  backend:
+    build: ./backend
+    container_name: smartinvoice-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://smartinvoice:smartinvoice@db:5432/smartinvoice
+      UPLOAD_DIR: /app/uploads
+      REPORT_DIR: /app/reports
+      RPA_FORM_URL: http://frontend/rpa_form.html
+      JWT_SECRET: ${JWT_SECRET:-smartinvoice-docker-secret}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-smartinvoice@example.local}
+      SMTP_TLS: ${SMTP_TLS:-true}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./reports:/app/reports
+      - ./data:/app/data:ro
+    ports:
+      - "${BACKEND_PORT:-8300}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - smartinvoice-net
+
+  frontend:
+    image: nginx:1.27-alpine
+    container_name: smartinvoice-frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${FRONTEND_PORT:-8301}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - smartinvoice-net
+
+networks:
+  smartinvoice-net:
+    driver: bridge
+
+volumes:
+  smartinvoice_pgdata:

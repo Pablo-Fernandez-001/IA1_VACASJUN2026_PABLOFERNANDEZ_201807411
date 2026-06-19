@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./doctor_byte.db"
     prolog_service_url: str = "http://localhost:8001"
     telegram_service_url: str = "http://localhost:8002"
+    telegram_default_chat_id: str = ""
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080"
 
     model_config = SettingsConfigDict(env_file=(PROJECT_ENV, ".env"), extra="ignore")

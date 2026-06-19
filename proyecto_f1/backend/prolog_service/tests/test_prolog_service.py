@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 import pytest
+import shutil
+from app import main as main_module
 from app.main import app
 
 client = TestClient(app)
@@ -57,6 +59,35 @@ def test_diagnose_returns_ranked_alternatives_for_partial_match():
     assert "problem_percentage" in diagnostics[0]
     assert "effectiveness_probability" in diagnostics[0]
     assert "solution_steps" in diagnostics[0]
+
+
+def test_new_symptom_can_be_used_in_a_new_rule(tmp_path, monkeypatch):
+    temporary_knowledge = tmp_path / "doctor_byte_knowledge.pl"
+    shutil.copy2(main_module.KNOWLEDGE_PATH, temporary_knowledge)
+    monkeypatch.setattr(main_module, "KNOWLEDGE_PATH", temporary_knowledge)
+
+    symptom = client.post(
+        "/symptoms",
+        json={"id": "pantalla_prueba", "name": "Pantalla de prueba", "category": "video", "weight": 2},
+    )
+    assert symptom.status_code == 200
+
+    rule = client.post(
+        "/diagnosis-rules",
+        json={
+            "id": "Regla Pantalla Prueba",
+            "failure_id": "falla_video_gpu",
+            "required_symptoms": ["pantalla_prueba"],
+            "support_symptoms": [],
+            "min_score": 20,
+            "enabled": True,
+        },
+    )
+    assert rule.status_code == 200
+    assert rule.json()["id"] == "regla_pantalla_prueba"
+
+    saved_rules = client.get("/diagnosis-rules").json()["diagnosis_rules"]
+    assert any(item["id"] == "regla_pantalla_prueba" for item in saved_rules)
 
 
 @pytest.mark.parametrize(("symptoms", "expected_id"), DIAGNOSIS_CASES)

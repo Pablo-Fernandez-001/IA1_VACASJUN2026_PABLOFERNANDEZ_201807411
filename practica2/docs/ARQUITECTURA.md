@@ -1,5 +1,7 @@
 # Arquitectura de SmartBot
 
+> La explicación completa de cada servicio, módulo, función y decisión está en el [Manual Técnico](MANUAL_TECNICO.md).
+
 ```mermaid
 flowchart LR
     U[Usuario Telegram] --> T[telegram-bot Python]
@@ -16,7 +18,17 @@ flowchart LR
 
 ## Patrón
 
-La solución usa arquitectura por capas y módulos por funcionalidad:
+La solución usa una arquitectura por funcionalidades con capas internas. Cada capacidad del negocio tiene un router independiente en `app/features`:
+
+- `auth`: autenticación y sesión.
+- `categories`: clasificación de FAQ.
+- `questions`: intenciones consultables.
+- `answers`: respuestas priorizadas.
+- `search`: normalización, puntuación y registro.
+- `settings`: configuración y prueba Telegram.
+- `stats`: agregaciones e historial.
+
+Las capas internas son:
 
 | Capa | Responsabilidad |
 |---|---|
@@ -24,6 +36,8 @@ La solución usa arquitectura por capas y módulos por funcionalidad:
 | API | Endpoints, validación Pydantic y manejo HTTP. |
 | Dominio | Autenticación, búsqueda, CRUD y estadísticas. |
 | Persistencia | Modelos SQLAlchemy y SQLite. |
+
+Se eligió este patrón para mantener separadas la presentación, la seguridad, cada funcionalidad y el almacenamiento. Web y Telegram comparten la misma API y la misma base de datos, evitando duplicar respuestas dentro del bot.
 
 ## Flujo de consulta
 

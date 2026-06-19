@@ -94,7 +94,9 @@ Invoke-RestMethod -Method Post -Uri 'http://localhost:8000/api/diagnose' -Conten
 ## Documentación
 
 - `docs/documento_tecnico.md`
+- `docs/manual_tecnico.md`
 - `docs/manual_usuario.md`
+- `docs/prompt_canva_ai.md`
 - `docs/arquitectura.mmd`
 - `docs/HOJA_CUMPLIMIENTO.md`
 - `docs/guia_verificacion.md`

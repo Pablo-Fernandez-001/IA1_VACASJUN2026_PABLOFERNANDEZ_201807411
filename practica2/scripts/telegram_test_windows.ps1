@@ -24,11 +24,11 @@ if (-not $Token) {
 }
 
 if (-not $ChatId) {
-    $ChatId = Get-EnvValue "TELEGRAM_SMARTBOT_LAST_CHAT_ID"
+    $ChatId = Get-EnvValue "TELEGRAM_DEFAULT_CHAT_ID"
 }
 
 if (-not $ChatId) {
-    throw "No hay chat_id. Ejecuta .\scripts\telegram_chat_id_windows.ps1 -SaveFirst despues de enviar /start al bot de Practica 2."
+    throw "No hay chat_id. Ejecuta .\scripts\telegram_chat_id_windows.ps1 -SaveFirst despues de enviar /start al bot de Practica 2 o define TELEGRAM_DEFAULT_CHAT_ID en .env."
 }
 
 $Payload = @{

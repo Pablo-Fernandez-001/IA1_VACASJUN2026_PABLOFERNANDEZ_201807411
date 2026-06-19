@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from app.core.config import settings
 from app.core.security import get_current_admin
 from app.db.models import Setting
 from app.db.session import get_db
@@ -39,5 +40,5 @@ def delete_setting(key: str, db: Session = Depends(get_db)):
 @router.post("/telegram/test", dependencies=[Depends(get_current_admin)])
 def send_telegram_test(payload: TelegramTestIn, db: Session = Depends(get_db)):
     configured = db.get(Setting, "telegram_chat_id")
-    chat_id = payload.chat_id or (configured.value if configured else "")
+    chat_id = payload.chat_id or (configured.value if configured and configured.value else settings.telegram_default_chat_id)
     return send_telegram_message(chat_id=chat_id, text=payload.text)

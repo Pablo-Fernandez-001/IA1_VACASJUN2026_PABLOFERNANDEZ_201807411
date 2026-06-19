@@ -1,5 +1,7 @@
 # Explicación del Código
 
+> Esta página es un índice rápido. La explicación paso a paso de cada archivo, clase, función, endpoint, tabla, script y componente frontend está en el [Manual Técnico](MANUAL_TECNICO.md).
+
 - `app/main.py`: crea FastAPI y registra routers.
 - `app/core/security.py`: JWT, bcrypt y dependencia de administrador.
 - `app/db/models.py`: entidades SQLAlchemy.

@@ -1,15 +1,42 @@
 flowchart LR
-    U[Usuario Web] --> F[React + Nginx]
-    A[Administrador] --> F
-    T[Usuario Telegram] <--> TS[Telegram Service]
-    F -->|REST| G[API Gateway Python]
-    TS -->|REST| G
-    G -->|REST| P[Prolog Service Python]
-    P -->|subprocess| SWI[SWI-Prolog]
-    SWI --> KB[(doctor_byte_knowledge.pl)]
-    G --> DB[(SQLite auxiliar)]
+    UW[Usuario web]
+    AD[Administrador]
+    UT[Usuario Telegram]
 
-    note1[SQLite: historial y configuracion]
-    note2[Prolog: sintomas fallas recomendaciones reglas e inferencia]
-    DB --- note1
-    KB --- note2
+    subgraph Presentacion[Funcionalidad de presentacion]
+        NG[Nginx]
+        RE[React + Vite]
+    end
+
+    subgraph Aplicacion[Funcionalidad de aplicacion]
+        GW[API Gateway FastAPI]
+        DB[(SQLite: historial y configuracion)]
+    end
+
+    subgraph Experto[Funcionalidad de conocimiento experto]
+        PS[Prolog Service FastAPI]
+        SWI[SWI-Prolog]
+        KB[(doctor_byte_knowledge.pl)]
+    end
+
+    subgraph Mensajeria[Funcionalidad de mensajeria]
+        TS[Telegram Service]
+        TAPI[Telegram Bot API]
+    end
+
+    UW --> NG --> RE
+    AD --> NG
+    RE -->|REST /api| GW
+    GW -->|REST| PS
+    PS -->|JSON por stdin/stdout| SWI
+    SWI -->|consult, assertz, retractall| KB
+    GW --> DB
+
+    UT <--> TAPI
+    TAPI <--> TS
+    TS -->|REST| GW
+
+    NOTE1[Prolog es la fuente de conocimiento y el motor de inferencia]
+    NOTE2[SQLite no participa en el diagnostico]
+    KB --- NOTE1
+    DB --- NOTE2
