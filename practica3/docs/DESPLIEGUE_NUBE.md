@@ -2,10 +2,11 @@
 
 ## Imagen unificada
 
-Desde la raiz del repositorio:
+Desde la carpeta de la practica:
 
 ```powershell
-docker build -f practica3/Dockerfile.cloud -t smartinvoice-cloud .
+cd practica3
+docker build -f Dockerfile.cloud -t smartinvoice-cloud .
 docker run --rm -p 8500:8000 -e DATABASE_URL=sqlite:////app/smartinvoice.db -e JWT_SECRET=local-cloud smartinvoice-cloud
 ```
 
@@ -14,7 +15,7 @@ Abrir `http://localhost:8500/login.html`.
 ## Render Blueprint
 
 1. Conectar el repositorio de GitHub a Render.
-2. Crear un Blueprint usando `practica3/render.yaml`.
+2. Crear un Blueprint usando `practica3/render.yaml`; el `rootDir` limita el contexto a la practica.
 3. Completar las variables SMTP opcionales.
 4. Esperar el health check `/api/health`.
 5. Copiar la URL asignada a `PUBLIC_URL` y al README.

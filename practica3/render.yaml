@@ -2,7 +2,8 @@ services:
   - type: web
     name: smartinvoice-ia1
     runtime: docker
-    dockerfilePath: ./practica3/Dockerfile.cloud
+    rootDir: practica3
+    dockerfilePath: ./Dockerfile.cloud
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
