@@ -1,0 +1,8 @@
+Fecha: 2026-06-19 America/Guatemala
+Endpoint: POST /api/invoices/seed-demo
+Documentos enviados: 20
+Procesados: 18
+Rechazados por duplicado: 2
+Errores OCR: 0
+
+Explicacion: antes del lote se habian cargado manualmente factura_001.pdf y factura_005.png para las pruebas individuales. El lote reconocio correctamente esos dos documentos como duplicados por numero, proveedor y total. Los otros 18 documentos quedaron Procesados. En una base limpia, las 20 facturas del dataset son unicas; factura_011 a factura_020 se generan con numeros, NIT, proveedores, fechas y montos distintos.

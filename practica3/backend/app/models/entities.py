@@ -14,8 +14,12 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(160), unique=True, index=True)
     full_name: Mapped[str] = mapped_column(String(160), default="")
     password_hash: Mapped[str] = mapped_column(String(220))
+    role: Mapped[str] = mapped_column(String(30), default="admin")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    invoices: Mapped[list["Invoice"]] = relationship(back_populates="user")
+    processing_logs: Mapped[list["ProcessingLog"]] = relationship(back_populates="user")
 
 
 class Provider(Base):
@@ -56,6 +60,9 @@ class Invoice(Base):
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     provider_id: Mapped[int | None] = mapped_column(ForeignKey("providers.id"), nullable=True)
     provider: Mapped[Provider | None] = relationship(back_populates="invoices")
+    user: Mapped[User | None] = relationship(back_populates="invoices")
+    processing_logs: Mapped[list["ProcessingLog"]] = relationship(back_populates="invoice")
+    rpa_runs: Mapped[list["RpaRun"]] = relationship(back_populates="invoice")
 
 
 class ProcessingLog(Base):
@@ -67,7 +74,12 @@ class ProcessingLog(Base):
     document_name: Mapped[str] = mapped_column(String(220))
     status: Mapped[str] = mapped_column(String(30), index=True)
     result: Mapped[str] = mapped_column(Text, default="")
+    error_detail: Mapped[str] = mapped_column(Text, default="")
     invoice_id: Mapped[int | None] = mapped_column(ForeignKey("invoices.id"), nullable=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+    invoice: Mapped[Invoice | None] = relationship(back_populates="processing_logs")
+    user: Mapped[User | None] = relationship(back_populates="processing_logs")
 
 
 class Report(Base):
@@ -80,6 +92,7 @@ class Report(Base):
     generated_by: Mapped[str] = mapped_column(String(80), default="system")
     emailed_to: Mapped[str] = mapped_column(String(160), default="")
     email_status: Mapped[str] = mapped_column(String(80), default="")
+    sent_by_email: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class RpaRun(Base):
@@ -90,4 +103,7 @@ class RpaRun(Base):
     invoice_id: Mapped[int] = mapped_column(ForeignKey("invoices.id"))
     status: Mapped[str] = mapped_column(String(40), default="Pendiente")
     target_url: Mapped[str] = mapped_column(String(500), default="")
+    evidence_path: Mapped[str] = mapped_column(String(500), default="")
     result: Mapped[str] = mapped_column(Text, default="")
+
+    invoice: Mapped[Invoice] = relationship(back_populates="rpa_runs")

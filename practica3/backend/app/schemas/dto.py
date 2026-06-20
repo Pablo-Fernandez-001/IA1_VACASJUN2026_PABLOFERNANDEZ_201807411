@@ -25,6 +25,7 @@ class UserOut(BaseModel):
     username: str
     email: str
     full_name: str
+    role: str
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -56,10 +57,13 @@ class InvoiceOut(BaseModel):
     taxes: float
     total: float
     status: str
+    provider_id: int | None
     file_name: str
+    file_path: str
     raw_text: str
     validation_errors: str
     created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -71,11 +75,29 @@ class LogOut(BaseModel):
     document_name: str
     status: str
     result: str
+    error_detail: str
     invoice_id: int | None
+    user_id: int | None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class EmailReportRequest(BaseModel):
-    recipient: str = Field(min_length=5, max_length=160)
+    recipient: str = Field(min_length=5, max_length=160, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
     report_type: str = Field(default="pdf", pattern="^(pdf|csv)$")
+
+
+class RejectInvoiceRequest(BaseModel):
+    reason: str = Field(default="Rechazada por revision administrativa", min_length=3, max_length=500)
+
+
+class RpaRunOut(BaseModel):
+    id: int
+    created_at: datetime
+    invoice_id: int
+    status: str
+    target_url: str
+    evidence_path: str
+    result: str
+
+    model_config = ConfigDict(from_attributes=True)

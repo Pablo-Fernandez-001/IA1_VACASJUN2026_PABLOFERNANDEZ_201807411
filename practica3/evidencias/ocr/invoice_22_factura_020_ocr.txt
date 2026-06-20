@@ -1,0 +1,20 @@
+FACTURA FAC-00020
+
+Proveedor: Importadora Monja Blanca
+
+NIT: 7101557-0
+
+Fecha: 09/03/2026
+
+Descripcion Precio
+
+Insumos administrativos Q 939.17
+
+Servicios profesionales Q 730.47
+
+Transporte y entrega Q 417.41
+Subtotal: Q 2087.05
+IVA 12%: Q 250.45
+TOTAL: Q 2337.50
+
+Documento sintetico para pruebas academicas de OCR.

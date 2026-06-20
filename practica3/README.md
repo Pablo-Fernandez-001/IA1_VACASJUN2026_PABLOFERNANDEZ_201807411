@@ -1,93 +1,89 @@
 # SmartInvoice - Practica 3 IA1
 
-SmartInvoice procesa facturas PDF/JPG/JPEG/PNG con Computer Vision, OCR local, validacion automatica, base de datos, bitacora, reportes CSV/PDF, correo SMTP/demo y RPA sobre un formulario web simulado.
+Plataforma para procesar facturas PDF/JPG/JPEG/PNG mediante Computer Vision, OCR local y RPA. Incluye autenticacion, CRUD de proveedores, validacion, PostgreSQL, bitacora, reportes CSV/PDF, correo SMTP/demo y evidencias automaticas.
 
-## Documentacion
+## URL publica
 
-Los documentos Markdown de soporte estan en `docs/`:
+**Pendiente de asignar desde la cuenta de nube del estudiante.** La imagen `Dockerfile.cloud` y `render.yaml` estan preparadas; siga `docs/DESPLIEGUE_NUBE.md` y reemplace esta linea con la URL real antes de entregar.
 
-- `docs/MANUAL_TECNICO.md`
-- `docs/MANUAL_USUARIO.md`
-- `docs/prompt_practica3.md`
-- `docs/recurso_facturas_generadas.md`
-- `docs/transcripcion_practica3.md`
-
-## Ejecutar rapido en local
-
-Desde la raiz del repositorio:
+## Inicio con Docker Compose
 
 ```powershell
 cd practica3
-$env:PYTHONPATH="backend"
-$env:DATABASE_URL="sqlite:///./smartinvoice_dev.db"
-$env:UPLOAD_DIR="./uploads"
-$env:REPORT_DIR="./reports"
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8300
+Copy-Item .env.example .env
+docker compose up --build -d
+docker compose ps
 ```
 
-En otra terminal:
-
-```powershell
-cd practica3/frontend
-python -m http.server 8311 --bind 127.0.0.1
-```
-
-Abrir:
-
-- Frontend: http://127.0.0.1:8311/login.html
-- API: http://127.0.0.1:8300/api/health
-- Swagger: http://127.0.0.1:8300/docs
-
-Usuario inicial:
-
-- Usuario: `admin`
-- Contrasena: `admin123`
-
-## Ejecutar con Docker Compose
-
-```powershell
-cd practica3
-docker compose up --build
-```
-
-Abrir:
-
-- Frontend: http://localhost:8301
+- Panel: http://localhost:8301
 - API: http://localhost:8300/api/health
 - Swagger: http://localhost:8300/docs
+- Usuario inicial: `admin`
+- Contrasena inicial: `admin123`
 
-Docker instala Tesseract, OpenCV y Playwright Chromium para OCR/CV/RPA completo.
+Docker levanta PostgreSQL, FastAPI con Tesseract/Playwright y Nginx.
 
-## Como ver que funciona
+## Demostracion recomendada
 
-1. Entrar al frontend e iniciar sesion con `admin` / `admin123`.
-2. Ir a `Proveedores` y crear un proveedor de prueba.
-3. Ir a `Facturas`.
-4. Subir una factura de `data/facturas_generadas/`, por ejemplo `factura_005.png`.
-5. Revisar el estado generado y pulsar `OCR` para ver el texto bruto.
-6. Pulsar `Validar` para revalidar campos.
-7. Pulsar `RPA` para llenar el formulario web simulado.
-8. Ir a `Bitacora` y confirmar que quedaron registros.
-9. Ir a `Reportes` y descargar CSV o PDF.
+1. Iniciar sesion.
+2. Crear y editar un proveedor.
+3. Cargar `data/facturas_generadas/factura_005.png`.
+4. Abrir `Detalle` y revisar campos, OCR bruto, validacion y archivo original.
+5. Probar `Rechazar`, `Reprocesar` y filtros por estado.
+6. Ejecutar `RPA` y descargar la captura desde `Ejecuciones RPA`.
+7. Consultar la bitacora filtrada.
+8. Descargar reportes CSV/PDF y enviar uno por correo/demo.
+9. Mostrar archivos creados en `evidencias/ocr/` y `evidencias/rpa/`.
+
+## Pruebas automatizadas
+
+```powershell
+cd practica3/backend
+pip install -r requirements.txt
+python -m pytest tests -q
+```
+
+La suite cubre health, login, CRUD, errores de carga, parser, validacion aritmetica, rechazo, bitacora, CSV y correo demo.
 
 ## Dataset
 
-El ZIP `facturas_generadas.zip` fue extraido en:
+`data/facturas_generadas/` contiene 20 documentos. Los primeros 10 provienen del ZIP y `scripts/seed_extra_invoices.py` completa el conjunto de evaluacion.
 
-```text
-data/facturas_generadas/
-```
+## Documentacion
 
-El ZIP original traia 10 documentos. Se agrego y ejecuto `scripts/seed_extra_invoices.py` para completar 20 archivos de prueba.
+- [Manual tecnico](docs/MANUAL_TECNICO.md)
+- [Manual de usuario](docs/MANUAL_USUARIO.md)
+- [Checklist 100 puntos](docs/checklist_100_practica3.md)
+- [Guia de defensa](docs/GUIA_DEFENSA.md)
+- [Entrega UEDI](docs/ENTREGA_UEDI.md)
+- [Despliegue](docs/DESPLIEGUE_NUBE.md)
+- [Fuentes de evaluacion](docs/evaluacion/)
+- [Evidencias](evidencias/README.md)
 
 ## Estructura
 
 ```text
-backend/        API FastAPI, modelos y servicios OCR/CV/RPA/reportes
-frontend/       panel administrativo HTML/CSS/JS
-data/           dataset de facturas de prueba
-docs/           manuales, prompt y transcripcion
-reports/        reportes generados
-uploads/        documentos cargados por usuarios
-scripts/        utilidades de seed
+practica3/
+|-- backend/             FastAPI, SQLAlchemy, OCR/CV, RPA y tests
+|-- frontend/            Panel administrativo y formulario simulado
+|-- data/                20 facturas de prueba
+|-- docs/                Manuales, checklist, defensa y fuentes
+|-- evidencias/          OCR, RPA, Docker y despliegue
+|-- reports/             Reportes generados (ignorado por Git)
+|-- uploads/             Archivos cargados (ignorado por Git)
+|-- Dockerfile.cloud     Imagen unificada para nube
+|-- docker-compose.yml   PostgreSQL + backend + frontend
+`-- render.yaml          Blueprint de despliegue
 ```
+
+## Guia rapida para defensa
+
+- Python integra FastAPI, OpenCV, Tesseract, SQLAlchemy, ReportLab y Playwright.
+- OpenCV prepara el documento; Tesseract reconoce texto localmente.
+- El parser propio extrae siete campos y las reglas validan NIT, montos, suma y duplicados.
+- SQLAlchemy persiste usuarios, proveedores, facturas, logs, reportes y RPA.
+- Playwright llena un formulario real y guarda captura.
+- Docker Compose coordina PostgreSQL, backend y frontend con health checks.
+- Un fallo deja estado `Error`, detalle en bitacora y opcion de reproceso.
+
+Las respuestas ampliadas estan en `docs/GUIA_DEFENSA.md`.

@@ -1,0 +1,8 @@
+﻿Fecha: 2026-06-19T18:49:54.8631935-06:00
+Health: {"status":"ok","service":"smartinvoice-api","database":"connected","tesseract_available":true,"rpa_engine":"playwright","public_url":null}
+Factura: id=1, numero=FAC-00005, estado=Procesado
+RPA: id=1, estado=Procesado, evidencia=/app/evidencias/rpa/rpa_invoice_1_FAC-00005_20260620_004947.png
+Metricas: {"providers":1,"invoices":1,"total_amount":2672.49,"logs":4,"reports":1,"rpa_runs":1,"by_status":{"Procesado":1}}
+Reporte: C:\Users\pabda\Desktop\IA1_VACASJUN2026_PABLOFERNANDEZ_201807411\practica3\reports\verificacion.csv
+
+NAME                    IMAGE                COMMAND                  SERVICE    CREATED              STATUS                        PORTS smartinvoice-backend    practica3-backend    "uvicorn app.main:ap…"   backend    About a minute ago   Up 47 seconds (healthy)       0.0.0.0:8300->8000/tcp, [::]:8300->8000/tcp smartinvoice-db         postgres:16-alpine   "docker-entrypoint.s…"   db         About a minute ago   Up About a minute (healthy)   5432/tcp smartinvoice-frontend   nginx:1.27-alpine    "/docker-entrypoint.…"   frontend   About a minute ago   Up 42 seconds (healthy)       0.0.0.0:8301->80/tcp, [::]:8301->80/tcp

@@ -1,0 +1,17 @@
+FACTURA FAC-00004
+Proveedor: Comercial Blanes y asociados S.L.
+NIT: 9603009-4
+Fecha: 09/10/2025
+Cliente:
+Esteban Ribes Aliaga
+Pasadizo Natalio Vega 747 Apt. 76 , Valencia, 48322
+Cant. Descripción Precio Total
+1 Dónde Q 85.24 Q 85.24
+4 Hombres Q 373.79 Q 1495.16
+2 Salir Q 175.88 Q 351.76
+2 Producto Q 257.11 Q 514.22
+5 Cual Q 57.79 Q 288.95
+Subtotal: Q 2735.33
+IVA 12%: Q 328.24
+TOTAL: Q 3063.57
+Documento generado únicamente para fines académicos.

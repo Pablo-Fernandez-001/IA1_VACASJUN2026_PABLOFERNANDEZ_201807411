@@ -1,0 +1,17 @@
+FACTURA FAC-00001
+Proveedor: Manufacturas Mesa y asociados S.L.N.E
+NIT: 6356625-9
+Fecha: 15/06/2025
+Cliente:
+Cesar Torralba Tello
+Paseo Victor Rios 99 Puerta 7 , Toledo, 33931
+Cant. Descripción Precio Total
+4 Muy Q 308.22 Q 1232.88
+3 Pocos Q 488.41 Q 1465.23
+4 Adelante Q 244 96 Q 979.84
+2 Vía Q 308.62 Q 617.24
+5 Armas Q 358 43 Q 1792.15
+Subtotal: Q 6087.34
+IVA 12%: Q 730.48
+TOTAL: Q 6817.82
+Documento generado únicamente para fines académicos.

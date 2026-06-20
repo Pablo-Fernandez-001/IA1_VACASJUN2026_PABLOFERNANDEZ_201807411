@@ -1,0 +1,20 @@
+FACTURA FAC-00019
+
+Proveedor: Mantenimiento Integral
+
+NIT: 7101384-9
+
+Fecha: 02/03/2026
+
+Descripcion Precio
+
+Insumos administrativos Q 877.32
+
+Servicios profesionales Q 682.36
+
+Transporte y entrega Q 389.92
+Subtotal: Q 1949.60
+IVA 12%: Q 233.95
+TOTAL: Q 2183.55
+
+Documento sintetico para pruebas academicas de OCR.

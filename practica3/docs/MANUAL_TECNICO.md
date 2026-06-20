@@ -2,126 +2,227 @@
 
 ## Resumen
 
-SmartInvoice es una plataforma full-stack para cargar facturas digitales, preprocesarlas con OpenCV, extraer texto con OCR local, obtener campos relevantes, validar datos, persistir resultados, generar reportes, registrar bitacora, enviar reportes por correo y ejecutar RPA sobre un formulario simulado.
+SmartInvoice automatiza la recepcion de facturas: carga documentos, mejora imagenes, ejecuta OCR local, extrae siete campos, valida, persiste, genera reportes, envia correo y registra los datos en un formulario mediante RPA.
 
-## Arquitectura
+## Patron de arquitectura
+
+Se usa una **arquitectura por capas**:
+
+- Presentacion: HTML/CSS/JavaScript.
+- API/controladores: routers FastAPI por dominio.
+- Servicios: OCR, CV, parser, validacion, reportes, correo y RPA.
+- Persistencia: modelos SQLAlchemy y sesiones.
+- Infraestructura: PostgreSQL/SQLite, Tesseract, Playwright, Nginx y Docker.
+
+La separacion permite probar parser/validacion sin navegador y cambiar PostgreSQL/SQLite mediante `DATABASE_URL`.
+
+## Diagrama de arquitectura
 
 ```mermaid
 flowchart LR
-    U[Usuario] --> F[Frontend HTML/CSS/JS]
-    F --> API[FastAPI]
-    API --> DB[(PostgreSQL o SQLite local)]
-    API --> CV[OpenCV preprocesamiento]
-    CV --> OCR[Tesseract OCR]
-    OCR --> Parser[Parser regex]
-    Parser --> Val[Validacion]
-    API --> RPA[Playwright RPA]
-    API --> Rep[CSV/PDF]
-    API --> SMTP[SMTP o modo demo]
+    U[Usuario] --> FE[Panel HTML CSS JS]
+    FE -->|Bearer token / JSON| API[FastAPI routers]
+    API --> AUTH[Seguridad PBKDF2 y token HMAC]
+    API --> DB[(PostgreSQL / SQLite local)]
+    API --> CV[OpenCV]
+    CV --> OCR[Tesseract local]
+    OCR --> PARSER[Regex y heuristicas]
+    PARSER --> VAL[Reglas de validacion]
+    API --> REP[CSV y ReportLab PDF]
+    API --> MAIL[SMTP / modo demo]
+    API --> RPA[Playwright Chromium]
+    RPA --> FORM[Formulario simulado]
+    CV --> EVI[Evidencias OCR]
+    RPA --> EVI2[Evidencias RPA]
 ```
-
-## Tecnologias
-
-- Python 3.11, FastAPI, SQLAlchemy.
-- PostgreSQL en Docker Compose; SQLite como modo local.
-- OpenCV, PyMuPDF, Pillow y Tesseract/pytesseract para OCR local.
-- ReportLab para PDF y `csv` de Python para CSV.
-- Playwright para RPA.
-- HTML, CSS y JavaScript puro para frontend.
-- Docker y Docker Compose.
 
 ## Modelo de datos
 
-- `users`: usuarios y hashes PBKDF2.
-- `providers`: proveedores con NIT, contacto y categoria.
-- `invoices`: campos extraidos, estado, archivo, OCR bruto y errores.
-- `processing_logs`: bitacora con usuario, documento, estado y resultado.
-- `reports`: reportes generados y estado de correo.
-- `rpa_runs`: ejecuciones RPA por factura.
+```mermaid
+erDiagram
+    USERS ||--o{ INVOICES : crea
+    USERS ||--o{ PROCESSING_LOGS : ejecuta
+    PROVIDERS ||--o{ INVOICES : emite
+    INVOICES ||--o{ PROCESSING_LOGS : genera
+    INVOICES ||--o{ RPA_RUNS : registra
+    USERS {
+      int id PK
+      string username UK
+      string email UK
+      string password_hash
+      string role
+      boolean is_active
+    }
+    PROVIDERS {
+      int id PK
+      string name
+      string nit UK
+      string email
+      string phone
+      string address
+    }
+    INVOICES {
+      int id PK
+      int user_id FK
+      int provider_id FK
+      string invoice_number
+      date issue_date
+      float subtotal
+      float taxes
+      float total
+      string status
+      text raw_text
+      text validation_errors
+    }
+    PROCESSING_LOGS {
+      int id PK
+      int invoice_id FK
+      int user_id FK
+      string status
+      text result
+      text error_detail
+    }
+    REPORTS {
+      int id PK
+      string report_type
+      string file_path
+      string email_status
+      boolean sent_by_email
+    }
+    RPA_RUNS {
+      int id PK
+      int invoice_id FK
+      string status
+      string evidence_path
+      text result
+    }
+```
 
-## Flujo OCR + Computer Vision
+Las tablas se crean automaticamente. `init_db.py` incluye migraciones compatibles para bases creadas con versiones anteriores.
 
-1. El usuario sube PDF/JPG/JPEG/PNG.
-2. El archivo se guarda en `uploads/`.
-3. Si es PDF, PyMuPDF extrae texto embebido y renderiza paginas.
-4. OpenCV convierte a escala de grises, binariza con Otsu y limpia ruido.
-5. Tesseract procesa la imagen localmente.
-6. `invoice_parser.py` extrae numero, fecha, proveedor, NIT, subtotal, impuestos y total.
-7. `validation_service.py` valida campos, fecha, total, NIT y duplicados.
-8. La factura se guarda como `Procesado` o `Rechazado`; errores tecnicos quedan como `Error`.
+## Tecnologias
 
-## Flujo RPA
+- Python 3.11 y FastAPI.
+- SQLAlchemy, PostgreSQL 16 y SQLite local.
+- OpenCV, Pillow y PyMuPDF.
+- Tesseract/pytesseract, idiomas `spa+eng`.
+- Playwright Chromium.
+- ReportLab y CSV estandar.
+- Nginx, Docker y Docker Compose.
+- Pytest y TestClient.
 
-`rpa_service.py` abre `frontend/rpa_form.html` con Playwright, llena numero, proveedor, NIT, total y estado, pulsa registrar y guarda el resultado en `rpa_runs`. Si no hay navegador local, devuelve modo demo documentado; en Docker se instala Chromium de Playwright.
+## Flujo OCR y Computer Vision
 
-## Reportes y correo
+1. Se valida extension PDF/JPG/JPEG/PNG.
+2. El archivo se guarda con nombre sanitizado y UUID.
+3. PyMuPDF renderiza hasta tres paginas PDF a 2x.
+4. OpenCV aplica escala de grises, Gaussian blur, Otsu, filtro mediano y deskew.
+5. Se guarda cada imagen preprocesada en `evidencias/ocr/`.
+6. Tesseract usa `--oem 3 --psm 6` con `spa+eng`.
+7. Se guarda el OCR bruto en texto.
+8. El parser extrae numero, fecha, proveedor, NIT, subtotal, IVA y total.
+9. Validacion comprueba obligatorios, fecha, NIT, montos, suma y duplicados.
 
-- CSV: `GET /api/reports/csv`.
-- PDF: `GET /api/reports/pdf`.
-- Correo: `POST /api/reports/email`.
+El parser toma el total rotulado final, evitando confundirlo con la columna `Total` del detalle.
 
-Si `SMTP_HOST`, `SMTP_USER` o `SMTP_PASSWORD` estan vacios, se crea una evidencia `.email_demo.txt` junto al reporte.
+## Estados y errores
 
-## Variables de entorno
+- `Pendiente`: archivo guardado, procesamiento iniciado.
+- `Procesado`: OCR util y validacion correcta.
+- `Rechazado`: OCR util, pero reglas incumplidas o rechazo manual.
+- `Error`: fallo tecnico u OCR sin contenido util.
 
-Ver `.env.example`:
-
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `CORS_ORIGINS`
-- `UPLOAD_DIR`
-- `REPORT_DIR`
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_TLS`
-- `RPA_FORM_URL`
+Errores HTTP usados: 400 formato invalido, 401 token, 404 recurso, 409 duplicado, 422 DTO invalido y 500 servicio interno. Los errores de carga/OCR/RPA/correo quedan en `processing_logs`.
 
 ## API REST
 
-| Metodo | Ruta | Uso |
+| Metodo | Ruta | Funcion |
 |---|---|---|
-| POST | `/api/auth/register` | Crear usuario |
+| GET | `/api/health` | DB, Tesseract y URL publica |
+| POST | `/api/auth/register` | Registrar usuario |
 | POST | `/api/auth/login` | Obtener token |
-| GET | `/api/me` | Usuario actual |
-| GET/POST | `/api/providers` | Listar/crear proveedores |
-| PUT/DELETE | `/api/providers/{id}` | Editar/eliminar proveedor |
-| POST | `/api/invoices/upload` | Cargar y procesar factura |
-| GET | `/api/invoices` | Listar facturas |
-| GET | `/api/invoices/{id}` | Detalle con OCR bruto |
-| POST | `/api/invoices/{id}/validate` | Revalidar factura |
-| POST | `/api/invoices/{id}/rpa-register` | Ejecutar RPA |
-| GET | `/api/logs` | Bitacora |
-| GET | `/api/reports/csv` | Reporte CSV |
-| GET | `/api/reports/pdf` | Reporte PDF |
-| POST | `/api/reports/email` | Enviar reporte |
+| GET | `/api/me` | Usuario autenticado |
+| GET/POST | `/api/providers` | Listar/crear |
+| GET/PUT/DELETE | `/api/providers/{id}` | Detalle/editar/eliminar |
+| POST | `/api/invoices/upload` | Cargar y procesar |
+| GET | `/api/invoices` | Lista con `status` y `search` |
+| GET | `/api/invoices/{id}` | Detalle y OCR |
+| GET | `/api/invoices/{id}/file` | Original |
+| POST | `/api/invoices/{id}/process` | Procesar |
+| POST | `/api/invoices/{id}/validate` | Validar |
+| POST | `/api/invoices/{id}/reject` | Rechazar |
+| POST | `/api/invoices/{id}/reprocess` | Reprocesar |
+| GET | `/api/logs` | Bitacora filtrable |
+| GET | `/api/logs/{id}` | Detalle de log |
+| GET | `/api/reports` | Historial de reportes |
+| GET | `/api/reports/csv` | Descargar CSV |
+| GET | `/api/reports/pdf` | Descargar PDF |
+| POST | `/api/reports/email` | SMTP/demo |
+| POST | `/api/rpa/invoices/{id}/register` | Ejecutar RPA |
+| GET | `/api/rpa/runs` | Historial RPA |
+| GET | `/api/rpa/runs/{id}/evidence` | Evidencia |
 | GET | `/api/dashboard/metrics` | Metricas |
 
-## Docker
+## RPA
 
-```bash
+Playwright abre `rpa_form.html`, llena numero, proveedor, NIT, total y estado, envia y espera `#rpa_result.ready`. En exito guarda PNG y JSON; en error guarda TXT. Todo se persiste en `rpa_runs` y bitacora.
+
+## Reportes y correo
+
+CSV y PDF se guardan en `reports/` y se registran en `reports`. SMTP usa TLS y credenciales de entorno. Sin credenciales se crea `*.email_demo.txt`, permitiendo demostrar el flujo sin fingir un envio real.
+
+## Variables de entorno
+
+| Variable | Uso |
+|---|---|
+| `DATABASE_URL` | Conexion SQL |
+| `JWT_SECRET` | Firma de token |
+| `ACCESS_TOKEN_MINUTES` | Vigencia |
+| `UPLOAD_DIR` | Archivos originales |
+| `REPORT_DIR` | Reportes |
+| `EVIDENCE_DIR` | OCR/RPA |
+| `RPA_FORM_URL` | Formulario objetivo |
+| `SMTP_*` | Correo |
+| `PUBLIC_URL` | URL publicada |
+| `FRONTEND_DIR` | Frontend unificado en nube |
+
+## Docker Compose
+
+```powershell
 cd practica3
-cp .env.example .env
-docker compose up --build
+Copy-Item .env.example .env
+docker compose up --build -d
+docker compose ps
 ```
 
-Servicios: PostgreSQL, backend FastAPI y frontend Nginx.
+Puertos: backend `8300`, frontend `8301`, PostgreSQL solo en red interna. Los directorios uploads/reports/evidencias se montan como volumen.
 
-## Despliegue en nube
+## Despliegue
 
-Opcion Render:
+`Dockerfile.cloud` empaqueta backend y frontend en un dominio. `render.yaml` conecta PostgreSQL y health check. Instrucciones en `DESPLIEGUE_NUBE.md`. La URL real requiere crear el servicio desde la cuenta del estudiante.
 
-1. Crear PostgreSQL administrado.
-2. Crear Web Service para `practica3/backend` con `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
-3. Configurar `DATABASE_URL`, `JWT_SECRET`, `SMTP_*`.
-4. Crear Static Site para `practica3/frontend`.
-5. Configurar proxy o `window.API_BASE_URL` si se sirve en dominios separados.
+## Pruebas
 
-## Requerimientos funcionales
+```powershell
+cd practica3/backend
+python -m pytest tests -q
+```
 
-Autenticacion, CRUD de proveedores, carga de facturas, OCR/CV local, extraccion de campos, validacion, bitacora, reportes CSV/PDF, correo SMTP/demo, RPA y dashboard.
+Cobertura funcional: health/auth, CRUD, archivo invalido, parser de factura real, total final, validacion aritmetica, rechazo, logs, CSV y correo demo. La prueba final Docker debe incluir PDF, PNG y RPA con Chromium.
 
 ## Requerimientos no funcionales
 
-Persistencia real, separacion frontend/backend, contenedores reproducibles, variables de entorno para secretos, trazabilidad por bitacora, manejo de errores y documentacion.
+- Seguridad: hash PBKDF2, token firmado y secretos por entorno.
+- Trazabilidad: logs y estados persistentes.
+- Mantenibilidad: routers/servicios/modelos separados.
+- Portabilidad: Docker Compose e imagen cloud.
+- Usabilidad: panel responsive, filtros y detalle.
+- Recuperacion: reproceso sin eliminar la factura original.
+
+## Guia rapida para defensa
+
+Ver `GUIA_DEFENSA.md`. Punto central: Python coordina, OpenCV/Tesseract extraen localmente, las reglas validan, PostgreSQL persiste y Playwright automatiza un formulario real dejando evidencia.
 
 ## Mejoras futuras
 
-Cola de procesamiento, OCR por lotes, revision humana de campos, exportacion Excel, despliegue CI/CD y entrenamiento de plantillas por proveedor.
+Cola de tareas, edicion humana de campos, Excel, almacenamiento de objetos, rotacion de tokens y observabilidad centralizada.

@@ -9,7 +9,10 @@ ALLOWED_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg"}
 
 
 def safe_upload_path(upload_dir: str, upload: UploadFile) -> Path:
-    original = upload.filename or "factura"
+    return safe_storage_path(upload_dir, upload.filename or "factura")
+
+
+def safe_storage_path(upload_dir: str, original: str) -> Path:
     extension = Path(original).suffix.lower()
     if extension not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="Formato no permitido. Use PDF, JPG, JPEG o PNG.")

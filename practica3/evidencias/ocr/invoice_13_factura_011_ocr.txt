@@ -1,0 +1,20 @@
+FACTURA FAC-00011
+
+Proveedor: Distribuidora Aurora S.A.
+
+NIT: 7100000-1
+
+Fecha: 05/01/2026
+
+Descripcion Precio
+
+Insumos administrativos Q 382.50
+
+Servicios profesionales Q 297.50
+
+Transporte y entrega Q 170.00
+Subtotal: Q 850.00
+IVA 12%: Q 102.00
+TOTAL: Q 952.00
+
+Documento sintetico para pruebas academicas de OCR.

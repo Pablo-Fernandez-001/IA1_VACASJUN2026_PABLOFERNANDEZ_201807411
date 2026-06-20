@@ -53,7 +53,8 @@ function shell(active) {
           <a class="${active === "invoices" ? "active" : ""}" href="invoices.html">Facturas</a>
           <a class="${active === "logs" ? "active" : ""}" href="logs.html">Bitacora</a>
           <a class="${active === "reports" ? "active" : ""}" href="reports.html">Reportes</a>
-          <a href="rpa_form.html">Formulario RPA</a>
+          <a class="${active === "rpa" ? "active" : ""}" href="rpa.html">Ejecuciones RPA</a>
+          <a href="rpa_form.html" target="_blank">Formulario simulado</a>
           <button type="button" onclick="logout()">Salir</button>
         </nav>
       </aside>
@@ -67,5 +68,26 @@ function money(value) {
 }
 
 function statusBadge(status) {
-  return `<span class="status ${status}">${status}</span>`;
+  const safe = escapeHtml(status || "Pendiente");
+  return `<span class="status ${safe}">${safe}</span>`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+async function downloadAuthenticated(path, filename) {
+  const response = await api(path);
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }

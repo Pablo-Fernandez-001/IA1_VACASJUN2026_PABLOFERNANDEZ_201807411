@@ -35,6 +35,8 @@ class Settings:
     cors_origins: str = os.getenv("CORS_ORIGINS", "*")
     upload_dir: str = os.getenv("UPLOAD_DIR", "./uploads")
     report_dir: str = os.getenv("REPORT_DIR", "./reports")
+    evidence_dir: str = os.getenv("EVIDENCE_DIR", "./evidencias")
+    dataset_dir: str = os.getenv("DATASET_DIR", "./data/facturas_generadas")
     smtp_host: str = os.getenv("SMTP_HOST", "")
     smtp_port: int = int(os.getenv("SMTP_PORT", "587"))
     smtp_user: str = os.getenv("SMTP_USER", "")
@@ -42,6 +44,15 @@ class Settings:
     smtp_from: str = os.getenv("SMTP_FROM", "smartinvoice@example.local")
     smtp_tls: bool = _bool("SMTP_TLS", True)
     rpa_form_url: str = os.getenv("RPA_FORM_URL", "")
+    public_url: str = os.getenv("PUBLIC_URL") or os.getenv("RENDER_EXTERNAL_URL", "")
+
+    @property
+    def ocr_evidence_dir(self) -> str:
+        return str(Path(self.evidence_dir) / "ocr")
+
+    @property
+    def rpa_evidence_dir(self) -> str:
+        return str(Path(self.evidence_dir) / "rpa")
 
     @property
     def sqlalchemy_database_url(self) -> str:

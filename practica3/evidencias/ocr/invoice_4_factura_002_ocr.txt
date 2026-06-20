@@ -1,0 +1,18 @@
+FACTURA FAC-00002
+Proveedor: Hermanos Sanjuan S.Coop.
+NIT: 6014689-1
+Fecha: 26/02/2026
+Cliente:
+Jeremías Vall Núñez
+Via de Javier Antúnez 17, Ciudad, 43757
+Cant. Descripción Precio Total
+3 Paises Q 93.66 Q 280.98
+2 Igual Q 337.63 Q 675.26
+5 Unos Q 183.31 Q 916.55
+4 Efecto Q 293.64 Q 1174.56
+1 Equipo Q 363.34 Q 363.34
+5 Mujer Q 389.12 Q 1945.60
+Subtotal: Q 5356.29
+IVA 12%: Q 642.75
+TOTAL: Q 5999.04
+Documento generado únicamente para fines académicos.

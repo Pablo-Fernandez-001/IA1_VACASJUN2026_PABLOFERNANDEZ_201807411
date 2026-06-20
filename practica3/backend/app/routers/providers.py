@@ -14,6 +14,14 @@ def list_providers(_: User = Depends(get_current_user), db: Session = Depends(ge
     return db.query(Provider).order_by(Provider.name.asc()).all()
 
 
+@router.get("/{provider_id}", response_model=ProviderOut)
+def get_provider(provider_id: int, _: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    provider = db.get(Provider, provider_id)
+    if not provider:
+        raise HTTPException(status_code=404, detail="Proveedor no encontrado")
+    return provider
+
+
 @router.post("", response_model=ProviderOut)
 def create_provider(payload: ProviderIn, _: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if db.query(Provider).filter(Provider.nit == payload.nit).first():

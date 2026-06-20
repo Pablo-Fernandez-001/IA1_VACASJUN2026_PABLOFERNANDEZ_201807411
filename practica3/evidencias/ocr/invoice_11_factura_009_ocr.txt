@@ -1,0 +1,18 @@
+FACTURA FAC-00009
+Proveedor: Nebot y Falcó S.L
+NIT: 9411230-2
+Fecha: 29/08/2025
+Cliente:
+Tecla del Barroso
+Paseo Vidal Puerta 13, Guadalajara, 25524
+Cant Descapción Precio Total
+5 Gran Q 320 68 Q 1603 40
+3 Ayuda Q 221 78 0 665 34
+4 Capacidad Q 247 18 Q 988 72
+2 Vuelta Q 162 98 Q 325 96
+5 Ocasiones Q 161 73 Q 808 65
+3 Niveles Q 267 31 Q 801 93
+Subtotal Q 5194.00
+IVA 12% Q 623.28
+TOTAL: Q 5817.28
+Documento generado únicamente para fines académicos

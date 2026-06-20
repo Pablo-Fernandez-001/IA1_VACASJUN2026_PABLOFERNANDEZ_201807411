@@ -16,7 +16,13 @@ app.innerHTML = `
     </form>
     <p id="message" class="message"></p>
   </section>
+  <section class="panel"><h2>Historial de reportes</h2><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Generado por</th><th>Correo</th><th>Estado</th></tr></thead><tbody id="reportRows"></tbody></table></div></section>
 `;
+
+async function loadReports() {
+  const items = await api("/api/reports");
+  reportRows.innerHTML = items.length ? items.map(item => `<tr><td>${new Date(item.created_at).toLocaleString()}</td><td>${escapeHtml(item.report_type.toUpperCase())}</td><td>${escapeHtml(item.generated_by)}</td><td>${escapeHtml(item.emailed_to || "")}</td><td>${escapeHtml(item.email_status || "Generado")}</td></tr>`).join("") : '<tr><td colspan="5">Sin reportes generados.</td></tr>';
+}
 
 window.downloadReport = async (type) => {
   try {
@@ -42,7 +48,9 @@ emailForm.addEventListener("submit", async (event) => {
       body: JSON.stringify({ recipient: recipient.value, report_type: report_type.value }),
     });
     message.textContent = `${result.status}: ${result.detail}`;
+    loadReports();
   } catch (error) {
     message.textContent = error.message;
   }
 });
+loadReports().catch(error => { message.textContent = error.message; });

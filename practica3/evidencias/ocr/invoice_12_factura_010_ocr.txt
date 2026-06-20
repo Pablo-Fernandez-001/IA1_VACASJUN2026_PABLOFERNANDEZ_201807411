@@ -1,0 +1,16 @@
+FACTURA FAC-00010
+Proveedor: Compañía Inteligentes S.L
+NIT: 1089300-7
+Fecha: 17/07/2025
+Cliente:
+Bárbara Lastra Arias
+Rambla de Luis Miguel Gomis 86 Piso 5, León, 42240
+Cant Descapción Precio Total
+2 Debe Q 286 20 Q 572 40
+1 Norte Q 100 73 Q 100 73
+4 Empresas 0 422 72 Q 1690 88
+2 Área Q 228 91 Q 457 82
+Subtotal Q 2821.83
+IVA 12% Q 338.62
+TOTAL: Q 3160.45
+Documento generado únicamente para fines académicos

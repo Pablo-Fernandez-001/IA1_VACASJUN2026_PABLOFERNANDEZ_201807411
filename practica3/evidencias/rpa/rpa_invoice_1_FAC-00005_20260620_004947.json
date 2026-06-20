@@ -1,0 +1,11 @@
+{
+  "target_url": "http://frontend/rpa_form.html",
+  "payload": {
+    "invoice_number": "FAC-00005",
+    "provider_name": "Hotel Llobet S Coop.",
+    "provider_nit": "4322338-2",
+    "total": "2672.49",
+    "status": "Procesado"
+  },
+  "result": "Registro simulado completado: FAC-00005 - Hotel Llobet S Coop. - Q 2672.49"
+}

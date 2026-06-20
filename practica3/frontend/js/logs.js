@@ -1,12 +1,6 @@
 const app = document.querySelector("#app");
-app.innerHTML = `
-  <div class="topline"><h1>Bitacora</h1></div>
-  <section class="panel">
-    <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Documento</th><th>Estado</th><th>Resultado</th></tr></thead><tbody id="rows"></tbody></table></div>
-  </section>
-`;
-api("/api/logs").then(logs => {
-  rows.innerHTML = logs.map(log => `
-    <tr><td>${new Date(log.created_at).toLocaleString()}</td><td>${log.username}</td><td>${log.document_name}</td><td>${statusBadge(log.status)}</td><td>${log.result}</td></tr>
-  `).join("");
-});
+app.innerHTML = `<div class="topline"><h1>Bitacora</h1></div><section class="panel"><form id="filters" class="form-grid"><label>Buscar<input id="search" placeholder="Documento o resultado"></label><label>Estado<select id="statusFilter"><option value="">Todos</option><option>Procesado</option><option>Pendiente</option><option>Error</option><option>Rechazado</option></select></label><button type="submit">Filtrar</button><button id="clearFilters" type="button" class="secondary">Limpiar</button></form></section><section class="panel"><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Documento</th><th>Estado</th><th>Resultado</th><th>Error</th></tr></thead><tbody id="rows"></tbody></table></div></section><p id="message" class="message"></p>`;
+async function loadLogs() { const params = new URLSearchParams(); if (search.value.trim()) params.set("search", search.value.trim()); if (statusFilter.value) params.set("status", statusFilter.value); const items = await api(`/api/logs?${params}`); rows.innerHTML = items.length ? items.map(log => `<tr><td>${new Date(log.created_at).toLocaleString()}</td><td>${escapeHtml(log.username)}</td><td>${escapeHtml(log.document_name)}</td><td>${statusBadge(log.status)}</td><td>${escapeHtml(log.result)}</td><td>${escapeHtml(log.error_detail)}</td></tr>`).join("") : '<tr><td colspan="6">Sin registros.</td></tr>'; }
+filters.addEventListener("submit", event => { event.preventDefault(); loadLogs(); });
+clearFilters.addEventListener("click", () => { filters.reset(); loadLogs(); });
+loadLogs().catch(error => { message.textContent = error.message; });

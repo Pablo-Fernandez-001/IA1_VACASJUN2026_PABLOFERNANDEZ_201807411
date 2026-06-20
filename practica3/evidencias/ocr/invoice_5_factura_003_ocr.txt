@@ -1,0 +1,15 @@
+FACTURA FAC-00003
+Proveedor: Máxima Villaverde Quero S.L.
+NIT: 2896400-4
+Fecha: 31/07/2025
+Cliente:
+Loreto Sastre-Chico
+Camino Félix Arcos 69, Asturias, 32770
+Cant. Descripción Precio Total
+2 El Q 438.75 Q 877.50
+2 Carácter Q 325.93 Q 651.86
+3 Vez Q 191.93 Q 575.79
+Subtotal: Q 2105.15
+IVA 12%: Q 252.62
+TOTAL: Q 2357.77
+Documento generado únicamente para fines académicos.

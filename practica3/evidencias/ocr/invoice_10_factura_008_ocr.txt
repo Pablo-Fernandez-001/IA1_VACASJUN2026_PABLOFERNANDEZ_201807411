@@ -1,0 +1,16 @@
+FACTURA FAC-00008
+Proveedor: Distribuciones Maestre S.Com
+NIT: 3940360-9
+Fecha: 21/02/2026
+Cliente:
+Isaac Medina Echeverria
+Rambla Lisandro Cerezo 5 Piso 7, Ceuta, 31210
+Cant Descapción Precio Total
+2 Humana 0 38 99 07798
+3 Conciencia Q 176 60 Q 529 80
+4 Juego Q 116 47 Q 465 88
+1 Ongen Q 86 66 0 86 66
+Subtotal Q 1160.32
+IVA 12% Q 139.24
+TOTAL: Q 1299.56
+Documento generado únicamente para fines académicos

@@ -1,0 +1,17 @@
+FACTURA FAC-00005
+Proveedor: Hotel Llobet S Coop.
+NIT: 4322338-2
+Fecha: 30/12/2025
+Cliente:
+Nilda Artigas Manzano
+Acceso de Sevenano Hernandez 65 Piso 4 , Jaén, 08203
+Cant Descapción Precio Total
+4 Manuel 08667 Q 346 68
+2 Servicios 088 51 Q 177 02
+2 Primer 02730 Q 54 60
+5 Nuestro 07372 Q 368 60
+3 Estado 047975 Q 1439 25
+Subtotal Q 2386.15
+IVA 12% Q 286.34
+TOTAL: Q 2672.49
+Documento generado únicamente para fines académicos

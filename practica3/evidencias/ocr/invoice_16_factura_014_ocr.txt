@@ -1,0 +1,20 @@
+FACTURA FAC-00014
+
+Proveedor: Logistica del Pacifico
+
+NIT: 7100519-4
+
+Fecha: 26/01/2026
+
+Descripcion Precio
+
+Insumos administrativos Q 568.06
+
+Servicios profesionales Q 441.82
+
+Transporte y entrega Q 252.47
+Subtotal: Q 1262.35
+IVA 12%: Q 151.48
+TOTAL: Q 1413.83
+
+Documento sintetico para pruebas academicas de OCR.

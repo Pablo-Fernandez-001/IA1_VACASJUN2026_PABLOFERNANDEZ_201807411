@@ -22,9 +22,11 @@ services:
     container_name: smartinvoice-backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://smartinvoice:smartinvoice@db:5432/smartinvoice
+      DATABASE_URL: postgresql://${POSTGRES_USER:-smartinvoice}:${POSTGRES_PASSWORD:-smartinvoice}@db:5432/${POSTGRES_DB:-smartinvoice}
       UPLOAD_DIR: /app/uploads
       REPORT_DIR: /app/reports
+      EVIDENCE_DIR: /app/evidencias
+      DATASET_DIR: /app/data/facturas_generadas
       RPA_FORM_URL: http://frontend/rpa_form.html
       JWT_SECRET: ${JWT_SECRET:-smartinvoice-docker-secret}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
@@ -37,6 +39,7 @@ services:
     volumes:
       - ./uploads:/app/uploads
       - ./reports:/app/reports
+      - ./evidencias:/app/evidencias
       - ./data:/app/data:ro
     ports:
       - "${BACKEND_PORT:-8300}:8000"

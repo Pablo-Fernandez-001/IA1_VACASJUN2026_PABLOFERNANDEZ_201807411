@@ -1,0 +1,20 @@
+FACTURA FAC-00018
+
+Proveedor: Alimentos del Valle
+
+NIT: 7101211-8
+
+Fecha: 23/02/2026
+
+Descripcion Precio
+
+Insumos administrativos Q 815.47
+
+Servicios profesionales Q 634.25
+
+Transporte y entrega Q 362.43
+Subtotal: Q 1812.15
+IVA 12%: Q 217.46
+TOTAL: Q 2029.61
+
+Documento sintetico para pruebas academicas de OCR.

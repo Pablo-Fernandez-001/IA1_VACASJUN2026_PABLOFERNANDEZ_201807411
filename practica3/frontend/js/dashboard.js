@@ -14,6 +14,8 @@ async function loadMetrics() {
     <div class="stat"><span>Facturas</span><strong>${data.invoices}</strong></div>
     <div class="stat"><span>Monto total</span><strong>${money(data.total_amount)}</strong></div>
     <div class="stat"><span>Bitacora</span><strong>${data.logs}</strong></div>
+    <div class="stat"><span>Reportes</span><strong>${data.reports}</strong></div>
+    <div class="stat"><span>Ejecuciones RPA</span><strong>${data.rpa_runs}</strong></div>
     <div class="stat"><span>Procesadas</span><strong>${data.by_status.Procesado || 0}</strong></div>
     <div class="stat"><span>Rechazadas</span><strong>${data.by_status.Rechazado || 0}</strong></div>
   `;

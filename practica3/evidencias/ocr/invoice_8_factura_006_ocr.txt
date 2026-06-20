@@ -1,0 +1,17 @@
+FACTURA FAC-00006
+Proveedor: Martin Cerdá Ramos S.A.
+NIT: 7462600-7
+Fecha: 30/12/2025
+Cliente:
+Baudelio del Montesinos
+Ronda de Noa Lorenzo 28, Valencia, 16875
+Cant Descapción Precio Total
+5 Régimen Q 202 99 Q 101495
+3 Camino Q 430 31 Q 1290 93
+5 Campana Q319 48 Q 1597 40
+1 Ojos Q 384 42 Q 384 42
+1 Dolor Q 205 92 Q 205 92
+Subtotal Q 4493.62
+IVA 12% Q 539.23
+TOTAL: Q 5032.85
+Documento generado únicamente para fines académicos

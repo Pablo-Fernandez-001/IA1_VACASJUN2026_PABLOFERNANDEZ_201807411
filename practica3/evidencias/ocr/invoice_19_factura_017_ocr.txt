@@ -1,0 +1,20 @@
+FACTURA FAC-00017
+
+Proveedor: Tecnologia Quetzal
+
+NIT: 7101038-7
+
+Fecha: 16/02/2026
+
+Descripcion Precio
+
+Insumos administrativos Q 753.62
+
+Servicios profesionales Q 586.14
+
+Transporte y entrega Q 334.94
+Subtotal: Q 1674.70
+IVA 12%: Q 200.96
+TOTAL: Q 1875.66
+
+Documento sintetico para pruebas academicas de OCR.

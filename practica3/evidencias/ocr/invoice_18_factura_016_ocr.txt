@@ -1,0 +1,20 @@
+FACTURA FAC-00016
+
+Proveedor: Comercial La Reforma
+
+NIT: 7100865-6
+
+Fecha: 09/02/2026
+
+Descripcion Precio
+
+Insumos administrativos Q 691.76
+
+Servicios profesionales Q 538.04
+
+Transporte y entrega Q 307.45
+Subtotal: Q 1537.25
+IVA 12%: Q 184.47
+TOTAL: Q 1721.72
+
+Documento sintetico para pruebas academicas de OCR.

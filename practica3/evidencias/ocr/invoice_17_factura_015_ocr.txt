@@ -1,0 +1,20 @@
+FACTURA FAC-00015
+
+Proveedor: Suministros Altiplano
+
+NIT: 7100692-5
+
+Fecha: 02/02/2026
+
+Descripcion Precio
+
+Insumos administrativos Q 629.91
+
+Servicios profesionales Q 489.93
+
+Transporte y entrega Q 279.96
+Subtotal: Q 1399.80
+IVA 12%: Q 167.98
+TOTAL: Q 1567.78
+
+Documento sintetico para pruebas academicas de OCR.

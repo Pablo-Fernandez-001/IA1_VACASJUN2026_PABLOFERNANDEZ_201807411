@@ -11,66 +11,32 @@ app.innerHTML = `
     <p id="message" class="message"></p>
   </section>
   <section class="panel">
-    <h2>Procesadas</h2>
-    <div class="table-wrap"><table><thead><tr><th>No.</th><th>Fecha</th><th>Proveedor</th><th>NIT</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <h2>Consulta</h2>
+    <form id="filters" class="form-grid">
+      <label>Buscar<input id="search" placeholder="Numero, proveedor o NIT"></label>
+      <label>Estado<select id="statusFilter"><option value="">Todos</option><option>Procesado</option><option>Pendiente</option><option>Error</option><option>Rechazado</option></select></label>
+      <button type="submit">Filtrar</button><button type="button" class="secondary" id="clearFilters">Limpiar</button>
+    </form>
   </section>
-  <section class="panel">
-    <h2>Texto OCR</h2>
-    <pre id="raw">Seleccione una factura para ver el texto extraido.</pre>
-  </section>
-`;
+  <section class="panel"><h2>Facturas registradas</h2><div class="table-wrap"><table><thead><tr><th>No.</th><th>Fecha</th><th>Proveedor</th><th>NIT</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="rows"></tbody></table></div></section>`;
 
 async function loadInvoices() {
-  const invoices = await api("/api/invoices");
-  rows.innerHTML = invoices.map(invoice => `
-    <tr>
-      <td>${invoice.invoice_number}</td><td>${invoice.issue_date || ""}</td><td>${invoice.provider_name}</td>
-      <td>${invoice.provider_nit}</td><td>${money(invoice.total)}</td><td>${statusBadge(invoice.status)}</td>
-      <td class="actions">
-        <button type="button" onclick="showRaw(${invoice.id})">OCR</button>
-        <button type="button" onclick="validateInvoice(${invoice.id})">Validar</button>
-        <button class="success" type="button" onclick="runRpa(${invoice.id})">RPA</button>
-      </td>
-    </tr>`).join("");
+  const params = new URLSearchParams();
+  if (search.value.trim()) params.set("search", search.value.trim());
+  if (statusFilter.value) params.set("status", statusFilter.value);
+  const invoices = await api(`/api/invoices?${params}`);
+  rows.innerHTML = invoices.length ? invoices.map(invoice => `<tr>
+    <td>${escapeHtml(invoice.invoice_number)}</td><td>${escapeHtml(invoice.issue_date || "")}</td><td>${escapeHtml(invoice.provider_name)}</td>
+    <td>${escapeHtml(invoice.provider_nit)}</td><td>${money(invoice.total)}</td><td>${statusBadge(invoice.status)}</td>
+    <td class="actions"><a class="button" href="invoice_detail.html?id=${invoice.id}">Detalle</a><button onclick="validateInvoice(${invoice.id})">Validar</button><button class="secondary" onclick="reprocessInvoice(${invoice.id})">Reprocesar</button><button class="danger" onclick="rejectInvoice(${invoice.id})">Rechazar</button><button class="success" onclick="runRpa(${invoice.id})">RPA</button></td>
+  </tr>`).join("") : '<tr><td colspan="7">No hay facturas para los filtros seleccionados.</td></tr>';
 }
-
-window.showRaw = async (id) => {
-  const invoice = await api(`/api/invoices/${id}`);
-  raw.textContent = invoice.raw_text || "Sin texto OCR.";
-};
-
-window.validateInvoice = async (id) => {
-  const invoice = await api(`/api/invoices/${id}/validate`, { method: "POST" });
-  message.textContent = `Validacion: ${invoice.status}`;
-  loadInvoices();
-};
-
-window.runRpa = async (id) => {
-  const result = await api(`/api/invoices/${id}/rpa-register`, { method: "POST" });
-  message.textContent = result.result;
-};
-
-uploadForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const body = new FormData();
-  body.append("file", file.files[0]);
-  try {
-    const invoice = await api("/api/invoices/upload", { method: "POST", body });
-    message.textContent = `Factura ${invoice.invoice_number} procesada con estado ${invoice.status}.`;
-    uploadForm.reset();
-    loadInvoices();
-  } catch (error) {
-    message.textContent = error.message;
-  }
-});
-
-seed.addEventListener("click", async () => {
-  try {
-    const result = await api("/api/invoices/seed-demo", { method: "POST" });
-    message.textContent = `Dataset procesado: ${result.total} documentos.`;
-    loadInvoices();
-  } catch (error) {
-    message.textContent = error.message;
-  }
-});
-loadInvoices();
+window.validateInvoice = async id => { const invoice = await api(`/api/invoices/${id}/validate`, { method: "POST" }); message.textContent = `Validacion: ${invoice.status}`; loadInvoices(); };
+window.reprocessInvoice = async id => { message.textContent = "Reprocesando..."; const invoice = await api(`/api/invoices/${id}/reprocess`, { method: "POST" }); message.textContent = `Reproceso: ${invoice.status}`; loadInvoices(); };
+window.rejectInvoice = async id => { const reason = prompt("Motivo del rechazo:", "Rechazada por revision administrativa"); if (!reason) return; const invoice = await api(`/api/invoices/${id}/reject`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason }) }); message.textContent = `Factura ${invoice.invoice_number} rechazada.`; loadInvoices(); };
+window.runRpa = async id => { message.textContent = "Ejecutando Playwright RPA..."; const result = await api(`/api/rpa/invoices/${id}/register`, { method: "POST" }); message.textContent = `${result.status}: ${result.result}`; };
+uploadForm.addEventListener("submit", async event => { event.preventDefault(); const body = new FormData(); body.append("file", file.files[0]); try { message.textContent = "Ejecutando Computer Vision y OCR..."; const invoice = await api("/api/invoices/upload", { method: "POST", body }); message.textContent = `Factura ${invoice.invoice_number}: ${invoice.status}.`; uploadForm.reset(); loadInvoices(); } catch (error) { message.textContent = error.message; } });
+seed.addEventListener("click", async () => { try { message.textContent = "Procesando dataset..."; const result = await api("/api/invoices/seed-demo", { method: "POST" }); message.textContent = `Dataset procesado: ${result.total} documentos.`; loadInvoices(); } catch (error) { message.textContent = error.message; } });
+filters.addEventListener("submit", event => { event.preventDefault(); loadInvoices(); });
+clearFilters.addEventListener("click", () => { filters.reset(); loadInvoices(); });
+loadInvoices().catch(error => { message.textContent = error.message; });

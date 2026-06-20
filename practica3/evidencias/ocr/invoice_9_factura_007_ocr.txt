@@ -1,0 +1,18 @@
+FACTURA FAC-00007
+Proveedor: Manufacturas Amor S.Com
+NIT: 3542019-1
+Fecha: 24/10/2025
+Cliente:
+Alfonso Diez
+C de Josep Isern 69, Zamora, 32279
+Cant Descapción Precio Total
+2 Bueno Q 360 05 Q720 10
+4 Siete 07458 Q 298 32
+4 J Q 249 44 Q 997 76
+4 Nuestros Q 394 42 Q 1577 68
+5 Número Q 111 46 Q 557 30
+5 Una Q 173 66 Q 868 30
+Subtotal Q 5019.46
+IVA 12% Q 602.34
+TOTAL: Q 5621.80
+Documento generado únicamente para fines académicos

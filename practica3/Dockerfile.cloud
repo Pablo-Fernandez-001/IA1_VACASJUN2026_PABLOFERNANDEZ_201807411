@@ -1,0 +1,25 @@
+FROM python:3.11-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FRONTEND_DIR=/app/frontend \
+    UPLOAD_DIR=/app/uploads \
+    REPORT_DIR=/app/reports \
+    EVIDENCE_DIR=/app/evidencias \
+    DATASET_DIR=/app/data/facturas_generadas
+
+WORKDIR /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-spa libgl1 libglib2.0-0 wget ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY practica3/backend/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+    && python -m playwright install --with-deps chromium
+
+COPY practica3/backend/app ./app
+COPY practica3/frontend ./frontend
+COPY practica3/data ./data
+RUN mkdir -p uploads reports evidencias/ocr evidencias/rpa
+
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
