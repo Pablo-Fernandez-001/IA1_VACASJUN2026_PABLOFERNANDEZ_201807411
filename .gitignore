@@ -4,6 +4,10 @@
 *.sqlite3
 uploads/
 reports/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+practica3/test_*
 
 # Large local evidence videos. Keep them on disk, not in GitHub.
 proyecto_f1/docs/videos/
