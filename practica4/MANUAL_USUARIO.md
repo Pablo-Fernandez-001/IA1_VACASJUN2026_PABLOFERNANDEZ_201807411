@@ -79,6 +79,20 @@ de ese algoritmo.
 Con esos seis pasos se demuestran los ejemplos, BFS, DFS, métricas, comparación,
 visualización y manejo de errores exigidos por la práctica.
 
+### Referencia rápida de controles
+
+| Quiero… | Control que debo usar |
+|---|---|
+| Cargar un caso incluido | Seleccionar un ejemplo y pulsar `↗` |
+| Dibujar o quitar paredes | Elegir **Obstáculo** y pulsar/arrastrar |
+| Cambiar el origen | Elegir **Inicio** y pulsar una celda |
+| Cambiar el destino | Elegir **Destino** y pulsar una celda |
+| Obtener la ruta mínima | Pulsar **BFS** |
+| Explorar en profundidad | Pulsar **DFS** |
+| Ver ambos resultados | Pulsar **Comparar BFS vs DFS** |
+| Conservar el mapa y borrar colores | Pulsar **Borrar recorrido** |
+| Quitar todas las paredes | Pulsar **Limpiar obstáculos** |
+
 ## 3. Iniciar el sistema manualmente
 
 ### Opción A: Python
