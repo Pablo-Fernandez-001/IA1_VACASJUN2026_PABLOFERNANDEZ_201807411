@@ -95,6 +95,7 @@
       if (this.visualTimer) window.clearTimeout(this.visualTimer);
       this.visited.clear();
       this.path.clear();
+      this.element.removeAttribute("data-algorithm");
       this.paintAll();
     }
 
@@ -113,6 +114,7 @@
 
     async visualize(result) {
       this.clearVisualization();
+      this.element.dataset.algorithm = result.algorithm.toLowerCase();
       const delay = Math.max(4, Math.min(28, 650 / Math.max(result.visited_nodes.length, 1)));
       for (const point of result.visited_nodes) {
         this.visited.add(keyOf(point));

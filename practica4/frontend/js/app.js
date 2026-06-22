@@ -40,6 +40,7 @@
   }
 
   function showMetrics(result) {
+    $("#resultsTitle").textContent = result.algorithm === "BFS" ? "Telemetría de onda BFS" : "Telemetría de sonda DFS";
     $("#metricAlgorithm").textContent = result.algorithm;
     $("#metricFound").textContent = result.path_found ? "Sí" : "No";
     $("#metricLength").textContent = number(result.path_length);
@@ -92,20 +93,64 @@
     return row;
   }
 
+  function renderMiniMaze(element, result, maze) {
+    const obstacles = new Set(maze.obstacles.map((point) => `${point.row},${point.col}`));
+    const visited = new Set(result.visited_nodes.map((point) => `${point.row},${point.col}`));
+    const path = new Set(result.path.map((point) => `${point.row},${point.col}`));
+    const start = `${maze.start.row},${maze.start.col}`;
+    const goal = `${maze.goal.row},${maze.goal.col}`;
+    element.innerHTML = "";
+    element.style.setProperty("--mini-rows", maze.rows);
+    element.style.setProperty("--mini-cols", maze.cols);
+    element.style.gridTemplateColumns = `repeat(${maze.cols}, 1fr)`;
+    element.style.gridTemplateRows = `repeat(${maze.rows}, 1fr)`;
+    const fragment = document.createDocumentFragment();
+    for (let row = 0; row < maze.rows; row += 1) {
+      for (let col = 0; col < maze.cols; col += 1) {
+        const key = `${row},${col}`;
+        const cell = document.createElement("i");
+        const classes = ["mini-cell"];
+        if (visited.has(key)) classes.push("visited");
+        if (path.has(key)) classes.push("path");
+        if (obstacles.has(key)) classes.push("obstacle");
+        if (key === start) classes.push("start");
+        if (key === goal) classes.push("goal");
+        cell.className = classes.join(" ");
+        cell.setAttribute("aria-hidden", "true");
+        fragment.appendChild(cell);
+      }
+    }
+    element.appendChild(fragment);
+  }
+
+  function renderDuel(data, maze) {
+    renderMiniMaze($("#bfsMiniMap"), data.bfs, maze);
+    renderMiniMaze($("#dfsMiniMap"), data.dfs, maze);
+    $("#bfsDuelStat").textContent = data.bfs.path_found
+      ? `${data.bfs.path_length} STEPS · ${data.bfs.nodes_explored} NODES`
+      : `NO PATH · ${data.bfs.nodes_explored} NODES`;
+    $("#dfsDuelStat").textContent = data.dfs.path_found
+      ? `${data.dfs.path_length} STEPS · ${data.dfs.nodes_explored} NODES`
+      : `NO PATH · ${data.dfs.nodes_explored} NODES`;
+  }
+
   async function runComparison() {
     setBusy(true, "Comparando…");
     try {
-      const data = await window.RoboMazeApi.solve("compare", board.getPayload());
+      const maze = board.getPayload();
+      const data = await window.RoboMazeApi.solve("compare", maze);
       comparisons.BFS = data.bfs;
       comparisons.DFS = data.dfs;
       const body = $("#comparisonBody");
       body.innerHTML = "";
       body.append(comparisonRow(data.bfs), comparisonRow(data.dfs));
+      renderDuel(data, maze);
       $("#conclusion").textContent = data.conclusion;
       $("#comparisonBlock").hidden = false;
       $("#resultMessage").textContent = "Selecciona “Mostrar” para alternar el recorrido visualizado.";
       showMetrics(data.bfs);
       $("#resultMessage").textContent = "Comparación completada. Selecciona “Mostrar” para alternar recorridos.";
+      $("#resultsTitle").textContent = "Duelo de estrategias";
       await board.visualize(data.bfs);
     } catch (error) {
       showError(error);
@@ -181,7 +226,7 @@
   });
 
   $("#mazeGrid").addEventListener("cellhover", (event) => {
-    $("#coordinateBadge").textContent = `Fila ${event.detail.row} · Col ${event.detail.col}`;
+    $("#coordinateBadge").textContent = `R${String(event.detail.row).padStart(2, "0")} · C${String(event.detail.col).padStart(2, "0")}`;
   });
   $("#bfsBtn").addEventListener("click", () => runSingle("bfs"));
   $("#dfsBtn").addEventListener("click", () => runSingle("dfs"));
@@ -195,6 +240,9 @@
     $("#resultState").textContent = "Sin ejecutar";
     ["#metricAlgorithm", "#metricFound", "#metricLength", "#metricNodes", "#metricTime"].forEach((id) => { $(id).textContent = "—"; });
     $("#resultMessage").textContent = "Configura el laberinto para comenzar.";
+    $("#resultsTitle").textContent = "Lectura de navegación";
+    $("#bfsMiniMap").innerHTML = "";
+    $("#dfsMiniMap").innerHTML = "";
   }
 
   checkBackend();
