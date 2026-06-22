@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: ./backend
+    container_name: robomaze-backend
+    restart: unless-stopped
+    environment:
+      EXAMPLES_DIR: /app/examples
+    volumes:
+      - ./examples:/app/examples:ro
+    ports:
+      - "8400:8400"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8400/api/health', timeout=3)"]
+      interval: 10s
+      timeout: 4s
+      retries: 8
+      start_period: 8s
+
+  frontend:
+    image: nginx:1.27-alpine
+    container_name: robomaze-frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8401:80"
+    depends_on:
+      backend:
+        condition: service_healthy

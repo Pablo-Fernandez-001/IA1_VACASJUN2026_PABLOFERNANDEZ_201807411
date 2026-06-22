@@ -1,0 +1,15 @@
+{
+  "id": 5,
+  "name": "Sin solucion",
+  "description": "La meta esta aislada para comprobar el manejo seguro de ausencia de ruta.",
+  "rows": 7,
+  "cols": 7,
+  "start": {"row": 0, "col": 0},
+  "goal": {"row": 3, "col": 3},
+  "obstacles": [
+    {"row": 2, "col": 3},
+    {"row": 3, "col": 2},
+    {"row": 3, "col": 4},
+    {"row": 4, "col": 3}
+  ]
+}

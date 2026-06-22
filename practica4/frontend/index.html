@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RoboMaze: visualizador interactivo de BFS y DFS">
+    <title>RoboMaze | BFS vs DFS</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script defer src="js/api.js"></script>
+    <script defer src="js/maze.js"></script>
+    <script defer src="js/app.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#main" aria-label="Ir al laberinto">
+        <span class="brand-mark" aria-hidden="true">R</span>
+        <span><strong>RoboMaze</strong><small>Laboratorio de búsqueda</small></span>
+      </a>
+      <div class="backend-status" id="backendStatus" role="status">
+        <span class="status-dot"></span><span>Conectando con la API…</span>
+      </div>
+    </header>
+
+    <main id="main" class="workspace">
+      <aside class="control-panel" aria-label="Controles del laberinto">
+        <section class="panel-section intro">
+          <p class="eyebrow">INTELIGENCIA ARTIFICIAL 1</p>
+          <h1>Encuentra el camino.</h1>
+          <p>Diseña un entorno y observa cómo BFS y DFS toman decisiones distintas.</p>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading">
+            <span class="step">01</span>
+            <div><h2>Escenario</h2><p>Elige un caso o crea el tuyo.</p></div>
+          </div>
+          <label for="exampleSelect">Laberinto predefinido</label>
+          <div class="field-row">
+            <select id="exampleSelect" aria-label="Laberinto predefinido">
+              <option value="">Selecciona uno…</option>
+            </select>
+            <button id="loadExampleBtn" class="icon-button" type="button" title="Cargar ejemplo" aria-label="Cargar ejemplo">↗</button>
+          </div>
+          <div class="size-fields">
+            <label>Filas<input id="rowsInput" type="number" min="2" max="30" value="10"></label>
+            <span aria-hidden="true">×</span>
+            <label>Columnas<input id="colsInput" type="number" min="2" max="30" value="10"></label>
+            <button id="resizeBtn" class="secondary-button" type="button">Aplicar</button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-heading">
+            <span class="step">02</span>
+            <div><h2>Herramientas</h2><p>Haz clic o arrastra sobre la cuadrícula.</p></div>
+          </div>
+          <div class="tool-grid" role="group" aria-label="Modo de edición">
+            <button class="tool-button active" data-mode="obstacle" type="button"><span class="swatch obstacle"></span>Obstáculo</button>
+            <button class="tool-button" data-mode="start" type="button"><span class="swatch start"></span>Inicio</button>
+            <button class="tool-button" data-mode="goal" type="button"><span class="swatch goal"></span>Destino</button>
+          </div>
+          <div class="utility-row">
+            <button id="clearMazeBtn" class="text-button" type="button">Limpiar obstáculos</button>
+            <button id="resetResultsBtn" class="text-button" type="button">Borrar recorrido</button>
+          </div>
+        </section>
+
+        <section class="panel-section run-section">
+          <div class="section-heading">
+            <span class="step">03</span>
+            <div><h2>Ejecutar</h2><p>La búsqueda ocurre en Python.</p></div>
+          </div>
+          <div class="run-buttons">
+            <button id="bfsBtn" class="run-button bfs" type="button"><span>BFS</span><small>Por amplitud</small></button>
+            <button id="dfsBtn" class="run-button dfs" type="button"><span>DFS</span><small>Por profundidad</small></button>
+          </div>
+          <button id="compareBtn" class="compare-button" type="button">Comparar BFS vs DFS <span>→</span></button>
+        </section>
+      </aside>
+
+      <section class="content-panel" aria-label="Visualización y resultados">
+        <div class="maze-card">
+          <div class="maze-card-head">
+            <div>
+              <p class="eyebrow">MAPA ACTIVO</p>
+              <h2 id="mazeTitle">Laberinto personalizado</h2>
+              <p id="mazeDescription">10 × 10 · Edita las celdas y ejecuta un algoritmo.</p>
+            </div>
+            <div class="coordinate-badge" id="coordinateBadge">Celda —</div>
+          </div>
+
+          <div class="maze-stage">
+            <div id="mazeGrid" class="maze-grid" role="grid" aria-label="Cuadrícula editable del laberinto"></div>
+          </div>
+
+          <div class="legend" aria-label="Leyenda">
+            <span><i class="legend-dot free"></i>Libre</span>
+            <span><i class="legend-dot obstacle"></i>Obstáculo</span>
+            <span><i class="legend-dot start"></i>Inicio</span>
+            <span><i class="legend-dot goal"></i>Destino</span>
+            <span><i class="legend-dot visited"></i>Explorado</span>
+            <span><i class="legend-dot path"></i>Ruta</span>
+          </div>
+        </div>
+
+        <section class="results-card" aria-labelledby="resultsTitle">
+          <div class="results-head">
+            <div><p class="eyebrow">ANÁLISIS</p><h2 id="resultsTitle">Resultados de búsqueda</h2></div>
+            <span id="resultState" class="result-state neutral">Sin ejecutar</span>
+          </div>
+
+          <div class="metric-grid">
+            <article class="metric-card"><span>Algoritmo</span><strong id="metricAlgorithm">—</strong></article>
+            <article class="metric-card"><span>Ruta</span><strong id="metricFound">—</strong></article>
+            <article class="metric-card"><span>Longitud</span><strong id="metricLength">—</strong><small>pasos</small></article>
+            <article class="metric-card"><span>Explorados</span><strong id="metricNodes">—</strong><small>nodos</small></article>
+            <article class="metric-card accent"><span>Tiempo</span><strong id="metricTime">—</strong><small>ms</small></article>
+          </div>
+
+          <div id="comparisonBlock" class="comparison-block" hidden>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Algoritmo</th><th>Ruta</th><th>Longitud</th><th>Nodos</th><th>Tiempo</th><th>Ver</th></tr></thead>
+                <tbody id="comparisonBody"></tbody>
+              </table>
+            </div>
+            <p id="conclusion" class="conclusion"></p>
+          </div>
+          <p id="resultMessage" class="result-message" aria-live="polite">Configura el laberinto para comenzar.</p>
+        </section>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+  </body>
+</html>

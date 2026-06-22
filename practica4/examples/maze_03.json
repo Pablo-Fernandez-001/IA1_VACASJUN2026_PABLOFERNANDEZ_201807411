@@ -1,0 +1,26 @@
+{
+  "id": 3,
+  "name": "Ruta larga",
+  "description": "Laberinto 12x12 con tres paredes y pasos alternados.",
+  "rows": 12,
+  "cols": 12,
+  "start": {"row": 0, "col": 0},
+  "goal": {"row": 11, "col": 11},
+  "obstacles": [
+    {"row": 0, "col": 2}, {"row": 1, "col": 2},
+    {"row": 2, "col": 2}, {"row": 3, "col": 2},
+    {"row": 4, "col": 2}, {"row": 5, "col": 2},
+    {"row": 6, "col": 2}, {"row": 7, "col": 2},
+    {"row": 8, "col": 2}, {"row": 9, "col": 2},
+    {"row": 1, "col": 5}, {"row": 2, "col": 5},
+    {"row": 3, "col": 5}, {"row": 4, "col": 5},
+    {"row": 5, "col": 5}, {"row": 6, "col": 5},
+    {"row": 7, "col": 5}, {"row": 8, "col": 5},
+    {"row": 9, "col": 5}, {"row": 10, "col": 5},
+    {"row": 0, "col": 8}, {"row": 1, "col": 8},
+    {"row": 2, "col": 8}, {"row": 3, "col": 8},
+    {"row": 4, "col": 8}, {"row": 5, "col": 8},
+    {"row": 6, "col": 8}, {"row": 7, "col": 8},
+    {"row": 8, "col": 8}, {"row": 9, "col": 8}
+  ]
+}

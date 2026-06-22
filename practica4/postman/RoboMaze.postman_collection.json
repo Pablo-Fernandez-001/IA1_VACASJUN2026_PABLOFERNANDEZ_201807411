@@ -1,0 +1,59 @@
+{
+  "info": {
+    "_postman_id": "6b0cdb29-bdc4-4acc-a68c-robomaze2026",
+    "name": "RoboMaze - Practica 4 IA1",
+    "description": "Health, cinco ejemplos, BFS, DFS, comparación y validación negativa.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [{"key": "baseUrl", "value": "http://localhost:8400"}],
+  "item": [
+    {
+      "name": "Health",
+      "request": {"method": "GET", "url": "{{baseUrl}}/api/health"}
+    },
+    {
+      "name": "Listar cinco laberintos",
+      "request": {"method": "GET", "url": "{{baseUrl}}/api/maze/examples"}
+    },
+    {
+      "name": "Obtener laberinto 4",
+      "request": {"method": "GET", "url": "{{baseUrl}}/api/maze/examples/4"}
+    },
+    {
+      "name": "Resolver con BFS",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"rows\": 5,\n  \"cols\": 5,\n  \"start\": {\"row\": 0, \"col\": 0},\n  \"goal\": {\"row\": 4, \"col\": 4},\n  \"obstacles\": [{\"row\": 1, \"col\": 1}]\n}"},
+        "url": "{{baseUrl}}/api/maze/solve/bfs"
+      }
+    },
+    {
+      "name": "Resolver con DFS",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"rows\": 5,\n  \"cols\": 5,\n  \"start\": {\"row\": 0, \"col\": 0},\n  \"goal\": {\"row\": 4, \"col\": 4},\n  \"obstacles\": [{\"row\": 1, \"col\": 1}]\n}"},
+        "url": "{{baseUrl}}/api/maze/solve/dfs"
+      }
+    },
+    {
+      "name": "Comparar BFS vs DFS",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"rows\": 8,\n  \"cols\": 8,\n  \"start\": {\"row\": 0, \"col\": 0},\n  \"goal\": {\"row\": 7, \"col\": 0},\n  \"obstacles\": []\n}"},
+        "url": "{{baseUrl}}/api/maze/solve/compare"
+      }
+    },
+    {
+      "name": "Error - inicio bloqueado",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {"mode": "raw", "raw": "{\n  \"rows\": 3,\n  \"cols\": 3,\n  \"start\": {\"row\": 0, \"col\": 0},\n  \"goal\": {\"row\": 2, \"col\": 2},\n  \"obstacles\": [{\"row\": 0, \"col\": 0}]\n}"},
+        "url": "{{baseUrl}}/api/maze/solve/bfs"
+      }
+    }
+  ]
+}

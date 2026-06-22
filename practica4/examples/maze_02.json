@@ -1,0 +1,18 @@
+{
+  "id": 2,
+  "name": "Barreras moderadas",
+  "description": "Corredores alternos que obligan a rodear dos paredes.",
+  "rows": 9,
+  "cols": 9,
+  "start": {"row": 0, "col": 0},
+  "goal": {"row": 8, "col": 8},
+  "obstacles": [
+    {"row": 0, "col": 3}, {"row": 1, "col": 3},
+    {"row": 2, "col": 3}, {"row": 3, "col": 3},
+    {"row": 4, "col": 3}, {"row": 6, "col": 3},
+    {"row": 7, "col": 3}, {"row": 8, "col": 3},
+    {"row": 3, "col": 5}, {"row": 4, "col": 5},
+    {"row": 5, "col": 5}, {"row": 6, "col": 5},
+    {"row": 7, "col": 5}, {"row": 8, "col": 5}
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "id": 4,
+  "name": "Trampa para DFS",
+  "description": "Espacio abierto donde el orden en profundidad explora un desvio grande.",
+  "rows": 8,
+  "cols": 8,
+  "start": {"row": 0, "col": 0},
+  "goal": {"row": 7, "col": 0},
+  "obstacles": []
+}

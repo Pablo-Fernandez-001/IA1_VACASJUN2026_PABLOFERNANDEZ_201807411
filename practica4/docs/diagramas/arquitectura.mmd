@@ -1,0 +1,14 @@
+flowchart LR
+    U[Usuario] --> F[Frontend HTML · CSS · JS]
+    F -->|JSON / HTTP| API[FastAPI · rutas]
+    API --> M[Schemas Pydantic]
+    API --> V[Validador de laberinto]
+    V --> B[BFS · cola FIFO]
+    V --> D[DFS · pila LIFO]
+    API --> C[Servicio de comparación]
+    C --> B
+    C --> D
+    API --> E[5 ejemplos JSON]
+    B --> R[SearchResult]
+    D --> R
+    R --> F

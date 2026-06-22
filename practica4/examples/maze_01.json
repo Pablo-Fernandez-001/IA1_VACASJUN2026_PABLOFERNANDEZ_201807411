@@ -1,0 +1,15 @@
+{
+  "id": 1,
+  "name": "Ruta directa",
+  "description": "Caso basico 6x6 con una ruta corta y pocos obstaculos.",
+  "rows": 6,
+  "cols": 6,
+  "start": {"row": 0, "col": 0},
+  "goal": {"row": 5, "col": 5},
+  "obstacles": [
+    {"row": 1, "col": 2},
+    {"row": 2, "col": 2},
+    {"row": 3, "col": 2},
+    {"row": 4, "col": 4}
+  ]
+}
