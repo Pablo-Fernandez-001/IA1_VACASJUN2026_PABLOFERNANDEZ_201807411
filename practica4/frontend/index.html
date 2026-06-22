@@ -13,8 +13,8 @@
   <body>
     <header class="topbar">
       <a class="brand" href="#main" aria-label="Ir al laberinto">
-        <span class="brand-mark" aria-hidden="true">R</span>
-        <span><strong>RoboMaze</strong><small>Laboratorio de búsqueda</small></span>
+        <span class="brand-mark" aria-hidden="true"><i></i>R</span>
+        <span><strong>ROBO<span>/MAZE</span></strong><small>NAVIGATION SYSTEM // IA-01</small></span>
       </a>
       <div class="backend-status" id="backendStatus" role="status">
         <span class="status-dot"></span><span>Conectando con la API…</span>
@@ -24,15 +24,17 @@
     <main id="main" class="workspace">
       <aside class="control-panel" aria-label="Controles del laberinto">
         <section class="panel-section intro">
-          <p class="eyebrow">INTELIGENCIA ARTIFICIAL 1</p>
-          <h1>Encuentra el camino.</h1>
-          <p>Diseña un entorno y observa cómo BFS y DFS toman decisiones distintas.</p>
+          <div class="mission-line"><span>MISSION CONTROL</span><strong>RM—04</strong></div>
+          <p class="eyebrow">AUTONOMOUS NAVIGATION LAB</p>
+          <h1>Traza. Explora.<br><em>Llega.</em></h1>
+          <p>Programa el terreno y observa cómo dos estrategias guían al rover hacia su baliza.</p>
+          <div class="system-readout"><span><i></i>SISTEMA LISTO</span><span>GRID // ORTHO</span></div>
         </section>
 
         <section class="panel-section">
           <div class="section-heading">
             <span class="step">01</span>
-            <div><h2>Escenario</h2><p>Elige un caso o crea el tuyo.</p></div>
+            <div><h2>Mapa de misión</h2><p>Carga un terreno o calibra la malla.</p></div>
           </div>
           <label for="exampleSelect">Laberinto predefinido</label>
           <div class="field-row">
@@ -52,12 +54,12 @@
         <section class="panel-section">
           <div class="section-heading">
             <span class="step">02</span>
-            <div><h2>Herramientas</h2><p>Haz clic o arrastra sobre la cuadrícula.</p></div>
+            <div><h2>Editor de terreno</h2><p>Asigna rover, baliza y bloqueos.</p></div>
           </div>
           <div class="tool-grid" role="group" aria-label="Modo de edición">
-            <button class="tool-button active" data-mode="obstacle" type="button"><span class="swatch obstacle"></span>Obstáculo</button>
-            <button class="tool-button" data-mode="start" type="button"><span class="swatch start"></span>Inicio</button>
-            <button class="tool-button" data-mode="goal" type="button"><span class="swatch goal"></span>Destino</button>
+            <button class="tool-button active" data-mode="obstacle" type="button"><span class="swatch obstacle"></span>Bloqueo</button>
+            <button class="tool-button" data-mode="start" type="button"><span class="swatch start"></span>Rover</button>
+            <button class="tool-button" data-mode="goal" type="button"><span class="swatch goal"></span>Baliza</button>
           </div>
           <div class="utility-row">
             <button id="clearMazeBtn" class="text-button" type="button">Limpiar obstáculos</button>
@@ -68,11 +70,11 @@
         <section class="panel-section run-section">
           <div class="section-heading">
             <span class="step">03</span>
-            <div><h2>Ejecutar</h2><p>La búsqueda ocurre en Python.</p></div>
+            <div><h2>Motor de búsqueda</h2><p>Procesamiento remoto en Python.</p></div>
           </div>
           <div class="run-buttons">
-            <button id="bfsBtn" class="run-button bfs" type="button"><span>BFS</span><small>Por amplitud</small></button>
-            <button id="dfsBtn" class="run-button dfs" type="button"><span>DFS</span><small>Por profundidad</small></button>
+            <button id="bfsBtn" class="run-button bfs" type="button"><b>WAVE</b><span>BFS</span><small>Exploración por ondas</small></button>
+            <button id="dfsBtn" class="run-button dfs" type="button"><b>PROBE</b><span>DFS</span><small>Sonda en profundidad</small></button>
           </div>
           <button id="compareBtn" class="compare-button" type="button">Comparar BFS vs DFS <span>→</span></button>
         </section>
@@ -82,22 +84,29 @@
         <div class="maze-card">
           <div class="maze-card-head">
             <div>
-              <p class="eyebrow">MAPA ACTIVO</p>
+              <p class="eyebrow">NAVIGATION ARENA <span>// LIVE MAP</span></p>
               <h2 id="mazeTitle">Laberinto personalizado</h2>
               <p id="mazeDescription">10 × 10 · Edita las celdas y ejecuta un algoritmo.</p>
             </div>
-            <div class="coordinate-badge" id="coordinateBadge">Celda —</div>
+            <div class="arena-head-tools">
+              <span class="arena-tag">4-WAY MOTION</span>
+              <div class="coordinate-badge" id="coordinateBadge">R— · C—</div>
+            </div>
           </div>
 
           <div class="maze-stage">
+            <span class="stage-code top-left">ARENA // 01</span>
+            <span class="stage-code top-right">SCALE 1:1</span>
+            <span class="stage-code bottom-left">X → COLUMNS</span>
+            <span class="stage-code bottom-right">Y → ROWS</span>
             <div id="mazeGrid" class="maze-grid" role="grid" aria-label="Cuadrícula editable del laberinto"></div>
           </div>
 
           <div class="legend" aria-label="Leyenda">
             <span><i class="legend-dot free"></i>Libre</span>
             <span><i class="legend-dot obstacle"></i>Obstáculo</span>
-            <span><i class="legend-dot start"></i>Inicio</span>
-            <span><i class="legend-dot goal"></i>Destino</span>
+            <span><i class="legend-dot start"></i>Rover</span>
+            <span><i class="legend-dot goal"></i>Baliza</span>
             <span><i class="legend-dot visited"></i>Explorado</span>
             <span><i class="legend-dot path"></i>Ruta</span>
           </div>
@@ -105,7 +114,7 @@
 
         <section class="results-card" aria-labelledby="resultsTitle">
           <div class="results-head">
-            <div><p class="eyebrow">ANÁLISIS</p><h2 id="resultsTitle">Resultados de búsqueda</h2></div>
+            <div><p class="eyebrow">MISSION TELEMETRY <span>// PYTHON CORE</span></p><h2 id="resultsTitle">Lectura de navegación</h2></div>
             <span id="resultState" class="result-state neutral">Sin ejecutar</span>
           </div>
 
@@ -118,6 +127,17 @@
           </div>
 
           <div id="comparisonBlock" class="comparison-block" hidden>
+            <div id="comparisonVisuals" class="algorithm-duel" aria-label="Comparación visual de recorridos">
+              <article class="duel-card bfs-card">
+                <div class="duel-head"><div><span>WAVE SEARCH</span><h3>BFS</h3></div><b id="bfsDuelStat">—</b></div>
+                <div id="bfsMiniMap" class="mini-maze" aria-label="Miniatura del recorrido BFS"></div>
+              </article>
+              <div class="versus-mark" aria-hidden="true">VS</div>
+              <article class="duel-card dfs-card">
+                <div class="duel-head"><div><span>DEPTH PROBE</span><h3>DFS</h3></div><b id="dfsDuelStat">—</b></div>
+                <div id="dfsMiniMap" class="mini-maze" aria-label="Miniatura del recorrido DFS"></div>
+              </article>
+            </div>
             <div class="table-wrap">
               <table>
                 <thead><tr><th>Algoritmo</th><th>Ruta</th><th>Longitud</th><th>Nodos</th><th>Tiempo</th><th>Ver</th></tr></thead>
