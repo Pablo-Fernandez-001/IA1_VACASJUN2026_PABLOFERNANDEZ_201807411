@@ -93,6 +93,7 @@
 
     clearVisualization() {
       if (this.visualTimer) window.clearTimeout(this.visualTimer);
+      this.clearRover();
       this.visited.clear();
       this.path.clear();
       this.element.removeAttribute("data-algorithm");
@@ -112,17 +113,56 @@
       };
     }
 
-    async visualize(result) {
+    async visualize(result, onProgress = null) {
       this.clearVisualization();
       this.element.dataset.algorithm = result.algorithm.toLowerCase();
       const delay = Math.max(4, Math.min(28, 650 / Math.max(result.visited_nodes.length, 1)));
-      for (const point of result.visited_nodes) {
+      for (const [index, point] of result.visited_nodes.entries()) {
         this.visited.add(keyOf(point));
         this.paintCell(point);
+        if (onProgress) onProgress({
+          phase: "exploration",
+          algorithm: result.algorithm,
+          point,
+          current: index + 1,
+          total: result.visited_nodes.length,
+        });
         await new Promise((resolve) => { this.visualTimer = window.setTimeout(resolve, delay); });
       }
       result.path.forEach((point) => this.path.add(keyOf(point)));
       this.paintAll();
+      if (onProgress) onProgress({
+        phase: "route-ready",
+        algorithm: result.algorithm,
+        point: result.path[0] || null,
+        current: 0,
+        total: result.path.length,
+      });
+    }
+
+    clearRover() {
+      this.element.querySelectorAll(".rover-token").forEach((token) => token.remove());
+      this.element.classList.remove("has-active-rover");
+    }
+
+    placeRover(point, previous = null) {
+      this.clearRover();
+      const cell = this.element.querySelector(`[data-row="${point.row}"][data-col="${point.col}"]`);
+      if (!cell) return;
+      let heading = 0;
+      if (previous) {
+        const rowDelta = point.row - previous.row;
+        const colDelta = point.col - previous.col;
+        if (colDelta > 0) heading = 90;
+        else if (rowDelta > 0) heading = 180;
+        else if (colDelta < 0) heading = -90;
+      }
+      const token = document.createElement("span");
+      token.className = "rover-token";
+      token.style.setProperty("--heading", `${heading}deg`);
+      token.setAttribute("aria-hidden", "true");
+      cell.appendChild(token);
+      this.element.classList.add("has-active-rover");
     }
 
     render() {
@@ -142,7 +182,30 @@
         }
       }
       this.element.appendChild(fragment);
+      this.renderAxes();
       this.paintAll();
+    }
+
+    renderAxes() {
+      const columnAxis = document.querySelector("#columnAxis");
+      const rowAxis = document.querySelector("#rowAxis");
+      if (!columnAxis || !rowAxis) return;
+      columnAxis.innerHTML = "";
+      rowAxis.innerHTML = "";
+      columnAxis.style.gridTemplateColumns = `repeat(${this.cols}, 1fr)`;
+      rowAxis.style.gridTemplateRows = `repeat(${this.rows}, 1fr)`;
+      const columnStep = this.cols > 16 ? 5 : this.cols > 10 ? 2 : 1;
+      const rowStep = this.rows > 16 ? 5 : this.rows > 10 ? 2 : 1;
+      for (let col = 0; col < this.cols; col += 1) {
+        const label = document.createElement("span");
+        label.textContent = col % columnStep === 0 ? String(col).padStart(2, "0") : "";
+        columnAxis.appendChild(label);
+      }
+      for (let row = 0; row < this.rows; row += 1) {
+        const label = document.createElement("span");
+        label.textContent = row % rowStep === 0 ? String(row).padStart(2, "0") : "";
+        rowAxis.appendChild(label);
+      }
     }
 
     paintCell(point) {
@@ -172,6 +235,7 @@
 
     changed() {
       if (this.onChange) this.onChange(this.getPayload());
+      this.element.dispatchEvent(new CustomEvent("mazechange"));
     }
   }
 

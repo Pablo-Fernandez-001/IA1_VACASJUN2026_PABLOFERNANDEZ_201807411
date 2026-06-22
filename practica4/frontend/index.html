@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="RoboMaze: visualizador interactivo de BFS y DFS">
     <title>RoboMaze | BFS vs DFS</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23cafa45' d='M4 4h42l14 14v42H18L4 46z'/%3E%3Cpath fill='%2306100f' d='M22 17h13q9 0 9 8 0 6-5 7l7 15H36l-6-13v13h-8zm8 7v5h4q3 0 3-3t-3-2z'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/styles.css">
     <script defer src="js/api.js"></script>
     <script defer src="js/maze.js"></script>
@@ -99,7 +100,11 @@
             <span class="stage-code top-right">SCALE 1:1</span>
             <span class="stage-code bottom-left">X → COLUMNS</span>
             <span class="stage-code bottom-right">Y → ROWS</span>
-            <div id="mazeGrid" class="maze-grid" role="grid" aria-label="Cuadrícula editable del laberinto"></div>
+            <div class="arena-grid-shell">
+              <div id="columnAxis" class="axis column-axis" aria-hidden="true"></div>
+              <div id="rowAxis" class="axis row-axis" aria-hidden="true"></div>
+              <div id="mazeGrid" class="maze-grid" role="grid" aria-label="Cuadrícula editable del laberinto"></div>
+            </div>
           </div>
 
           <div class="legend" aria-label="Leyenda">
@@ -110,6 +115,32 @@
             <span><i class="legend-dot visited"></i>Explorado</span>
             <span><i class="legend-dot path"></i>Ruta</span>
           </div>
+
+          <section id="missionConsole" class="mission-console" aria-labelledby="missionConsoleTitle">
+            <div class="console-copy">
+              <div class="console-label"><i></i><span id="missionPhase">STANDBY</span></div>
+              <h3 id="missionConsoleTitle">Consola de misión</h3>
+              <p id="missionNarrative" aria-live="polite">Carga un mapa y ejecuta un algoritmo para iniciar la navegación.</p>
+            </div>
+            <div class="live-telemetry">
+              <div><span>POSICIÓN</span><strong id="missionPosition">R— · C—</strong></div>
+              <div><span>PROGRESO</span><strong id="missionProgress">0%</strong></div>
+              <div><span>PASO</span><strong id="missionStep">0 / 0</strong></div>
+            </div>
+            <div class="mission-progress" aria-hidden="true"><i id="missionProgressBar"></i></div>
+            <div class="replay-controls" aria-label="Controles de repetición de misión">
+              <button id="replayBtn" type="button" disabled>▶ Ejecutar ruta</button>
+              <button id="pauseReplayBtn" type="button" disabled>Ⅱ Pausar</button>
+              <button id="resetReplayBtn" type="button" disabled>↺ Reiniciar</button>
+              <label for="speedSelect">Velocidad
+                <select id="speedSelect">
+                  <option value="180">0.5×</option>
+                  <option value="90" selected>1×</option>
+                  <option value="45">2×</option>
+                </select>
+              </label>
+            </div>
+          </section>
         </div>
 
         <section class="results-card" aria-labelledby="resultsTitle">
@@ -127,6 +158,11 @@
           </div>
 
           <div id="comparisonBlock" class="comparison-block" hidden>
+            <div id="winnerBanner" class="winner-banner">
+              <span>RESULTADO DE MISIÓN</span>
+              <strong id="winnerTitle">ANÁLISIS PENDIENTE</strong>
+              <p id="winnerReason">Ejecuta ambos algoritmos para comparar sus decisiones.</p>
+            </div>
             <div id="comparisonVisuals" class="algorithm-duel" aria-label="Comparación visual de recorridos">
               <article class="duel-card bfs-card">
                 <div class="duel-head"><div><span>WAVE SEARCH</span><h3>BFS</h3></div><b id="bfsDuelStat">—</b></div>
