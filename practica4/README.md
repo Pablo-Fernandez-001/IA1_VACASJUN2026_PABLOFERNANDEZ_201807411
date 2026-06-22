@@ -139,12 +139,16 @@ practica4/
 └── transcripcion_practica4.md
 ```
 
-## Documentación
+## Manuales
 
-- [Manual técnico](MANUAL_TECNICO.md)
-- [Manual de usuario](MANUAL_USUARIO.md)
+| Manual | Contenido |
+|---|---|
+| **[Manual de usuario](MANUAL_USUARIO.md)** | Instalación, inicio, creación de laberintos, ejecución de BFS/DFS, comparación, interpretación de resultados y capturas de funcionamiento. |
+| **[Manual técnico](MANUAL_TECNICO.md)** | Arquitectura por capas, diagramas, algoritmos, modelos, API REST, validaciones, pruebas y requerimientos funcionales/no funcionales. |
+
+## Documentación adicional
+
 - [Entrega UEDI](ENTREGA_UEDI.md)
-- [Checklist de 100 puntos](docs/CHECKLIST_100.md)
 - [Guía de defensa](docs/GUIA_DEFENSA.md)
 - [Evidencias](docs/evidencias/README.md)
 - [Colección Postman](postman/RoboMaze.postman_collection.json)

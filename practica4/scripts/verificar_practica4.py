@@ -92,7 +92,7 @@ def main() -> int:
         ("Coleccion Postman", (ROOT / "postman/RoboMaze.postman_collection.json").is_file()),
         ("Suite automatizada", tests_pass()),
         ("Evidencias PNG", all(path.is_file() and path.stat().st_size > 1000 for path in evidence)),
-        ("Checklist y defensa", all((ROOT / path).is_file() for path in ["docs/CHECKLIST_100.md", "docs/GUIA_DEFENSA.md"])),
+        ("Defensa y guia de evidencias", all((ROOT / path).is_file() for path in ["docs/GUIA_DEFENSA.md", "docs/evidencias/README.md"])),
         ("Datos de entrega", contains("ENTREGA_UEDI.md", "201807411", "24/06/2026", "github.com")),
     ]
 
