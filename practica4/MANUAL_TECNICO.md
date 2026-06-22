@@ -68,6 +68,21 @@ El diagrama también está disponible en `docs/diagramas/arquitectura.mmd`.
 Las coordenadas son de base cero. `path_length` cuenta aristas o pasos, por eso es
 `len(path) - 1`; si inicio y meta coinciden, la longitud es cero.
 
+### 4.1 Glosario de métricas
+
+| Campo | Significado técnico |
+|---|---|
+| `path_found` | Indica si la meta fue alcanzada |
+| `path` | Secuencia ordenada desde inicio hasta meta, incluidos ambos extremos |
+| `visited_nodes` | Orden real en que los estados salieron de la cola o pila |
+| `nodes_explored` | Cantidad de elementos en `visited_nodes` |
+| `path_length` | Número de movimientos; equivale a `len(path) - 1` |
+| `execution_time_ms` | Tiempo exclusivo del algoritmo medido con `perf_counter()` |
+
+La animación consume `visited_nodes`, mientras que la línea verde consume `path`.
+Así, el frontend representa exactamente lo calculado en Python sin repetir la
+lógica de búsqueda.
+
 ## 5. Breadth-First Search (BFS)
 
 BFS usa `collections.deque` como cola FIFO. Descubre primero todos los estados a
