@@ -65,7 +65,9 @@ La interfaz adopta la metáfora de un laboratorio de navegación autónoma. El r
 y la baliza se dibujan con CSS, sin imágenes externas; la arena usa una retícula
 técnica y telemetría monoespaciada. BFS se identifica como **WAVE** en cian, DFS
 como **PROBE** en naranja y la ruta confirmada usa lima. La comparación construye
-dos miniaturas desde los mismos `visited_nodes` y `path` recibidos por la API.
+dos miniaturas desde los mismos `visited_nodes` y `path` recibidos por la API. Un
+`ResizeObserver` calcula el mayor rectángulo posible según la proporción filas/
+columnas, por lo que la arena muestra hasta `100 × 100` sin scrollbar.
 
 ## 4. Modelo del espacio de estados
 
@@ -199,7 +201,7 @@ FastAPI publica OpenAPI/Swagger en `/docs` y ReDoc en `/redoc`.
 
 ## 10. Validaciones y errores
 
-- Filas y columnas mayores que cero y máximo `50 × 50` en la API.
+- Filas y columnas mayores que cero y máximo `100 × 100` en la API.
 - Inicio, meta y cada obstáculo dentro de los límites.
 - Inicio y meta no pueden ser obstáculos.
 - No se aceptan obstáculos duplicados.
@@ -227,7 +229,8 @@ FastAPI publica OpenAPI/Swagger en `/docs` y ReDoc en `/redoc`.
 
 ## 12. Requerimientos no funcionales
 
-- **Rendimiento:** hasta 2,500 celdas en API; operaciones lineales.
+- **Rendimiento:** hasta 10,000 celdas en API; operaciones lineales y animación
+  visual por lotes para mapas grandes.
 - **Usabilidad:** leyenda, estados de color, mensajes y controles agrupados.
 - **Accesibilidad:** etiquetas, roles de cuadrícula, foco y texto además de color.
 - **Mantenibilidad:** capas, funciones pequeñas, type hints y tests.

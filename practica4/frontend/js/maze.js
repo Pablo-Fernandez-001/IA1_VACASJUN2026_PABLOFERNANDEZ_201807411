@@ -10,6 +10,12 @@
       this.mode = "obstacle";
       this.mouseDown = false;
       this.visualTimer = null;
+      this.cells = [];
+      this.resizeObserver = typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => this.fitGrid())
+        : null;
+      if (this.resizeObserver) this.resizeObserver.observe(this.element.closest(".maze-stage"));
+      else window.addEventListener("resize", () => this.fitGrid());
       this.create(10, 10);
       this.bindPointerEvents();
     }
@@ -116,18 +122,27 @@
     async visualize(result, onProgress = null) {
       this.clearVisualization();
       this.element.dataset.algorithm = result.algorithm.toLowerCase();
-      const delay = Math.max(4, Math.min(28, 650 / Math.max(result.visited_nodes.length, 1)));
+      const totalVisited = result.visited_nodes.length;
+      const batchSize = totalVisited > 2000
+        ? Math.ceil(totalVisited / 90)
+        : totalVisited > 500
+          ? Math.ceil(totalVisited / 120)
+          : 1;
+      const delay = batchSize > 1 ? 6 : Math.max(4, Math.min(28, 650 / Math.max(totalVisited, 1)));
       for (const [index, point] of result.visited_nodes.entries()) {
         this.visited.add(keyOf(point));
         this.paintCell(point);
-        if (onProgress) onProgress({
+        const batchComplete = (index + 1) % batchSize === 0 || index === totalVisited - 1;
+        if (onProgress && batchComplete) onProgress({
           phase: "exploration",
           algorithm: result.algorithm,
           point,
           current: index + 1,
-          total: result.visited_nodes.length,
+          total: totalVisited,
         });
-        await new Promise((resolve) => { this.visualTimer = window.setTimeout(resolve, delay); });
+        if (batchComplete) {
+          await new Promise((resolve) => { this.visualTimer = window.setTimeout(resolve, delay); });
+        }
       }
       result.path.forEach((point) => this.path.add(keyOf(point)));
       this.paintAll();
@@ -147,7 +162,7 @@
 
     placeRover(point, previous = null) {
       this.clearRover();
-      const cell = this.element.querySelector(`[data-row="${point.row}"][data-col="${point.col}"]`);
+      const cell = this.cells[(point.row * this.cols) + point.col];
       if (!cell) return;
       let heading = 0;
       if (previous) {
@@ -167,8 +182,13 @@
 
     render() {
       this.element.innerHTML = "";
+      this.cells = [];
       this.element.style.setProperty("--rows", this.rows);
       this.element.style.setProperty("--cols", this.cols);
+      const largestDimension = Math.max(this.rows, this.cols);
+      this.element.dataset.density = largestDimension > 50 ? "micro" : largestDimension > 24 ? "dense" : "normal";
+      this.element.style.setProperty("--cell-gap", largestDimension > 50 ? "0px" : largestDimension > 24 ? "1px" : "clamp(2px, .35vw, 4px)");
+      this.element.style.setProperty("--grid-padding", largestDimension > 50 ? "2px" : largestDimension > 24 ? "4px" : "clamp(6px, .8vw, 10px)");
       const fragment = document.createDocumentFragment();
       for (let row = 0; row < this.rows; row += 1) {
         for (let col = 0; col < this.cols; col += 1) {
@@ -178,12 +198,38 @@
           cell.dataset.row = row;
           cell.dataset.col = col;
           cell.setAttribute("role", "gridcell");
+          this.cells.push(cell);
           fragment.appendChild(cell);
         }
       }
       this.element.appendChild(fragment);
       this.renderAxes();
       this.paintAll();
+      window.requestAnimationFrame(() => this.fitGrid());
+    }
+
+    fitGrid() {
+      const stage = this.element.closest(".maze-stage");
+      const shell = this.element.closest(".arena-grid-shell");
+      if (!stage || !shell || stage.clientWidth === 0 || stage.clientHeight === 0) return;
+      const stageStyles = window.getComputedStyle(stage);
+      const horizontalPadding = parseFloat(stageStyles.paddingLeft) + parseFloat(stageStyles.paddingRight);
+      const verticalPadding = parseFloat(stageStyles.paddingTop) + parseFloat(stageStyles.paddingBottom);
+      const axisWidth = window.innerWidth <= 560 ? 18 : 24;
+      const axisHeight = window.innerWidth <= 560 ? 16 : 20;
+      const availableWidth = Math.max(40, stage.clientWidth - horizontalPadding - axisWidth);
+      const availableHeight = Math.max(40, stage.clientHeight - verticalPadding - axisHeight);
+      const ratio = this.cols / this.rows;
+      let gridWidth = availableWidth;
+      let gridHeight = gridWidth / ratio;
+      if (gridHeight > availableHeight) {
+        gridHeight = availableHeight;
+        gridWidth = gridHeight * ratio;
+      }
+      shell.style.width = `${Math.floor(gridWidth + axisWidth)}px`;
+      shell.style.height = `${Math.floor(gridHeight + axisHeight)}px`;
+      this.element.style.width = `${Math.floor(gridWidth)}px`;
+      this.element.style.height = `${Math.floor(gridHeight)}px`;
     }
 
     renderAxes() {
@@ -194,8 +240,8 @@
       rowAxis.innerHTML = "";
       columnAxis.style.gridTemplateColumns = `repeat(${this.cols}, 1fr)`;
       rowAxis.style.gridTemplateRows = `repeat(${this.rows}, 1fr)`;
-      const columnStep = this.cols > 16 ? 5 : this.cols > 10 ? 2 : 1;
-      const rowStep = this.rows > 16 ? 5 : this.rows > 10 ? 2 : 1;
+      const columnStep = this.cols > 50 ? 10 : this.cols > 16 ? 5 : this.cols > 10 ? 2 : 1;
+      const rowStep = this.rows > 50 ? 10 : this.rows > 16 ? 5 : this.rows > 10 ? 2 : 1;
       for (let col = 0; col < this.cols; col += 1) {
         const label = document.createElement("span");
         label.textContent = col % columnStep === 0 ? String(col).padStart(2, "0") : "";
@@ -209,12 +255,12 @@
     }
 
     paintCell(point) {
-      const cell = this.element.querySelector(`[data-row="${point.row}"][data-col="${point.col}"]`);
+      const cell = this.cells[(point.row * this.cols) + point.col];
       if (cell) this.paint(cell);
     }
 
     paintAll() {
-      this.element.querySelectorAll(".maze-cell").forEach((cell) => this.paint(cell));
+      this.cells.forEach((cell) => this.paint(cell));
     }
 
     paint(cell) {

@@ -266,13 +266,14 @@ select:focus, input:focus { border-color: var(--cyan); box-shadow: inset 3px 0 0
 
 .maze-stage {
   margin-top: 20px;
-  min-height: 440px;
-  max-height: 70vh;
+  height: clamp(420px, calc(100vh - 150px), 720px);
+  min-height: 0;
+  max-height: none;
   padding: clamp(31px, 4vw, 48px);
   display: grid;
   place-items: center;
   position: relative;
-  overflow: auto;
+  overflow: hidden;
   border: 1px solid var(--line);
   background-color: #071412;
   background-image:
@@ -293,6 +294,8 @@ select:focus, input:focus { border-color: var(--cyan); box-shadow: inset 3px 0 0
 
 .arena-grid-shell {
   width: min(100%, 710px);
+  max-width: 100%;
+  max-height: 100%;
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   grid-template-rows: 20px minmax(0, 1fr);
@@ -310,10 +313,10 @@ select:focus, input:focus { border-color: var(--cyan); box-shadow: inset 3px 0 0
   width: 100%;
   aspect-ratio: var(--cols) / var(--rows);
   display: grid;
-  grid-template-columns: repeat(var(--cols), minmax(17px, 1fr));
-  grid-template-rows: repeat(var(--rows), minmax(17px, 1fr));
-  gap: clamp(2px, .35vw, 4px);
-  padding: clamp(6px, .8vw, 10px);
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  gap: var(--cell-gap, clamp(2px, .35vw, 4px));
+  padding: var(--grid-padding, clamp(6px, .8vw, 10px));
   border: 1px solid rgba(67,220,225,.28);
   background: rgba(4,12,11,.82);
   box-shadow: 0 0 0 6px rgba(67,220,225,.025), 0 24px 50px rgba(0,0,0,.45);
@@ -323,7 +326,8 @@ select:focus, input:focus { border-color: var(--cyan); box-shadow: inset 3px 0 0
 .maze-cell {
   min-width: 0;
   min-height: 0;
-  aspect-ratio: 1;
+  width: 100%;
+  height: 100%;
   position: relative;
   padding: 0;
   overflow: hidden;
@@ -334,6 +338,17 @@ select:focus, input:focus { border-color: var(--cyan); box-shadow: inset 3px 0 0
   font: 800 clamp(7px, 1vw, 13px) var(--mono);
   transition: background .12s, transform .12s, border-color .12s;
 }
+.maze-grid[data-density="dense"] .maze-cell { border-width: 0; }
+.maze-grid[data-density="micro"] .maze-cell { border: 0; font-size: 0; }
+.maze-grid[data-density="micro"] .maze-cell.is-obstacle {
+  background: #344743;
+  box-shadow: none;
+}
+.maze-grid[data-density="micro"] .maze-cell.is-path::after,
+.maze-grid[data-density="micro"] .maze-cell.is-start::after,
+.maze-grid[data-density="micro"] .maze-cell.is-goal::after,
+.maze-grid[data-density="micro"] .rover-token::before,
+.maze-grid[data-density="micro"] .rover-token::after { display: none; }
 .maze-cell::before, .maze-cell::after { pointer-events: none; }
 .maze-cell:hover { z-index: 3; transform: scale(1.07); border-color: var(--acid); }
 .maze-cell.is-visited { background: var(--visited-color); border-color: rgba(67,220,225,.2); animation: scan-node .25s ease-out; }
@@ -528,6 +543,8 @@ select:focus, input:focus { border-color: var(--cyan); box-shadow: inset 3px 0 0
 .duel-head b { font: 10px var(--mono); }
 .versus-mark { display: grid; place-items: center; color: var(--acid); font: 800 12px var(--mono); background: rgba(202,250,69,.06); border: 1px solid rgba(202,250,69,.18); }
 .mini-maze { display: grid; gap: 2px; aspect-ratio: var(--mini-cols) / var(--mini-rows); max-height: 180px; background: #06110f; padding: 5px; border: 1px solid var(--line); }
+.mini-maze[data-density="dense"] { gap: 1px; padding: 3px; }
+.mini-maze[data-density="micro"] { gap: 0; padding: 2px; }
 .mini-cell { min-width: 0; min-height: 0; background: #152a27; }
 .mini-cell.obstacle { background: #43534f; }
 .mini-cell.visited { background: #18565a; }
@@ -570,7 +587,7 @@ tbody th { color: var(--text); }
 @media (max-width: 1080px) {
   .workspace { grid-template-columns: 300px minmax(0, 1fr); padding-inline: 16px; }
   .metric-grid { grid-template-columns: repeat(3, 1fr); }
-  .maze-stage { min-height: 390px; padding: 38px 28px; }
+  .maze-stage { height: clamp(380px, 65vh, 620px); padding: 38px 28px; }
   .arena-tag { display: none; }
   .mission-console { grid-template-columns: 1fr; }
   .live-telemetry { grid-column: 1; }
@@ -582,7 +599,7 @@ tbody th { color: var(--text); }
   .workspace { display: block; padding: 14px 10px 38px; }
   .control-panel { position: static; margin-bottom: 14px; }
   .content-panel { gap: 14px; }
-  .maze-stage { min-height: 340px; max-height: none; }
+  .maze-stage { height: clamp(340px, 62vh, 540px); }
 }
 
 @media (max-width: 560px) {
@@ -594,7 +611,7 @@ tbody th { color: var(--text); }
   .algorithm-duel { grid-template-columns: 1fr; }
   .winner-banner { grid-template-columns: 1fr; }
   .versus-mark { height: 28px; }
-  .maze-stage { min-height: 290px; padding: 34px 17px; }
+  .maze-stage { height: clamp(300px, 58vh, 460px); padding: 34px 17px; }
   .stage-code.bottom-right, .stage-code.top-right { display: none; }
   .arena-grid-shell { grid-template-columns: 18px minmax(0,1fr); grid-template-rows: 16px minmax(0,1fr); }
   .replay-controls { flex-wrap: wrap; }

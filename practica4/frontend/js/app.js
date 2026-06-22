@@ -271,6 +271,8 @@
     element.innerHTML = "";
     element.style.setProperty("--mini-rows", maze.rows);
     element.style.setProperty("--mini-cols", maze.cols);
+    const largestDimension = Math.max(maze.rows, maze.cols);
+    element.dataset.density = largestDimension > 50 ? "micro" : largestDimension > 24 ? "dense" : "normal";
     element.style.gridTemplateColumns = `repeat(${maze.cols}, 1fr)`;
     element.style.gridTemplateRows = `repeat(${maze.rows}, 1fr)`;
     const fragment = document.createDocumentFragment();
@@ -434,8 +436,8 @@
   $("#resizeBtn").addEventListener("click", () => {
     const rows = Number($("#rowsInput").value);
     const cols = Number($("#colsInput").value);
-    if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 2 || cols < 2 || rows > 30 || cols > 30) {
-      return toast("Usa dimensiones enteras entre 2 y 30.");
+    if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 2 || cols < 2 || rows > 100 || cols > 100) {
+      return toast("Usa dimensiones enteras entre 2 y 100.");
     }
     currentName = "Laberinto personalizado";
     $("#exampleSelect").value = "";

@@ -135,7 +135,6 @@ practica4/
 ├── docker-compose.yml
 ├── MANUAL_TECNICO.md
 ├── MANUAL_USUARIO.md
-├── ENTREGA_UEDI.md
 └── transcripcion_practica4.md
 ```
 
@@ -148,7 +147,6 @@ practica4/
 
 ## Documentación adicional
 
-- [Entrega UEDI](ENTREGA_UEDI.md)
 - [Guía de defensa](docs/GUIA_DEFENSA.md)
 - [Evidencias](docs/evidencias/README.md)
 - [Colección Postman](postman/RoboMaze.postman_collection.json)

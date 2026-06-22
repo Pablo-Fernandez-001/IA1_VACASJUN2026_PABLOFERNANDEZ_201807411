@@ -74,7 +74,7 @@ def test_unsolvable_maze_returns_safe_result(solver):
     ("changes", "message"),
     [
         ({"rows": 0}, "positivos"),
-        ({"rows": 51}, "maximo"),
+        ({"rows": 101}, "maximo"),
         ({"start": {"row": -1, "col": 0}}, "inicial"),
         ({"goal": {"row": 9, "col": 0}}, "destino"),
         ({"obstacles": [{"row": 7, "col": 0}]}, "obstaculo"),

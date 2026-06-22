@@ -149,7 +149,8 @@ algoritmo sacó de su cola o pila. El tiempo mide solo la búsqueda en el backen
 
 ## 5. Crear un laberinto
 
-1. Escriba filas y columnas entre 2 y 30.
+1. Escriba filas y columnas entre 2 y 100. La arena reduce automáticamente las
+   celdas para mostrar el mapa completo sin barras de desplazamiento.
 2. Pulse **Aplicar**; inicio y meta se ubican en esquinas opuestas.
 3. Elija **Rover** y pulse una celda para mover el punto inicial.
 4. Elija **Baliza** y pulse una celda para mover el destino.
@@ -200,7 +201,7 @@ explorados son las métricas didácticas principales.
 | “API desconectada” | Inicie Uvicorn en el puerto 8400 y recargue |
 | No aparecen ejemplos | Compruebe `/api/maze/examples` en el navegador |
 | Puerto ocupado | Cierre el proceso previo o use Docker tras liberar 8400 |
-| “Dimensiones…” | Use enteros de 2 a 30 en la interfaz |
+| “Dimensiones…” | Use enteros de 2 a 100 en la interfaz |
 | “Sin ruta” | Quite paredes o pruebe el caso 5 para demostrar el control |
 | Frontend antiguo | Recarga forzada con `Ctrl+F5` |
 

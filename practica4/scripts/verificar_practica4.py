@@ -61,7 +61,6 @@ def main() -> int:
         "README.md",
         "MANUAL_TECNICO.md",
         "MANUAL_USUARIO.md",
-        "ENTREGA_UEDI.md",
         "transcripcion_practica4.md",
     ]
     evidence = [ROOT / "docs" / "evidencias" / f"0{index}_{name}.png" for index, name in [
@@ -93,7 +92,7 @@ def main() -> int:
         ("Suite automatizada", tests_pass()),
         ("Evidencias PNG", all(path.is_file() and path.stat().st_size > 1000 for path in evidence)),
         ("Defensa y guia de evidencias", all((ROOT / path).is_file() for path in ["docs/GUIA_DEFENSA.md", "docs/evidencias/README.md"])),
-        ("Datos de entrega", contains("ENTREGA_UEDI.md", "201807411", "24/06/2026", "github.com")),
+        ("Navegacion entre manuales", contains("MANUAL_USUARIO.md", "Manual técnico", "Guía de defensa")),
     ]
 
     passed = 0
@@ -108,7 +107,7 @@ def main() -> int:
         print("Todo el contenido local verificable esta completo.")
     else:
         print("Revise los controles marcados como FALTA antes de entregar.")
-    print("Nota: commits, push y entrega UEDI deben comprobarse externamente.")
+    print("Nota: los commits y el push deben comprobarse externamente.")
     return 0 if score == 100 else 1
 
 
