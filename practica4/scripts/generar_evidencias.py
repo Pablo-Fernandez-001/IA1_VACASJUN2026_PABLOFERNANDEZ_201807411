@@ -56,11 +56,11 @@ def main() -> None:
 
         Select(driver.find_element(By.ID, "exampleSelect")).select_by_value("4")
         driver.find_element(By.ID, "loadExampleBtn").click()
-        wait.until(conditions.text_to_be_present_in_element((By.ID, "mazeTitle"), "Trampa para DFS"))
+        wait.until(conditions.text_to_be_present_in_element((By.ID, "mazeTitle"), "TRAMPA PARA DFS"))
         capture(driver, "02_laberinto_predefinido.png")
 
         driver.find_element(By.ID, "bfsBtn").click()
-        wait.until(conditions.text_to_be_present_in_element((By.ID, "resultState"), "Ruta encontrada"))
+        wait.until(conditions.text_to_be_present_in_element((By.ID, "resultState"), "RUTA ENCONTRADA"))
         time.sleep(0.9)
         capture(driver, "03_bfs_resultado.png")
 
@@ -77,7 +77,7 @@ def main() -> None:
         Select(driver.find_element(By.ID, "exampleSelect")).select_by_value("5")
         driver.find_element(By.ID, "loadExampleBtn").click()
         driver.find_element(By.ID, "compareBtn").click()
-        wait.until(conditions.text_to_be_present_in_element((By.ID, "resultState"), "Sin ruta"))
+        wait.until(conditions.text_to_be_present_in_element((By.ID, "resultState"), "SIN RUTA"))
         time.sleep(0.9)
         capture(driver, "06_sin_ruta.png")
     finally:

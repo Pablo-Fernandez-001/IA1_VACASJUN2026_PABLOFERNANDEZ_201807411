@@ -35,7 +35,7 @@ Después abra **http://localhost:8401**. Arriba a la derecha debe aparecer el te
 
 1. Abra la lista **Laberinto predefinido**.
 2. Seleccione **4. Trampa para DFS**.
-3. Pulse el botón negro `↗` situado a la derecha.
+3. Pulse el botón lima `↗` situado a la derecha.
 4. Confirme que el tablero cambió a `8 × 8`.
 
 <p align="center">
@@ -44,8 +44,8 @@ Después abra **http://localhost:8401**. Arriba a la derecha debe aparecer el te
 
 ### Paso 3 — Ejecutar BFS
 
-Pulse el botón verde **BFS / Por amplitud** y espere a que termine la animación.
-Debe mostrar **Ruta encontrada**, longitud `7` y el camino verde directo hacia `G`.
+Pulse el control cian **WAVE / BFS** y espere a que termine la animación. Debe
+mostrar **Ruta encontrada**, longitud `7` y la ruta lima hasta la baliza.
 
 <p align="center">
   <img src="docs/evidencias/03_bfs_resultado.png" alt="Resultado de BFS con ruta y métricas" width="900">
@@ -53,7 +53,7 @@ Debe mostrar **Ruta encontrada**, longitud `7` y el camino verde directo hacia `
 
 ### Paso 4 — Ejecutar DFS
 
-Pulse el botón morado **DFS / Por profundidad**. Debe encontrar una ruta, pero en
+Pulse el control naranja **PROBE / DFS**. Debe encontrar una ruta, pero en
 este ejemplo recorre `31` pasos porque primero explora un desvío.
 
 <p align="center">
@@ -62,9 +62,9 @@ este ejemplo recorre `31` pasos porque primero explora un desvío.
 
 ### Paso 5 — Comparar los algoritmos
 
-Pulse **Comparar BFS vs DFS**. Debajo del tablero aparecerán dos filas con
-longitud, nodos y tiempo. Pulse **Mostrar** en una fila para visualizar el recorrido
-de ese algoritmo.
+Pulse **Comparar BFS vs DFS**. Debajo del tablero aparecerán dos mapas tácticos y
+una tabla con longitud, nodos y tiempo. Pulse **Mostrar** en una fila para
+visualizar el recorrido de ese algoritmo en la arena principal.
 
 <p align="center">
   <img src="docs/evidencias/05_comparacion.png" alt="Tabla comparativa de BFS y DFS" width="900">
@@ -88,9 +88,9 @@ visualización y manejo de errores exigidos por la práctica.
 | Quiero… | Control que debo usar |
 |---|---|
 | Cargar un caso incluido | Seleccionar un ejemplo y pulsar `↗` |
-| Dibujar o quitar paredes | Elegir **Obstáculo** y pulsar/arrastrar |
-| Cambiar el origen | Elegir **Inicio** y pulsar una celda |
-| Cambiar el destino | Elegir **Destino** y pulsar una celda |
+| Dibujar o quitar paredes | Elegir **Bloqueo** y pulsar/arrastrar |
+| Cambiar el origen | Elegir **Rover** y pulsar una celda |
+| Cambiar el destino | Elegir **Baliza** y pulsar una celda |
 | Obtener la ruta mínima | Pulsar **BFS** |
 | Explorar en profundidad | Pulsar **DFS** |
 | Ver ambos resultados | Pulsar **Comparar BFS vs DFS** |
@@ -137,12 +137,12 @@ zona principal contiene la cuadrícula, leyenda, métricas y tabla comparativa.
 
 | Color/símbolo | Significado |
 |---|---|
-| Blanco | Celda libre |
-| Gris oscuro | Obstáculo |
-| Azul `S` | Punto inicial |
-| Naranja `G` | Destino |
-| Azul claro | Nodo explorado |
-| Verde lima | Ruta final |
+| Verde petróleo | Celda libre de la arena |
+| Bloque con franjas | Obstáculo o bloqueo |
+| Robot cian | Rover en el punto inicial |
+| Círculo naranja | Baliza de destino |
+| Turquesa/naranja | Nodo explorado por BFS/DFS |
+| Lima brillante | Ruta final |
 
 La longitud cuenta movimientos, no celdas. “Explorados” indica los estados que el
 algoritmo sacó de su cola o pila. El tiempo mide solo la búsqueda en el backend.
@@ -151,9 +151,9 @@ algoritmo sacó de su cola o pila. El tiempo mide solo la búsqueda en el backen
 
 1. Escriba filas y columnas entre 2 y 30.
 2. Pulse **Aplicar**; inicio y meta se ubican en esquinas opuestas.
-3. Elija **Inicio** y pulse una celda para mover `S`.
-4. Elija **Destino** y pulse una celda para mover `G`.
-5. Elija **Obstáculo**. Pulse para alternar una pared o arrastre para dibujar.
+3. Elija **Rover** y pulse una celda para mover el punto inicial.
+4. Elija **Baliza** y pulse una celda para mover el destino.
+5. Elija **Bloqueo**. Pulse para alternar una pared o arrastre para dibujar.
 6. **Limpiar obstáculos** conserva inicio/meta; **Borrar recorrido** conserva el
    diseño y quita únicamente la visualización anterior.
 
@@ -171,20 +171,21 @@ Seleccione uno y pulse el botón `↗`:
 
 ## 7. Ejecutar BFS
 
-Pulse **BFS / Por amplitud**. Las celdas visitadas aparecen en azul claro y al
-final el camino mínimo aparece en verde. Revise algoritmo, ruta, longitud, nodos y
-tiempo. BFS garantiza la menor cantidad de pasos en esta cuadrícula sin pesos.
+Pulse **WAVE / BFS**. Las celdas visitadas aparecen en turquesa y al final el
+camino mínimo se fija en lima. Revise algoritmo, ruta, longitud, nodos y tiempo.
+BFS garantiza la menor cantidad de pasos en esta cuadrícula sin pesos.
 
 ## 8. Ejecutar DFS
 
-Pulse **DFS / Por profundidad**. DFS se interna por una rama antes de retroceder;
+Pulse **PROBE / DFS**. Los explorados cambian a naranja porque DFS se interna por
+una rama antes de retroceder;
 puede hallar un recorrido válido más largo. La interfaz usa el resultado enviado
 por Python; JavaScript no calcula el camino.
 
 ## 9. Comparar BFS y DFS
 
 1. Pulse **Comparar BFS vs DFS**.
-2. Revise las dos filas de la tabla.
+2. Compare los mapas tácticos WAVE y PROBE y después las dos filas de la tabla.
 3. Lea la conclusión generada por el backend.
 4. Pulse **Mostrar** en cualquier fila para alternar el recorrido sobre el mapa.
 

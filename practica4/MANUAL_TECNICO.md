@@ -59,6 +59,14 @@ El diagrama también está disponible en `docs/diagramas/arquitectura.mmd`.
 | `frontend/js/api.js` | Cliente HTTP |
 | `frontend/js/app.js` | Coordinación de interfaz |
 
+### 3.1 Lenguaje visual del frontend
+
+La interfaz adopta la metáfora de un laboratorio de navegación autónoma. El rover
+y la baliza se dibujan con CSS, sin imágenes externas; la arena usa una retícula
+técnica y telemetría monoespaciada. BFS se identifica como **WAVE** en cian, DFS
+como **PROBE** en naranja y la ruta confirmada usa lima. La comparación construye
+dos miniaturas desde los mismos `visited_nodes` y `path` recibidos por la API.
+
 ## 4. Modelo del espacio de estados
 
 - Estado: tupla `(fila, columna)`.
@@ -83,7 +91,7 @@ Las coordenadas son de base cero. `path_length` cuenta aristas o pasos, por eso 
 | `path_length` | Número de movimientos; equivale a `len(path) - 1` |
 | `execution_time_ms` | Tiempo exclusivo del algoritmo medido con `perf_counter()` |
 
-La animación consume `visited_nodes`, mientras que la línea verde consume `path`.
+La animación consume `visited_nodes`, mientras que la ruta lima consume `path`.
 Así, el frontend representa exactamente lo calculado en Python sin repetir la
 lógica de búsqueda.
 
@@ -211,8 +219,8 @@ FastAPI publica OpenAPI/Swagger en `/docs` y ReDoc en `/redoc`.
 | RF-04 | Ejecutar BFS | API + botón BFS |
 | RF-05 | Ejecutar DFS | API + botón DFS |
 | RF-06 | Mostrar explorados/ruta | Animación por clases CSS |
-| RF-07 | Mostrar métricas | Cinco tarjetas |
-| RF-08 | Comparar algoritmos | Tabla y conclusión |
+| RF-07 | Mostrar métricas | Cinco módulos de telemetría |
+| RF-08 | Comparar algoritmos | Dos mapas tácticos, tabla y conclusión |
 | RF-09 | Cargar cinco casos | Archivos JSON + endpoints |
 | RF-10 | Manejar ausencia de ruta | Respuesta segura y estado visual |
 | RF-11 | Limpiar/reiniciar | Controles independientes |
