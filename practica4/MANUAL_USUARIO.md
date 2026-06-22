@@ -1,5 +1,9 @@
 # Manual de usuario — RoboMaze
 
+> **Navegación:** [README principal](README.md) ·
+> [Manual técnico](MANUAL_TECNICO.md) ·
+> [Guía de defensa](docs/GUIA_DEFENSA.md)
+
 ## 1. Requisitos
 
 - Python 3.11 o superior.

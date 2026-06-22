@@ -1,5 +1,9 @@
 # Manual técnico — RoboMaze
 
+> **Navegación:** [README principal](README.md) ·
+> [Manual de usuario](MANUAL_USUARIO.md) ·
+> [Guía de defensa](docs/GUIA_DEFENSA.md)
+
 ## 1. Introducción y objetivo
 
 RoboMaze representa una cuadrícula como un grafo implícito: cada celda transitable
