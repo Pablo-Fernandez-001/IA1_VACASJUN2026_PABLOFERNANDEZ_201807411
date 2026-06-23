@@ -1,5 +1,8 @@
 :- dynamic robot_estado/4.
 :- dynamic paquete_estado/5.
+:- dynamic mapa/2.
+:- dynamic zona_entrega/2.
+:- dynamic obstaculo/1.
 
 mapa(10, 10).
 

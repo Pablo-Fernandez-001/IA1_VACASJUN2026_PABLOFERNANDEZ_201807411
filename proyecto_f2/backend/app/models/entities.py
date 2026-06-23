@@ -69,3 +69,36 @@ class MetricRecord(Base):
     efficiency: Mapped[float] = mapped_column(Float, default=0)
     elapsed_seconds: Mapped[float] = mapped_column(Float, default=0)
     recorded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Scenario(Base):
+    __tablename__ = "scenarios"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    is_default: Mapped[bool] = mapped_column(default=False)
+    width: Mapped[int] = mapped_column(Integer, default=10)
+    height: Mapped[int] = mapped_column(Integer, default=10)
+    configuration: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class ScenarioChange(Base):
+    __tablename__ = "scenario_changes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    scenario_id: Mapped[int] = mapped_column(ForeignKey("scenarios.id"), index=True)
+    action: Mapped[str] = mapped_column(String(40))
+    details: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class SimulationScenario(Base):
+    __tablename__ = "simulation_scenarios"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    simulation_id: Mapped[int] = mapped_column(ForeignKey("simulations.id"), unique=True, index=True)
+    scenario_id: Mapped[int | None] = mapped_column(ForeignKey("scenarios.id"), nullable=True, index=True)
+    scenario_name: Mapped[str] = mapped_column(String(80), default="Escenario temporal")
+    initial_snapshot: Mapped[str] = mapped_column(Text, default="{}")

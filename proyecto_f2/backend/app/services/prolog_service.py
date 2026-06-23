@@ -24,8 +24,11 @@ def next_action(state: dict, robot_id: str = "r1") -> dict:
         raise HTTPException(status_code=503, detail="SWI-Prolog no esta instalado o no esta en PATH")
     payload = {
         "robot_id": robot_id,
+        "map": state["map"],
         "robots": state["robots"],
         "packages": state["packages"],
+        "zones": state["zones"],
+        "obstacles": state["obstacles"],
     }
     try:
         with PROLOG_LOCK:

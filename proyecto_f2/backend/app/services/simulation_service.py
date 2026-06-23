@@ -2,54 +2,81 @@ import json
 from copy import deepcopy
 from datetime import datetime
 
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.models.entities import MetricRecord, PackageRecord, RobotRecord, Simulation, SimulationStep
+from app.models.entities import (
+    MetricRecord,
+    PackageRecord,
+    RobotRecord,
+    Simulation,
+    SimulationScenario,
+    SimulationStep,
+)
 from app.services.prolog_service import next_action
+from app.services.scenario_service import DEFAULT_CONFIGURATION, normalize_configuration
 
 
-INITIAL_STATE = {
-    "map": {"width": 10, "height": 10},
-    "running": False,
-    "simulation_id": None,
-    "started_at": None,
-    "steps": 0,
-    "moves": 0,
-    "deliveries": 0,
-    "robots": [{"id": "r1", "x": 1, "y": 1, "status": "libre", "carrying": "none"}],
-    "packages": [
-        {"id": "p1", "x": 1, "y": 3, "zone": "zona_a", "status": "pendiente"},
-        {"id": "p2", "x": 4, "y": 2, "zone": "zona_b", "status": "pendiente"},
-        {"id": "p3", "x": 6, "y": 8, "zone": "zona_a", "status": "pendiente"},
-        {"id": "p4", "x": 9, "y": 1, "zone": "zona_b", "status": "pendiente"},
-        {"id": "p5", "x": 3, "y": 9, "zone": "zona_a", "status": "pendiente"},
-    ],
-    "zones": [{"id": "zona_a", "x": 10, "y": 10}, {"id": "zona_b", "x": 1, "y": 10}],
-    "obstacles": [
-        {"x": 3, "y": 1},
-        {"x": 3, "y": 2},
-        {"x": 3, "y": 3},
-        {"x": 5, "y": 5},
-        {"x": 6, "y": 5},
-        {"x": 7, "y": 5},
-        {"x": 2, "y": 7},
-        {"x": 8, "y": 3},
-    ],
-    "last_action": None,
-    "last_reason": "",
-}
+ACTIVE_CONFIGURATION = normalize_configuration(DEFAULT_CONFIGURATION)
+ACTIVE_SCENARIO = {"id": None, "name": "Bodega clasica", "is_default": True, "dirty": False}
 
-STATE = deepcopy(INITIAL_STATE)
+
+def _runtime_from_configuration(configuration: dict) -> dict:
+    clean = normalize_configuration(configuration)
+    return {
+        "map": deepcopy(clean["map"]),
+        "running": False,
+        "phase": "ready",
+        "simulation_id": None,
+        "started_at": None,
+        "steps": 0,
+        "moves": 0,
+        "deliveries": 0,
+        "robots": deepcopy(clean["robots"]),
+        "packages": deepcopy(clean["packages"]),
+        "zones": deepcopy(clean["zones"]),
+        "obstacles": deepcopy(clean["obstacles"]),
+        "last_action": None,
+        "last_reason": "Escenario listo para iniciar.",
+        "last_source": None,
+        "last_route": [],
+        "last_target": None,
+    }
+
+
+STATE = _runtime_from_configuration(ACTIVE_CONFIGURATION)
 
 
 def reset_state() -> dict:
     global STATE
-    STATE = deepcopy(INITIAL_STATE)
-    return STATE
+    STATE = _runtime_from_configuration(ACTIVE_CONFIGURATION)
+    return current_state()
 
 
 def current_state() -> dict:
-    return deepcopy(STATE)
+    snapshot = deepcopy(STATE)
+    snapshot["scenario"] = deepcopy(ACTIVE_SCENARIO)
+    return snapshot
+
+
+def activate_configuration(
+    configuration: dict,
+    scenario_id: int | None = None,
+    scenario_name: str = "Escenario temporal",
+    is_default: bool = False,
+    dirty: bool = False,
+) -> dict:
+    global ACTIVE_CONFIGURATION, ACTIVE_SCENARIO
+    if STATE.get("simulation_id") is not None:
+        raise HTTPException(status_code=409, detail="Reinicia la simulacion antes de cambiar el escenario")
+    ACTIVE_CONFIGURATION = normalize_configuration(configuration)
+    ACTIVE_SCENARIO = {
+        "id": scenario_id,
+        "name": scenario_name,
+        "is_default": is_default,
+        "dirty": dirty,
+    }
+    return reset_state()
 
 
 def _active_robot() -> dict:
@@ -183,23 +210,47 @@ def _record_snapshot(db: Session, action: str, reason: str) -> None:
             simulation.status = "completed"
             simulation.finished_at = datetime.utcnow()
             STATE["running"] = False
+            STATE["phase"] = "completed"
     db.commit()
+
+
+def _close_previous_simulation(db: Session, status: str) -> None:
+    if not STATE.get("simulation_id"):
+        return
+    simulation = db.get(Simulation, STATE["simulation_id"])
+    if simulation and simulation.status not in {"completed", "reset"}:
+        simulation.status = status
+        simulation.finished_at = datetime.utcnow()
+        db.commit()
 
 
 def start(db: Session) -> dict:
+    _close_previous_simulation(db, "restarted")
     reset_state()
     simulation = Simulation(status="running")
     db.add(simulation)
+    db.flush()
+    db.add(
+        SimulationScenario(
+            simulation_id=simulation.id,
+            scenario_id=ACTIVE_SCENARIO["id"],
+            scenario_name=ACTIVE_SCENARIO["name"],
+            initial_snapshot=json.dumps(ACTIVE_CONFIGURATION),
+        )
+    )
     db.commit()
     db.refresh(simulation)
     STATE["running"] = True
+    STATE["phase"] = "running"
     STATE["simulation_id"] = simulation.id
     STATE["started_at"] = simulation.started_at.isoformat()
+    STATE["last_reason"] = "Simulacion iniciada; Prolog esta listo para decidir."
     return current_state()
 
 
 def pause(db: Session) -> dict:
     STATE["running"] = False
+    STATE["phase"] = "paused" if STATE["simulation_id"] else "ready"
     if STATE["simulation_id"]:
         simulation = db.get(Simulation, STATE["simulation_id"])
         if simulation and simulation.status == "running":
@@ -209,19 +260,19 @@ def pause(db: Session) -> dict:
 
 
 def reset(db: Session) -> dict:
-    if STATE["simulation_id"]:
-        simulation = db.get(Simulation, STATE["simulation_id"])
-        if simulation and simulation.status == "running":
-            simulation.status = "reset"
-            simulation.finished_at = datetime.utcnow()
-            db.commit()
+    _close_previous_simulation(db, "reset")
     return reset_state()
 
 
 def step(db: Session) -> dict:
     if not STATE["simulation_id"]:
         start(db)
+    simulation = db.get(Simulation, STATE["simulation_id"])
+    if simulation and simulation.status == "paused":
+        simulation.status = "running"
+        db.commit()
     STATE["running"] = True
+    STATE["phase"] = "running"
     decision = next_action(current_state(), _active_robot()["id"])
     action = decision["action"]
     reason = decision.get("reason", "")
@@ -229,18 +280,25 @@ def step(db: Session) -> dict:
     STATE["steps"] += 1
     STATE["last_action"] = action
     STATE["last_reason"] = reason
+    STATE["last_source"] = decision.get("source")
+    STATE["last_route"] = decision.get("route", [])
+    STATE["last_target"] = decision.get("target")
     _record_snapshot(db, action, reason)
     return current_state()
 
 
 def auto(db: Session, max_steps: int = 25) -> dict:
-    STATE["running"] = True
-    for _ in range(max_steps):
+    for _ in range(max(1, min(max_steps, 500))):
         if _metrics()["pending_packages"] == 0:
             break
         step(db)
+        if STATE["last_action"] == "esperar":
+            break
     return current_state()
 
 
 def metrics() -> dict:
-    return _metrics()
+    result = _metrics()
+    result["phase"] = STATE["phase"]
+    result["scenario"] = ACTIVE_SCENARIO["name"]
+    return result

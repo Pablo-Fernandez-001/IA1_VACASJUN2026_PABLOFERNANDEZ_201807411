@@ -1,16 +1,24 @@
-# Evidencias sugeridas
+# Evidencias de funcionamiento
 
-Capturas recomendadas para la entrega:
+Archivos incluidos:
 
-1. Frontend con mapa 10x10 renderizado.
-2. Primer paso mostrando accion devuelta por Prolog.
-3. Robot recogiendo un paquete.
-4. Robot entregando un paquete en zona valida.
-5. Dashboard con metricas e historial.
-6. Swagger de la API en `/docs`.
+- `simulacion_redisenada.png`: mapa 10x10, primer movimiento, objetivo, ruta BFS y fuente Prolog.
+- `dashboard_redisenado.png`: metricas e historial persistente asociado a escenarios.
 
-Comando de evidencia Prolog:
+La prueba automatizada integral tambien constituye evidencia reproducible:
 
-```bash
-'{"robot_id":"r1","robots":[{"id":"r1","x":1,"y":1,"carrying":"none"}],"packages":[{"id":"p1","x":1,"y":3,"zone":"zona_a","status":"pendiente"}]}' | swipl -q -s prolog/warehouse.pl -g warehouse_cli
+```powershell
+docker compose build backend
+docker run --rm -v "${PWD}/backend/tests:/app/tests:ro" `
+  -e PROLOG_PATH=/app/prolog/warehouse.pl `
+  proyecto_f2-backend:latest python -m unittest discover -s tests -v
 ```
+
+Resultado verificado: cinco pruebas correctas, incluida una simulacion completa con cinco entregas y decisiones originadas en Prolog.
+
+Evidencias adicionales recomendadas para la presentacion:
+
+1. Editor con un paquete arrastrado a una nueva casilla.
+2. Biblioteca con un escenario personalizado guardado.
+3. Robot recogiendo y entregando una caja.
+4. Swagger en `/docs` mostrando los endpoints de escenarios.

@@ -1,94 +1,86 @@
-# Smart Warehouse - Proyecto Fase 2 IA1
+# Smart Warehouse - Proyecto 2 IA1
 
-Smart Warehouse simula una bodega inteligente 10x10 donde un robot transporta paquetes hacia zonas de entrega. La decision de cada accion se origina en SWI-Prolog; Python coordina, aplica la accion y guarda historial.
+Smart Warehouse simula una bodega configurable de 10x10. Un robot recoge cinco paquetes y los entrega en su zona; la seleccion del objetivo, la ruta BFS y cada accion se originan en SWI-Prolog. FastAPI coordina el estado y SQLAlchemy conserva escenarios, pasos, metricas e historial.
 
-## Documentacion
+## Funciones principales
 
-Los documentos Markdown de soporte estan en `docs/`:
+- Editor visual para mover paquetes mediante clic o arrastre.
+- Biblioteca persistente de escenarios personalizados.
+- Validacion de limites, colisiones y zonas de entrega.
+- Busqueda de ruta minima BFS implementada completamente en Prolog.
+- Sincronizacion de mapa, robots, paquetes, zonas y obstaculos con Prolog en cada paso.
+- Ruta calculada y explicacion de la decision visibles en el mapa.
+- Controles de inicio, pausa, reinicio, paso a paso y modo automatico.
+- Dashboard e historial asociados al escenario inicial de cada simulacion.
+- Interfaz adaptable para escritorio y movil.
 
-- `docs/MANUAL_TECNICO.md`
-- `docs/MANUAL_USUARIO.md`
-- `docs/prompt_proyecto_f2.md`
-- `docs/transcripcion_proyecto_f2.md`
-- `docs/evidencias/README.md`
-
-## Ejecutar rapido en local
-
-Desde la raiz del repositorio:
-
-```powershell
-cd proyecto_f2
-$env:PYTHONPATH="backend"
-$env:DATABASE_URL="sqlite:///./warehouse_dev.db"
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8400
-```
-
-En otra terminal:
-
-```powershell
-cd proyecto_f2/frontend
-python -m http.server 8411 --bind 127.0.0.1
-```
-
-Abrir:
-
-- Frontend: http://127.0.0.1:8411/index.html
-- API: http://127.0.0.1:8400/api/health
-- Swagger: http://127.0.0.1:8400/docs
-
-Requisito local: tener `swipl` en PATH. Con Docker Compose ya va instalado.
+La vision por computadora no forma parte de esta version.
 
 ## Ejecutar con Docker Compose
 
 ```powershell
 cd proyecto_f2
-docker compose up --build
+docker compose up --build -d
 ```
 
 Abrir:
 
-- Frontend: http://localhost:8401
+- Interfaz: http://localhost:8401
 - API: http://localhost:8400/api/health
 - Swagger: http://localhost:8400/docs
 
-## Como ver que funciona
-
-1. Entrar al frontend.
-2. Pulsar `Iniciar`.
-3. Pulsar `Paso` varias veces.
-4. Observar que el robot se mueve en el mapa y el panel muestra la accion devuelta por Prolog.
-5. Continuar hasta que el robot recoja un paquete y lo entregue en su zona.
-6. Pulsar `Automatico` para ejecutar pasos continuos.
-7. Abrir `Dashboard` para revisar entregas, movimientos, eficiencia, pendientes e historial.
-
-## Prueba Prolog directa
-
-Desde `proyecto_f2`:
+Si esos puertos estan ocupados:
 
 ```powershell
-'{"robot_id":"r1","robots":[{"id":"r1","x":1,"y":1,"carrying":"none"}],"packages":[{"id":"p1","x":1,"y":3,"zone":"zona_a","status":"pendiente"}]}' | swipl -q -s prolog/warehouse.pl -g warehouse_cli
+$env:BACKEND_PORT="8420"
+$env:FRONTEND_PORT="8421"
+docker compose up --build -d
 ```
 
-Respuesta esperada inicial: `mover_abajo`.
+## Flujo recomendado
 
-## Requisitos cubiertos
+1. Abrir `Simulacion`.
+2. Pulsar `Editar mapa`.
+3. Seleccionar un paquete y colocarlo en una casilla libre.
+4. Elegir su zona y pulsar `Aplicar diseño`, o guardarlo con `Guardar como`.
+5. Pulsar `Iniciar` y luego `Ejecutar paso` o `Automatico`.
+6. Observar la ruta BFS, el objetivo y la explicacion generada por Prolog.
+7. Abrir `Analitica` para consultar metricas e historial.
 
-- Mapa 10x10.
-- 1 robot funcional.
-- 5 paquetes.
-- 2 zonas de entrega.
-- 8 obstaculos.
-- Acciones: `mover_arriba`, `mover_abajo`, `mover_izquierda`, `mover_derecha`, `recoger_paquete`, `entregar_paquete`, `esperar`.
-- Hechos, reglas, variables, listas y corte `!` en Prolog.
-- Backend Python con FastAPI.
-- Frontend visual con modo paso a paso y automatico.
-- Historial y metricas en base de datos real SQLite.
+## Pruebas
+
+Pruebas locales; la prueba integral se omite si `swipl` no esta instalado:
+
+```powershell
+$env:PYTHONPATH="backend"
+python -m unittest discover -s backend/tests -v
+```
+
+Prueba integral dentro de la imagen Docker:
+
+```powershell
+docker compose build backend
+docker run --rm -v "${PWD}/backend/tests:/app/tests:ro" `
+  -e PROLOG_PATH=/app/prolog/warehouse.pl `
+  proyecto_f2-backend:latest python -m unittest discover -s tests -v
+```
+
+La prueba integral exige que Prolog complete los cinco paquetes en menos de 250 decisiones sin devolver `esperar`.
+
+## Documentacion y evidencias
+
+- `docs/MANUAL_TECNICO.md`
+- `docs/MANUAL_USUARIO.md`
+- `docs/evidencias/simulacion_redisenada.png`
+- `docs/evidencias/dashboard_redisenado.png`
 
 ## Estructura
 
 ```text
-backend/   API FastAPI, simulacion, persistencia e integracion Prolog
-prolog/    hechos, reglas y consulta CLI
-frontend/  simulacion visual y dashboard
-docs/      manuales, prompt, transcripcion y evidencias
+backend/app/schemas/       validacion de escenarios
+backend/app/services/      simulacion, escenarios e integracion Prolog
+backend/tests/             pruebas unitarias e integrales
+prolog/                    hechos, BFS, reglas y entrada JSON
+frontend/                  simulacion, editor y dashboard
+docs/                      manuales y evidencias
 ```
