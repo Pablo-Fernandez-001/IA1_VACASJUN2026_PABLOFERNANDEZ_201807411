@@ -6,6 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.database.session import Base
+from app.models.entities import Scenario, SimulationCheckpoint
+from app.routers.simulation import history_detail
 from app.services import simulation_service
 from app.services.scenario_service import DEFAULT_CONFIGURATION
 
@@ -27,12 +29,38 @@ class SimulationConfigurationTests(unittest.TestCase):
         custom = deepcopy(DEFAULT_CONFIGURATION)
         custom["packages"][0]["x"] = 2
         custom["packages"][0]["y"] = 2
+        custom["obstacles"][0]["x"] = 4
+        custom["obstacles"][0]["y"] = 4
         simulation_service.activate_configuration(custom, scenario_name="Prueba", dirty=True)
         simulation_service.reset_state()
         state = simulation_service.current_state()
         package = next(item for item in state["packages"] if item["id"] == "p1")
         self.assertEqual((package["x"], package["y"]), (2, 2))
+        self.assertIn({"x": 4, "y": 4}, state["obstacles"])
         self.assertEqual(state["scenario"]["name"], "Prueba")
+
+    def test_empty_inventory_completes_on_start(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        db = sessionmaker(bind=engine)()
+        custom = deepcopy(DEFAULT_CONFIGURATION)
+        custom["packages"] = []
+        simulation_service.activate_configuration(custom, scenario_name="Sin paquetes")
+        result = simulation_service.start(db)
+        simulation_id = result["simulation_id"]
+        self.assertIsNotNone(result["scenario"]["id"])
+        self.assertTrue(result["scenario"]["name"].startswith("Auto "))
+        self.assertEqual(db.query(Scenario).count(), 1)
+        self.assertEqual(
+            [item.event for item in db.query(SimulationCheckpoint).filter_by(simulation_id=simulation_id).all()],
+            ["started", "completed"],
+        )
+        simulation_service.reset(db)
+        events = [item.event for item in db.query(SimulationCheckpoint).filter_by(simulation_id=simulation_id).order_by(SimulationCheckpoint.id).all()]
+        db.close()
+        self.assertEqual(result["phase"], "completed")
+        self.assertEqual(result["deliveries"], 0)
+        self.assertEqual(events, ["started", "completed", "reset"])
 
 
 @unittest.skipUnless(shutil.which("swipl"), "SWI-Prolog no esta disponible")
@@ -63,6 +91,11 @@ class PrologEndToEndTests(unittest.TestCase):
         self.assertEqual(result["deliveries"], 5)
         self.assertEqual(result["phase"], "completed")
         self.assertEqual(result["last_source"], "prolog")
+        detail = history_detail(result["simulation_id"], self.db)
+        self.assertEqual(detail["analytics"]["deliveries"], 5)
+        self.assertEqual(detail["analytics"]["waits"], 0)
+        self.assertEqual(sum(detail["analytics"]["action_counts"].values()), result["steps"])
+        self.assertEqual([item["event"] for item in detail["checkpoints"]], ["started", "completed"])
 
 
 if __name__ == "__main__":

@@ -28,6 +28,21 @@ class ScenarioValidationTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             ScenarioConfiguration.model_validate(configuration)
 
+    def test_allows_custom_scenario_without_packages(self):
+        configuration = deepcopy(DEFAULT_CONFIGURATION)
+        configuration["packages"] = []
+        scenario = ScenarioConfiguration.model_validate(configuration)
+        self.assertEqual(scenario.packages, [])
+
+    def test_allows_added_shelf_and_relocated_zone(self):
+        configuration = deepcopy(DEFAULT_CONFIGURATION)
+        configuration["zones"][0]["x"] = 4
+        configuration["zones"][0]["y"] = 4
+        configuration["obstacles"].append({"x": 1, "y": 2})
+        scenario = ScenarioConfiguration.model_validate(configuration)
+        self.assertEqual((scenario.zones[0].x, scenario.zones[0].y), (4, 4))
+        self.assertEqual(len(scenario.obstacles), 9)
+
 
 if __name__ == "__main__":
     unittest.main()

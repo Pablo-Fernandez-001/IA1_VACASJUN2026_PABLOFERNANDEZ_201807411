@@ -10,11 +10,12 @@ from app.models.entities import (
     PackageRecord,
     RobotRecord,
     Simulation,
+    SimulationCheckpoint,
     SimulationScenario,
     SimulationStep,
 )
 from app.services.prolog_service import next_action
-from app.services.scenario_service import DEFAULT_CONFIGURATION, normalize_configuration
+from app.services.scenario_service import DEFAULT_CONFIGURATION, create_auto_scenario, normalize_configuration
 
 
 ACTIVE_CONFIGURATION = normalize_configuration(DEFAULT_CONFIGURATION)
@@ -211,7 +212,20 @@ def _record_snapshot(db: Session, action: str, reason: str) -> None:
             simulation.finished_at = datetime.utcnow()
             STATE["running"] = False
             STATE["phase"] = "completed"
+            _checkpoint(db, "completed")
     db.commit()
+
+
+def _checkpoint(db: Session, event: str) -> None:
+    if not STATE.get("simulation_id"):
+        return
+    db.add(
+        SimulationCheckpoint(
+            simulation_id=STATE["simulation_id"],
+            event=event,
+            snapshot=json.dumps(current_state()),
+        )
+    )
 
 
 def _close_previous_simulation(db: Session, status: str) -> None:
@@ -225,7 +239,19 @@ def _close_previous_simulation(db: Session, status: str) -> None:
 
 
 def start(db: Session) -> dict:
+    global ACTIVE_SCENARIO
+    if STATE.get("simulation_id"):
+        _checkpoint(db, "restarted")
     _close_previous_simulation(db, "restarted")
+    if ACTIVE_SCENARIO["id"] is None or ACTIVE_SCENARIO.get("dirty"):
+        autosaved = create_auto_scenario(db, ACTIVE_CONFIGURATION)
+        ACTIVE_SCENARIO = {
+            "id": autosaved.id,
+            "name": autosaved.name,
+            "is_default": False,
+            "dirty": False,
+            "autosaved": True,
+        }
     reset_state()
     simulation = Simulation(status="running")
     db.add(simulation)
@@ -245,6 +271,15 @@ def start(db: Session) -> dict:
     STATE["simulation_id"] = simulation.id
     STATE["started_at"] = simulation.started_at.isoformat()
     STATE["last_reason"] = "Simulacion iniciada; Prolog esta listo para decidir."
+    _checkpoint(db, "started")
+    if not STATE["packages"]:
+        simulation.status = "completed"
+        simulation.finished_at = datetime.utcnow()
+        STATE["running"] = False
+        STATE["phase"] = "completed"
+        STATE["last_reason"] = "El escenario no contiene paquetes pendientes."
+        _checkpoint(db, "completed")
+    db.commit()
     return current_state()
 
 
@@ -255,11 +290,13 @@ def pause(db: Session) -> dict:
         simulation = db.get(Simulation, STATE["simulation_id"])
         if simulation and simulation.status == "running":
             simulation.status = "paused"
+            _checkpoint(db, "paused")
             db.commit()
     return current_state()
 
 
 def reset(db: Session) -> dict:
+    _checkpoint(db, "reset")
     _close_previous_simulation(db, "reset")
     return reset_state()
 
@@ -270,6 +307,7 @@ def step(db: Session) -> dict:
     simulation = db.get(Simulation, STATE["simulation_id"])
     if simulation and simulation.status == "paused":
         simulation.status = "running"
+        _checkpoint(db, "resumed")
         db.commit()
     STATE["running"] = True
     STATE["phase"] = "running"

@@ -102,3 +102,13 @@ class SimulationScenario(Base):
     scenario_id: Mapped[int | None] = mapped_column(ForeignKey("scenarios.id"), nullable=True, index=True)
     scenario_name: Mapped[str] = mapped_column(String(80), default="Escenario temporal")
     initial_snapshot: Mapped[str] = mapped_column(Text, default="{}")
+
+
+class SimulationCheckpoint(Base):
+    __tablename__ = "simulation_checkpoints"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    simulation_id: Mapped[int] = mapped_column(ForeignKey("simulations.id"), index=True)
+    event: Mapped[str] = mapped_column(String(40))
+    snapshot: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

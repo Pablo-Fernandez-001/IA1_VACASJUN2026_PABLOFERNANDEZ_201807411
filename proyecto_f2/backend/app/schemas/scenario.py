@@ -40,7 +40,7 @@ class ObstacleConfiguration(StrictModel):
 class ScenarioConfiguration(StrictModel):
     map: MapConfiguration
     robots: list[RobotConfiguration] = Field(min_length=1)
-    packages: list[PackageConfiguration] = Field(min_length=5)
+    packages: list[PackageConfiguration] = Field(default_factory=list)
     zones: list[ZoneConfiguration] = Field(min_length=2)
     obstacles: list[ObstacleConfiguration] = Field(min_length=8)
 

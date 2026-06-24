@@ -1,5 +1,6 @@
 import json
 from copy import deepcopy
+from datetime import datetime
 
 from fastapi import HTTPException
 from sqlalchemy import func
@@ -125,6 +126,17 @@ def create_scenario(db: Session, name: str, configuration: dict | object) -> Sce
     db.commit()
     db.refresh(scenario)
     return scenario
+
+
+def create_auto_scenario(db: Session, configuration: dict | object) -> Scenario:
+    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H-%M-%S")
+    base_name = f"Auto {timestamp}"
+    name = base_name
+    suffix = 2
+    while db.query(Scenario).filter(func.lower(Scenario.name) == name.lower()).first():
+        name = f"{base_name} ({suffix})"
+        suffix += 1
+    return create_scenario(db, name, configuration)
 
 
 def update_scenario(db: Session, scenario_id: int, name: str, configuration: dict | object) -> Scenario:

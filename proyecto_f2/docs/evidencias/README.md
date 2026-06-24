@@ -4,6 +4,12 @@ Archivos incluidos:
 
 - `simulacion_redisenada.png`: mapa 10x10, primer movimiento, objetivo, ruta BFS y fuente Prolog.
 - `dashboard_redisenado.png`: metricas e historial persistente asociado a escenarios.
+- `editor_estanterias.png`: una estanteria trasladada desde el editor.
+- `editor_inventario.png`: sexto paquete añadido y disponible para eliminar o configurar.
+- `analitica_proceso.png`: detalle individual con acciones y decisiones paso a paso.
+- `editor_estanterias_zonas.png`: estanteria adicional y zona A reubicada.
+- `escenario_autoguardado.png`: diseño temporal persistido automáticamente al iniciar.
+- `historial_autoguardado.png`: proceso conservado tras eliminar el escenario, con checkpoints de inicio y reinicio.
 
 La prueba automatizada integral tambien constituye evidencia reproducible:
 

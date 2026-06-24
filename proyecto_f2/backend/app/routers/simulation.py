@@ -1,10 +1,12 @@
 import json
+from collections import Counter
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
-from app.models.entities import Simulation, SimulationScenario, SimulationStep
+from app.models.entities import Simulation, SimulationCheckpoint, SimulationScenario, SimulationStep
 from app.schemas.scenario import ScenarioApply, ScenarioCreate, ScenarioUpdate
 from app.services import scenario_service, simulation_service
 
@@ -99,7 +101,10 @@ def update_scenario(scenario_id: int, payload: ScenarioUpdate, db: Session = Dep
 
 @router.delete("/scenarios/{scenario_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_scenario(scenario_id: int, db: Session = Depends(get_db)):
-    was_active = simulation_service.current_state()["scenario"]["id"] == scenario_id
+    current = simulation_service.current_state()
+    was_active = current["scenario"]["id"] == scenario_id
+    if was_active and current["simulation_id"] is not None:
+        raise HTTPException(status_code=409, detail="Reinicia la simulacion antes de eliminar su escenario")
     scenario_service.delete_scenario(db, scenario_id)
     if was_active:
         default = scenario_service.ensure_default_scenario(db)
@@ -149,6 +154,10 @@ def history(db: Session = Depends(get_db)):
             "deliveries": item.deliveries,
             "moves": item.moves,
             "efficiency": item.efficiency,
+            "duration_seconds": round(
+                ((item.finished_at or datetime.utcnow()) - item.started_at).total_seconds(),
+                2,
+            ),
         }
         for item in simulations
     ]
@@ -168,11 +177,25 @@ def history_detail(simulation_id: int, db: Session = Depends(get_db)):
         .order_by(SimulationStep.step_number)
         .all()
     )
+    checkpoints = (
+        db.query(SimulationCheckpoint)
+        .filter(SimulationCheckpoint.simulation_id == simulation_id)
+        .order_by(SimulationCheckpoint.created_at)
+        .all()
+    )
+    action_counts = Counter(step.action for step in steps)
+    duration_seconds = (
+        round(((simulation.finished_at or datetime.utcnow()) - simulation.started_at).total_seconds(), 2)
+        if simulation
+        else 0
+    )
+    initial_configuration = json.loads(link.initial_snapshot) if link else None
+    deliveries = simulation.deliveries if simulation else 0
     return {
         "simulation": {
             "id": simulation.id,
             "scenario": link.scenario_name if link else "Escenario anterior",
-            "initial_configuration": json.loads(link.initial_snapshot) if link else None,
+            "initial_configuration": initial_configuration,
             "status": simulation.status,
             "started_at": simulation.started_at,
             "finished_at": simulation.finished_at,
@@ -180,6 +203,7 @@ def history_detail(simulation_id: int, db: Session = Depends(get_db)):
             "deliveries": simulation.deliveries,
             "moves": simulation.moves,
             "efficiency": simulation.efficiency,
+            "duration_seconds": duration_seconds,
         }
         if simulation
         else None,
@@ -192,4 +216,23 @@ def history_detail(simulation_id: int, db: Session = Depends(get_db)):
             }
             for step in steps
         ],
+        "checkpoints": [
+            {
+                "event": checkpoint.event,
+                "snapshot": json.loads(checkpoint.snapshot),
+                "created_at": checkpoint.created_at,
+            }
+            for checkpoint in checkpoints
+        ],
+        "analytics": {
+            "action_counts": dict(action_counts),
+            "waits": action_counts.get("esperar", 0),
+            "pickups": action_counts.get("recoger_paquete", 0),
+            "deliveries": action_counts.get("entregar_paquete", 0),
+            "average_steps_per_delivery": round(simulation.total_steps / deliveries, 2) if deliveries else 0,
+            "duration_seconds": duration_seconds,
+            "initial_packages": len(initial_configuration.get("packages", [])) if initial_configuration else None,
+            "initial_obstacles": len(initial_configuration.get("obstacles", [])) if initial_configuration else None,
+            "checkpoint_count": len(checkpoints),
+        },
     }

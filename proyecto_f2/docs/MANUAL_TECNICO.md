@@ -46,14 +46,16 @@ frontend/css/style.css
 
 ## Flujo frontend, backend y Prolog
 
-1. El frontend obtiene o edita una configuracion.
+1. El frontend obtiene o edita paquetes, estanterias y zonas de una configuracion.
 2. Pydantic valida dimensiones, minimos, identificadores, zonas, limites y colisiones.
-3. `Iniciar` crea una simulacion usando el escenario activo, sin volver a posiciones codificadas.
+3. `Iniciar` crea una simulacion usando el escenario activo; si era temporal, primero lo persiste como `Auto fecha-hora`.
 4. Cada paso envia a Prolog `map`, `robots`, `packages`, `zones` y `obstacles`.
 5. Prolog reconstruye sus hechos dinamicos y calcula el objetivo alcanzable mas cercano.
 6. BFS devuelve la ruta minima; `accion/2` prioriza recoger, entregar, mover y esperar.
 7. Python aplica exclusivamente la accion recibida, guarda el snapshot y actualiza metricas.
 8. El frontend resalta la ruta y presenta la explicacion de Prolog.
+9. El historial agrega por proceso la distribucion de acciones, duracion, esperas, promedios y trazabilidad completa.
+10. `simulation_checkpoints` conserva automáticamente estados de inicio, pausa, reanudación, finalización y previos a reinicio o reemplazo.
 
 ## Logica Prolog
 
@@ -130,13 +132,14 @@ Respuesta:
 
 ## Validacion del escenario
 
-El mapa admite dimensiones de 10 a 30. Se requieren al menos un robot, cinco paquetes, dos zonas y ocho obstaculos. No se permiten coordenadas fuera del mapa, identificadores repetidos, colisiones iniciales ni paquetes asignados a zonas inexistentes. Los estados de robots y paquetes se normalizan al guardar.
+El mapa admite dimensiones de 10 a 30. Se requieren al menos un robot, dos zonas y ocho obstaculos. El escenario base conserva cinco paquetes para cumplir el enunciado; los escenarios personalizados pueden añadir, eliminar o incluso dejar vacío el inventario. No se permiten coordenadas fuera del mapa, identificadores repetidos, colisiones iniciales ni paquetes asignados a zonas inexistentes.
 
 ## Base de datos
 
 - `scenarios`: nombre y configuracion JSON persistente.
 - `scenario_changes`: creacion y actualizaciones.
 - `simulation_scenarios`: escenario y snapshot inicial de cada corrida.
+- `simulation_checkpoints`: snapshots del ciclo de vida y copia previa a reinicios.
 - `simulations`: estado y resumen de la corrida.
 - `simulation_steps`: accion, razon y snapshot por paso.
 - `robots`, `packages` y `metrics`: estado historico por paso.
@@ -150,7 +153,21 @@ $env:PYTHONPATH="backend"
 python -m unittest discover -s backend/tests -v
 ```
 
-La suite verifica validaciones, persistencia de posiciones personalizadas y una corrida integral de cinco entregas. Para ejecutar la prueba integral sin instalar SWI-Prolog localmente, use el comando Docker documentado en `README.md`.
+La suite verifica validaciones, inventario variable, zonas reubicadas, estanterias añadidas, autoguardado, checkpoints previos al reinicio, analitica por proceso y una corrida integral de cinco entregas. Para ejecutar la prueba integral sin instalar SWI-Prolog localmente, use el comando Docker documentado en `README.md`.
+
+## Evidencias visuales
+
+### Editor completo
+
+![Editor con estantería añadida y zona A reubicada](evidencias/editor_estanterias_zonas.png)
+
+### Escenario temporal autoguardado
+
+![Escenario Auto activo](evidencias/escenario_autoguardado.png)
+
+### Persistencia antes de reiniciar
+
+![Analítica con checkpoints de inicio y reinicio](evidencias/historial_autoguardado.png)
 
 ## Distribucion de trabajo
 
