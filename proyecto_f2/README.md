@@ -27,15 +27,15 @@ docker compose up --build -d
 
 Abrir:
 
-- Interfaz: http://localhost:8521
-- API: http://localhost:8520/api/health
-- Swagger: http://localhost:8520/docs
+- Interfaz: http://localhost:8621
+- API: http://localhost:8620/api/health
+- Swagger: http://localhost:8620/docs
 
-Si esos puertos estan ocupados:
+Si esos puertos estan ocupados, use otro par libre:
 
 ```powershell
-$env:PROYECTO_F2_BACKEND_PORT="8620"
-$env:PROYECTO_F2_FRONTEND_PORT="8621"
+$env:PROYECTO_F2_BACKEND_PORT="8720"
+$env:PROYECTO_F2_FRONTEND_PORT="8721"
 docker compose up --build -d
 ```
 

@@ -7,7 +7,7 @@ cd proyecto_f2
 docker compose up --build -d
 ```
 
-Abra http://localhost:8521. La API queda en http://localhost:8520. Si el puerto esta ocupado, configure `PROYECTO_F2_BACKEND_PORT` y `PROYECTO_F2_FRONTEND_PORT` antes de ejecutar Docker Compose.
+Abra http://localhost:8621. La API queda en http://localhost:8620. Si el puerto esta ocupado, configure `PROYECTO_F2_BACKEND_PORT` y `PROYECTO_F2_FRONTEND_PORT` antes de ejecutar Docker Compose.
 
 ## Interpretar la interfaz
 

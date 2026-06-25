@@ -14,7 +14,7 @@ services:
     volumes:
       - ia_vacas_proyecto_f2_data:/data
     ports:
-      - "${PROYECTO_F2_BACKEND_PORT:-8520}:8000"
+      - "${PROYECTO_F2_BACKEND_PORT:-8620}:8000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
       interval: 10s
@@ -32,7 +32,7 @@ services:
       - ./frontend:/usr/share/nginx/html:ro
       - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "${PROYECTO_F2_FRONTEND_PORT:-8521}:80"
+      - "${PROYECTO_F2_FRONTEND_PORT:-8621}:80"
     depends_on:
       backend:
         condition: service_healthy
