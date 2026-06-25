@@ -1,17 +1,20 @@
+name: ia-vacas-proyecto-f2
+
 services:
   backend:
+    image: ia-vacas-proyecto-f2-backend:latest
     build:
       context: .
       dockerfile: backend/Dockerfile
-    container_name: smartwarehouse-backend
+    container_name: ia-vacas-proyecto-f2-backend
     restart: unless-stopped
     environment:
       DATABASE_URL: sqlite:////data/warehouse.db
       PROLOG_PATH: /app/prolog/warehouse.pl
     volumes:
-      - smartwarehouse_data:/data
+      - ia_vacas_proyecto_f2_data:/data
     ports:
-      - "${BACKEND_PORT:-8400}:8000"
+      - "${PROYECTO_F2_BACKEND_PORT:-8520}:8000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
       interval: 10s
@@ -19,26 +22,28 @@ services:
       retries: 10
       start_period: 10s
     networks:
-      - smartwarehouse-net
+      - ia_vacas_proyecto_f2_net
 
   frontend:
     image: nginx:1.27-alpine
-    container_name: smartwarehouse-frontend
+    container_name: ia-vacas-proyecto-f2-frontend
     restart: unless-stopped
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
       - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
-      - "${FRONTEND_PORT:-8401}:80"
+      - "${PROYECTO_F2_FRONTEND_PORT:-8521}:80"
     depends_on:
       backend:
         condition: service_healthy
     networks:
-      - smartwarehouse-net
+      - ia_vacas_proyecto_f2_net
 
 networks:
-  smartwarehouse-net:
+  ia_vacas_proyecto_f2_net:
+    name: ia-vacas-proyecto-f2-net
     driver: bridge
 
 volumes:
-  smartwarehouse_data:
+  ia_vacas_proyecto_f2_data:
+    name: ia-vacas-proyecto-f2-data

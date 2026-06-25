@@ -17,7 +17,7 @@ La prueba automatizada integral tambien constituye evidencia reproducible:
 docker compose build backend
 docker run --rm -v "${PWD}/backend/tests:/app/tests:ro" `
   -e PROLOG_PATH=/app/prolog/warehouse.pl `
-  proyecto_f2-backend:latest python -m unittest discover -s tests -v
+  ia-vacas-proyecto-f2-backend:latest python -m unittest discover -s tests -v
 ```
 
 Resultado verificado: cinco pruebas correctas, incluida una simulacion completa con cinco entregas y decisiones originadas en Prolog.

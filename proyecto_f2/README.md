@@ -27,17 +27,25 @@ docker compose up --build -d
 
 Abrir:
 
-- Interfaz: http://localhost:8401
-- API: http://localhost:8400/api/health
-- Swagger: http://localhost:8400/docs
+- Interfaz: http://localhost:8521
+- API: http://localhost:8520/api/health
+- Swagger: http://localhost:8520/docs
 
 Si esos puertos estan ocupados:
 
 ```powershell
-$env:BACKEND_PORT="8420"
-$env:FRONTEND_PORT="8421"
+$env:PROYECTO_F2_BACKEND_PORT="8620"
+$env:PROYECTO_F2_FRONTEND_PORT="8621"
 docker compose up --build -d
 ```
+
+Este Compose usa nombres exclusivos para no mezclarse con practicas anteriores:
+
+- Proyecto Compose: `ia-vacas-proyecto-f2`
+- Backend: `ia-vacas-proyecto-f2-backend`
+- Frontend: `ia-vacas-proyecto-f2-frontend`
+- Red: `ia-vacas-proyecto-f2-net`
+- Volumen: `ia-vacas-proyecto-f2-data`
 
 ## Flujo recomendado
 
@@ -64,7 +72,7 @@ Prueba integral dentro de la imagen Docker:
 docker compose build backend
 docker run --rm -v "${PWD}/backend/tests:/app/tests:ro" `
   -e PROLOG_PATH=/app/prolog/warehouse.pl `
-  proyecto_f2-backend:latest python -m unittest discover -s tests -v
+  ia-vacas-proyecto-f2-backend:latest python -m unittest discover -s tests -v
 ```
 
 La prueba integral exige que Prolog complete los cinco paquetes en menos de 250 decisiones sin devolver `esperar`.

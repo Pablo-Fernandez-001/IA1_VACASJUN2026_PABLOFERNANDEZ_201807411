@@ -1,5 +1,5 @@
-const LOCAL_API = location.hostname === "localhost" || location.hostname === "127.0.0.1" ? "http://127.0.0.1:8400" : "";
-const API_BASE = window.API_BASE_URL || (location.port === "8411" ? LOCAL_API : "");
+const LOCAL_API = location.hostname === "localhost" || location.hostname === "127.0.0.1" ? "http://127.0.0.1:8520" : "";
+const API_BASE = window.API_BASE_URL || (location.port === "8521" ? "" : LOCAL_API);
 
 async function api(path, options = {}) {
   const headers = { Accept: "application/json", ...(options.headers || {}) };
