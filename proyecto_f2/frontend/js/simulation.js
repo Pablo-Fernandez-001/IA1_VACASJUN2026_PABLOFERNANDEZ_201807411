@@ -564,10 +564,46 @@ async function applyDesign() {
   notify("Diseño aplicado. Ya puedes iniciar la simulacion.");
 }
 
+function askScenarioName(suggested) {
+  return new Promise(resolve => {
+    const overlay = document.createElement("div");
+    overlay.className = "name-dialog-backdrop";
+    overlay.innerHTML = `
+      <section class="name-dialog" role="dialog" aria-modal="true" aria-labelledby="scenarioNameTitle">
+        <p class="section-label">ESCENARIO</p>
+        <h2 id="scenarioNameTitle">Nombre del escenario</h2>
+        <p class="helper">Escribe un nombre para guardar esta configuración.</p>
+        <input id="scenarioNameInput" class="name-input" maxlength="80" value="${escapeHtml(suggested)}">
+        <div class="name-dialog-actions">
+          <button id="cancelScenarioName" class="button ghost" type="button">Cancelar</button>
+          <button id="acceptScenarioName" class="button primary" type="button">Guardar</button>
+        </div>
+      </section>
+    `;
+    document.body.appendChild(overlay);
+    const input = overlay.querySelector("#scenarioNameInput");
+    const close = value => {
+      overlay.remove();
+      resolve(value);
+    };
+    overlay.querySelector("#cancelScenarioName").addEventListener("click", () => close(null));
+    overlay.querySelector("#acceptScenarioName").addEventListener("click", () => close(input.value));
+    overlay.addEventListener("click", event => {
+      if (event.target === overlay) close(null);
+    });
+    input.addEventListener("keydown", event => {
+      if (event.key === "Enter") close(input.value);
+      if (event.key === "Escape") close(null);
+    });
+    input.focus();
+    input.select();
+  });
+}
+
 async function saveScenario(update = false) {
   const current = scenarios.find(item => item.id === state.scenario.id);
   const suggested = update && current ? current.name : `Escenario ${scenarios.length + 1}`;
-  const name = window.prompt("Nombre del escenario", suggested);
+  const name = await askScenarioName(suggested);
   if (!name?.trim()) return;
   try {
     const path = update ? `/api/scenarios/${current.id}` : "/api/scenarios";

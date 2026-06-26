@@ -1,82 +1,167 @@
-# Manual Tecnico - Smart Warehouse
+# Manual Técnico - Smart Warehouse
 
-## Resumen
+## 1. Resumen técnico
 
-Smart Warehouse es una simulacion de bodega inteligente configurable. El frontend permite diseñar escenarios y controlar la ejecucion; FastAPI valida y coordina el estado; SWI-Prolog selecciona objetivos y calcula rutas minimas con BFS; SQLAlchemy conserva escenarios, revisiones, simulaciones, pasos y metricas.
+Smart Warehouse es una simulación de bodega inteligente configurable. Integra una interfaz web, una API FastAPI, persistencia con SQLAlchemy y un motor simbólico en SWI-Prolog. El robot no decide en JavaScript ni en Python: cada paso consulta Prolog, que selecciona el objetivo y calcula una ruta mínima mediante BFS.
 
-## Arquitectura
+El sistema conserva escenarios, cambios de diseño, corridas, checkpoints, pasos, métricas y reportes PDF individuales.
+
+## 2. Arquitectura general
 
 ```mermaid
 flowchart LR
-    U[Usuario] --> FE[Editor y simulacion web]
-    FE -->|JSON REST| API[FastAPI]
-    API --> VAL[Validacion Pydantic]
-    API --> DB[(SQLite o PostgreSQL)]
-    API -->|Estado completo| PL[SWI-Prolog]
-    PL -->|Accion + ruta + explicacion| API
+    U[Usuario] --> FE[Frontend HTML/CSS/JS]
+    FE -->|REST JSON| API[FastAPI]
+    API --> VAL[Pydantic]
+    API --> DB[(SQLite/PostgreSQL)]
+    API -->|Estado completo JSON| PL[SWI-Prolog]
+    PL -->|Acción, ruta, objetivo y razón| API
     API --> FE
+    API --> PDF[Reporte PDF]
 ```
 
-## Tecnologias
+Responsabilidades:
 
-- SWI-Prolog 9 para hechos, inferencia y BFS.
-- Python 3.11, FastAPI, Pydantic y SQLAlchemy.
-- SQLite por defecto; compatible con PostgreSQL mediante `DATABASE_URL`.
+| Capa | Responsabilidad |
+|---|---|
+| Frontend | Edición visual, simulación, analítica y descarga de reportes |
+| FastAPI | Estado, validación, API REST, persistencia y coordinación |
+| Prolog | Selección de objetivo, BFS y acción siguiente |
+| SQLAlchemy | Modelado de tablas y almacenamiento histórico |
+| Docker | Empaquetado reproducible con SWI-Prolog incluido |
+
+## 3. Tecnologías
+
+- Python 3.11.
+- FastAPI.
+- SQLAlchemy.
+- Pydantic.
+- SWI-Prolog 9.
+- SQLite por defecto.
+- PostgreSQL compatible mediante `DATABASE_URL`.
 - HTML, CSS y JavaScript sin frameworks.
-- Nginx y Docker Compose.
+- Nginx para frontend en Docker.
+- Docker Compose.
 
-## Componentes
+## 4. Estructura del proyecto
 
 ```text
-backend/app/main.py
-backend/app/models/entities.py
-backend/app/schemas/scenario.py
-backend/app/services/prolog_service.py
-backend/app/services/scenario_service.py
-backend/app/services/simulation_service.py
-backend/app/routers/simulation.py
-backend/tests/
-prolog/facts.pl
-prolog/rules.pl
-prolog/warehouse.pl
-frontend/js/simulation.js
-frontend/js/dashboard.js
-frontend/css/style.css
+proyecto_f2/
+├─ backend/
+│  ├─ app/
+│  │  ├─ core/                 Configuración
+│  │  ├─ database/             Engine, sesión e inicialización
+│  │  ├─ models/               Entidades SQLAlchemy
+│  │  ├─ routers/              Endpoints REST
+│  │  ├─ schemas/              Validaciones Pydantic
+│  │  └─ services/             Simulación, escenarios, Prolog y PDF
+│  └─ tests/                   Pruebas unitarias e integrales
+├─ frontend/
+│  ├─ css/style.css            Diseño visual
+│  ├─ js/api.js                Cliente REST y shell visual
+│  ├─ js/simulation.js         Simulación y editor
+│  └─ js/dashboard.js          Analítica y reportes
+├─ prolog/
+│  ├─ facts.pl                 Hechos dinámicos
+│  ├─ rules.pl                 Reglas, objetivos y BFS
+│  └─ warehouse.pl             Entrada JSON para CLI
+├─ docs/
+│  ├─ MANUAL_USUARIO.md
+│  ├─ MANUAL_TECNICO.md
+│  └─ evidencias/
+└─ docker-compose.yml
 ```
 
-## Flujo frontend, backend y Prolog
+## 5. Configuración y puertos
 
-1. El frontend obtiene o edita paquetes, estanterias y zonas de una configuracion.
-2. Pydantic valida dimensiones, minimos, identificadores, zonas, limites y colisiones.
-3. `Iniciar` crea una simulacion usando el escenario activo; si era temporal, primero lo persiste como `Auto fecha-hora`.
-4. Cada paso envia a Prolog `map`, `robots`, `packages`, `zones` y `obstacles`.
-5. Prolog reconstruye sus hechos dinamicos y calcula el objetivo alcanzable mas cercano.
-6. BFS devuelve la ruta minima; `accion/2` prioriza recoger, entregar, mover y esperar.
-7. Python aplica exclusivamente la accion recibida, guarda el snapshot y actualiza metricas.
-8. El frontend resalta la ruta y presenta la explicacion de Prolog.
-9. El historial agrega por proceso la distribucion de acciones, duracion, esperas, promedios y trazabilidad completa.
-10. `simulation_checkpoints` conserva automáticamente estados de inicio, pausa, reanudación, finalización y previos a reinicio o reemplazo.
+Variables principales:
 
-## Logica Prolog
+| Variable | Valor por defecto | Uso |
+|---|---|---|
+| `PROYECTO_F2_BACKEND_PORT` | `8620` | Puerto host para FastAPI |
+| `PROYECTO_F2_FRONTEND_PORT` | `8621` | Puerto host para Nginx |
+| `DATABASE_URL` | `sqlite:////data/warehouse.db` en Docker | Base de datos |
+| `PROLOG_PATH` | `/app/prolog/warehouse.pl` en Docker | Archivo principal Prolog |
+| `CORS_ORIGINS` | `*` | Orígenes permitidos |
 
-`facts.pl` incluye hechos base y declara dinamicos `mapa/2`, `robot_estado/4`, `paquete_estado/5`, `zona_entrega/2` y `obstaculo/1`. `warehouse.pl` reemplaza esos hechos con el estado JSON actual en cada consulta.
+El Compose define nombres explícitos:
 
-Reglas principales:
+- `ia-vacas-proyecto-f2`
+- `ia-vacas-proyecto-f2-backend`
+- `ia-vacas-proyecto-f2-frontend`
+- `ia-vacas-proyecto-f2-net`
+- `ia-vacas-proyecto-f2-data`
 
-1. `dentro_mapa/2`: valida limites.
-2. `celda_libre/2`: evita obstaculos.
-3. `puede_recoger/2`: detecta un paquete pendiente bajo el robot.
-4. `puede_entregar/2`: valida la zona del paquete transportado.
-5. `ruta_mas_corta/4`: ejecuta busqueda en anchura.
-6. `bfs/5`: expande la frontera y conserva posiciones visitadas.
-7. `paquete_pendiente_mas_cercano/2`: compara longitudes de rutas alcanzables.
-8. `objetivo/2`: selecciona paquete o zona.
-9. `plan_ruta/4`: produce acciones y posiciones de la ruta.
-10. `accion/2`: usa cortes `!` para priorizar recoger, entregar y mover.
+Esto evita colisiones con contenedores de otras prácticas.
 
-Se emplean variables, terminos `posicion(X,Y)`, listas de nodos pendientes y visitados, `findall/3`, `append/3`, `memberchk/2`, `keysort/2`, `maplist/3` y cortes.
+## 6. Flujo de ejecución
 
-## Contrato con Prolog
+1. El usuario diseña o selecciona un escenario.
+2. El frontend envía la configuración al backend.
+3. Pydantic valida mapa, robots, paquetes, zonas y obstáculos.
+4. Al iniciar, el backend crea una fila en `simulations`.
+5. Si el escenario era temporal, se persiste como `Auto fecha-hora`.
+6. En cada paso, FastAPI construye el estado completo.
+7. `prolog_service.py` invoca SWI-Prolog por subprocess.
+8. Prolog reconstruye hechos dinámicos desde JSON.
+9. Prolog calcula objetivo y ruta BFS.
+10. Prolog devuelve acción, ruta, objetivo, algoritmo y explicación.
+11. Python aplica la acción al estado.
+12. SQLAlchemy guarda snapshot, métricas y entidades históricas.
+13. El frontend redibuja mapa, ruta y métricas.
+
+## 7. Modelo de estado de simulación
+
+El estado activo contiene:
+
+```json
+{
+  "map": {"width": 10, "height": 10},
+  "phase": "running",
+  "simulation_id": 1,
+  "steps": 9,
+  "moves": 6,
+  "deliveries": 2,
+  "robots": [],
+  "packages": [],
+  "zones": [],
+  "obstacles": [],
+  "last_action": "mover_derecha",
+  "last_reason": "Prolog calculo...",
+  "last_route": [],
+  "last_target": {"x": 10, "y": 10},
+  "speed": {"key": "turbo", "interval_ms": 180, "multiplier": 4}
+}
+```
+
+El estado runtime vive en `simulation_service.py`. El escenario activo se mantiene separado para que un reinicio no destruya la configuración personalizada.
+
+## 8. Velocidad de recorrido
+
+La velocidad es una configuración del proceso de simulación expuesta por:
+
+```http
+PUT /api/simulation/speed
+```
+
+Payload:
+
+```json
+{"speed": "turbo"}
+```
+
+Velocidades:
+
+| Clave | Etiqueta | Intervalo |
+|---|---|---:|
+| `lenta` | Lenta | 1100 ms |
+| `normal` | Normal | 650 ms |
+| `rapida` | Rápida | 350 ms |
+| `turbo` | Turbo | 180 ms |
+
+El frontend usa el intervalo para controlar `setInterval`. El backend guarda la velocidad en snapshots y reportes para que el historial sea trazable.
+
+## 9. Integración con Prolog
 
 El backend ejecuta:
 
@@ -84,7 +169,7 @@ El backend ejecuta:
 swipl -q -s prolog/warehouse.pl -g warehouse_cli
 ```
 
-Entrada abreviada:
+Entrada enviada:
 
 ```json
 {
@@ -97,7 +182,7 @@ Entrada abreviada:
 }
 ```
 
-Respuesta:
+Respuesta esperada:
 
 ```json
 {
@@ -110,71 +195,277 @@ Respuesta:
 }
 ```
 
-## API REST
+## 10. Reglas principales en Prolog
 
-| Metodo | Ruta | Uso |
+Archivo principal: `prolog/rules.pl`.
+
+Predicados relevantes:
+
+| Predicado | Responsabilidad |
+|---|---|
+| `dentro_mapa/2` | Verifica límites |
+| `celda_libre/2` | Evita obstáculos |
+| `puede_recoger/2` | Detecta paquete pendiente en posición del robot |
+| `puede_entregar/2` | Verifica zona destino del paquete cargado |
+| `ruta_mas_corta/4` | Calcula camino mínimo |
+| `bfs/5` | Implementa búsqueda en anchura |
+| `paquete_pendiente_mas_cercano/2` | Escoge paquete alcanzable más cercano |
+| `objetivo/2` | Define paquete o zona de entrega |
+| `plan_ruta/4` | Convierte ruta en acción siguiente |
+| `accion/2` | Prioriza recoger, entregar, mover o esperar |
+
+La regla de objetivo para paquetes pendientes es:
+
+```prolog
+objetivo(Robot, posicion(TX, TY)) :-
+    paquete_pendiente_mas_cercano(Robot, Paquete),
+    paquete_estado(Paquete, TX, TY, _, pendiente).
+```
+
+Cuando el robot transporta un paquete, el objetivo pasa a ser la zona asignada.
+
+## 11. Validación de escenarios
+
+Archivo: `backend/app/schemas/scenario.py`.
+
+Reglas:
+
+- Mapa de 10 a 30 casillas por eje.
+- Al menos un robot.
+- Al menos dos zonas.
+- Al menos ocho obstáculos.
+- Paquetes con IDs únicos.
+- Robots con IDs únicos.
+- Zonas con IDs únicos.
+- Sin colisiones iniciales.
+- Paquetes asignados a zonas existentes.
+- Coordenadas dentro del mapa.
+
+Los escenarios personalizados pueden tener inventario variable, incluso cero paquetes. Si no hay paquetes, la corrida finaliza inmediatamente.
+
+## 12. Persistencia
+
+Modelos principales en `backend/app/models/entities.py`:
+
+| Tabla | Contenido |
+|---|---|
+| `scenarios` | Escenarios persistentes |
+| `scenario_changes` | Creación y actualizaciones |
+| `simulation_scenarios` | Snapshot inicial asociado a cada corrida |
+| `simulation_checkpoints` | Estados guardados por evento |
+| `simulations` | Resumen de cada corrida |
+| `simulation_steps` | Acción, explicación y snapshot por paso |
+| `robots` | Histórico de posición del robot |
+| `packages` | Histórico de paquetes |
+| `metrics` | Métricas registradas por paso |
+
+La base se crea con `Base.metadata.create_all`.
+
+## 13. Checkpoints automáticos
+
+Eventos guardados:
+
+| Evento | Cuándo ocurre |
+|---|---|
+| `started` | Al iniciar una corrida |
+| `paused` | Al pausar |
+| `resumed` | Al continuar una corrida pausada |
+| `completed` | Al entregar todos los paquetes |
+| `reset` | Antes de reiniciar |
+| `restarted` | Antes de reemplazar una ejecución activa |
+
+Cada checkpoint conserva el estado completo como JSON.
+
+## 14. API REST
+
+| Método | Ruta | Uso |
 |---|---|---|
 | GET | `/api/health` | Salud de la API |
-| GET | `/api/simulation/state` | Estado y escenario activo |
-| PUT | `/api/simulation/configuration` | Aplicar un diseño temporal |
-| POST | `/api/simulation/start` | Iniciar sobre el escenario activo |
+| GET | `/api/simulation/state` | Estado actual |
+| PUT | `/api/simulation/configuration` | Aplicar diseño temporal |
+| PUT | `/api/simulation/speed` | Cambiar velocidad |
+| POST | `/api/simulation/start` | Iniciar corrida |
 | POST | `/api/simulation/pause` | Pausar |
-| POST | `/api/simulation/reset` | Cerrar y volver al diseño inicial |
-| POST | `/api/simulation/step` | Consultar Prolog y ejecutar una accion |
-| POST | `/api/simulation/auto` | Ejecutar varios pasos |
+| POST | `/api/simulation/reset` | Reiniciar |
+| POST | `/api/simulation/step` | Ejecutar un paso Prolog |
+| POST | `/api/simulation/auto` | Ejecutar varios pasos desde API |
+| GET | `/api/metrics` | Métricas actuales |
 | GET/POST | `/api/scenarios` | Listar o crear escenarios |
-| GET/PUT/DELETE | `/api/scenarios/{id}` | Consultar, editar o eliminar |
-| POST | `/api/scenarios/{id}/activate` | Activar un escenario |
-| GET | `/api/scenarios/{id}/changes` | Historial de cambios |
-| GET | `/api/metrics` | Metricas actuales |
-| GET | `/api/history` | Historial de simulaciones |
-| GET | `/api/history/{id}` | Pasos y configuracion inicial |
+| GET/PUT/DELETE | `/api/scenarios/{id}` | Consultar, editar o eliminar escenario |
+| POST | `/api/scenarios/{id}/activate` | Activar escenario |
+| GET | `/api/scenarios/{id}/changes` | Cambios de escenario |
+| GET | `/api/history` | Historial de corridas |
+| GET | `/api/history/{id}` | Detalle analítico |
+| GET | `/api/history/{id}/report` | Reporte PDF |
 
-## Validacion del escenario
+## 15. Reportes PDF
 
-El mapa admite dimensiones de 10 a 30. Se requieren al menos un robot, dos zonas y ocho obstaculos. El escenario base conserva cinco paquetes para cumplir el enunciado; los escenarios personalizados pueden añadir, eliminar o incluso dejar vacío el inventario. No se permiten coordenadas fuera del mapa, identificadores repetidos, colisiones iniciales ni paquetes asignados a zonas inexistentes.
+Archivo: `backend/app/services/report_service.py`.
 
-## Base de datos
+El reporte se genera sin dependencias externas adicionales. El servicio construye un PDF básico con comandos PDF nativos:
 
-- `scenarios`: nombre y configuracion JSON persistente.
-- `scenario_changes`: creacion y actualizaciones.
-- `simulation_scenarios`: escenario y snapshot inicial de cada corrida.
-- `simulation_checkpoints`: snapshots del ciclo de vida y copia previa a reinicios.
-- `simulations`: estado y resumen de la corrida.
-- `simulation_steps`: accion, razon y snapshot por paso.
-- `robots`, `packages` y `metrics`: estado historico por paso.
+- Cabecera oscura estilo Analítica.
+- Tarjetas de métricas.
+- Barras de distribución de acciones.
+- Configuración inicial.
+- Velocidad de recorrido.
+- Tabla de pasos.
 
-Las tablas nuevas se crean con `Base.metadata.create_all`; no modifican las columnas de tablas antiguas.
+Endpoint:
 
-## Pruebas
+```http
+GET /api/history/{simulation_id}/report
+```
+
+Respuesta:
+
+```http
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="reporte_proceso_1.pdf"
+```
+
+Solo se permite descargar si la corrida tiene al menos un paso registrado.
+
+## 16. Frontend
+
+### `api.js`
+
+Define:
+
+- `API_BASE`.
+- Función `api()`.
+- `escapeHtml()`.
+- Shell visual compartido.
+
+### `simulation.js`
+
+Gestiona:
+
+- Render del mapa.
+- Editor visual.
+- Escenarios.
+- Velocidad.
+- Simulación paso a paso.
+- Modo automático.
+- Inventario.
+
+### `dashboard.js`
+
+Gestiona:
+
+- Métricas generales.
+- Historial.
+- Detalle por corrida.
+- Botones de reporte PDF.
+- Barras de distribución de acciones.
+
+### `style.css`
+
+Contiene:
+
+- Layout lateral.
+- Paneles.
+- Grid de bodega.
+- Tokens de robot, paquete, estantería y zona.
+- Tarjetas analíticas.
+- Botones de reporte.
+- Responsive.
+
+## 17. Evidencias visuales
+
+### Simulación y velocidad
+
+![Simulación con velocidad turbo](evidencias/simulacion_velocidad_actualizada.png)
+
+### Editor de mapa
+
+![Editor actualizado](evidencias/editor_mapa_actualizado.png)
+
+### Analítica y reportes
+
+![Historial con reporte PDF](evidencias/analitica_reportes_pdf.png)
+
+### Detalle por proceso
+
+![Detalle del proceso](evidencias/detalle_analitica_pdf.png)
+
+PDF de ejemplo:
+
+[reporte_proceso_demo.pdf](evidencias/reporte_proceso_demo.pdf)
+
+## 18. Pruebas
+
+Ejecutar pruebas locales:
 
 ```powershell
 $env:PYTHONPATH="backend"
 python -m unittest discover -s backend/tests -v
 ```
 
-La suite verifica validaciones, inventario variable, zonas reubicadas, estanterias añadidas, autoguardado, checkpoints previos al reinicio, analitica por proceso y una corrida integral de cinco entregas. Para ejecutar la prueba integral sin instalar SWI-Prolog localmente, use el comando Docker documentado en `README.md`.
+Ejecutar prueba integral dentro de Docker:
 
-## Evidencias visuales
+```powershell
+docker compose build backend
+docker run --rm -v "${PWD}/backend/tests:/app/tests:ro" `
+  -e PROLOG_PATH=/app/prolog/warehouse.pl `
+  ia-vacas-proyecto-f2-backend:latest python -m unittest discover -s tests -v
+```
 
-### Editor completo
+Cobertura funcional:
 
-![Editor con estantería añadida y zona A reubicada](evidencias/editor_estanterias_zonas.png)
+- Validación de escenarios.
+- Inventario variable.
+- Estanterías añadidas.
+- Zonas reubicadas.
+- Autoguardado.
+- Checkpoints.
+- Reportes PDF.
+- Velocidad registrada.
+- Corrida integral con Prolog cuando `swipl` está disponible.
 
-### Escenario temporal autoguardado
+## 19. Despliegue
 
-![Escenario Auto activo](evidencias/escenario_autoguardado.png)
+Construcción:
 
-### Persistencia antes de reiniciar
+```powershell
+docker compose build
+```
 
-![Analítica con checkpoints de inicio y reinicio](evidencias/historial_autoguardado.png)
+Inicio:
 
-## Distribucion de trabajo
+```powershell
+docker compose up -d
+```
 
-| Integrante | Responsabilidad |
-|---|---|
-| Pablo Fernandez | Backend, Prolog, frontend, pruebas y documentacion |
+Logs:
 
-## Mejoras futuras
+```powershell
+docker compose logs -f backend
+docker compose logs -f frontend
+```
 
-Vision por computadora con marcadores ArUco, edicion de obstaculos y zonas, multiples robots con prevencion de colisiones, reportes PDF y notificaciones.
+Apagado:
+
+```powershell
+docker compose down
+```
+
+Apagado eliminando datos persistentes:
+
+```powershell
+docker compose down -v
+```
+
+## 20. Limitaciones y mejoras futuras
+
+La visión por computadora no forma parte de esta versión. Queda como mejora futura usando marcadores ArUco o detección de objetos para reconstruir automáticamente el escenario físico.
+
+Mejoras posibles:
+
+- Múltiples robots.
+- Prevención de colisiones entre robots.
+- Prioridades por tipo de paquete.
+- Exportación adicional a CSV.
+- Autenticación.
+- Vista previa web del PDF.
+- Integración real con cámara.

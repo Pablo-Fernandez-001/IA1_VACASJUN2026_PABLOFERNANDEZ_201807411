@@ -1,29 +1,33 @@
 # Smart Warehouse - Proyecto 2 IA1
 
-Smart Warehouse simula una bodega configurable de 10x10. Un robot recoge cinco paquetes y los entrega en su zona; la seleccion del objetivo, la ruta BFS y cada accion se originan en SWI-Prolog. FastAPI coordina el estado y SQLAlchemy conserva escenarios, pasos, metricas e historial.
+Smart Warehouse es una simulación de bodega inteligente configurable. Un robot recoge paquetes y los entrega en zonas asignadas; la selección del objetivo, la ruta mínima BFS y cada acción se originan en SWI-Prolog. FastAPI coordina el estado, SQLAlchemy guarda escenarios e historial, y el frontend permite diseñar, ejecutar, analizar y descargar reportes PDF.
+
+![Simulación con velocidad](docs/evidencias/simulacion_velocidad_actualizada.png)
 
 ## Funciones principales
 
-- Editor visual para añadir o mover estanterias, reubicar zonas A/B y administrar paquetes mediante clic o arrastre.
-- Biblioteca persistente de escenarios personalizados.
-- Autoguardado de diseños temporales al iniciar y checkpoints antes de reiniciar.
-- Eliminacion de escenarios desde la interfaz, excepto `Bodega clasica`.
-- Validacion de limites, colisiones y zonas de entrega.
-- Busqueda de ruta minima BFS implementada completamente en Prolog.
-- Sincronizacion de mapa, robots, paquetes, zonas y obstaculos con Prolog en cada paso.
-- Ruta calculada y explicacion de la decision visibles en el mapa.
-- Selector de velocidad para el recorrido automatico: lenta, normal, rapida y turbo.
-- Controles de inicio, pausa, reinicio, paso a paso y modo automatico.
-- Dashboard con analisis individual de cada proceso: duracion, acciones, esperas, configuracion inicial, velocidad y decisiones paso a paso.
-- Descarga de reporte PDF con diseÃ±o de Analitica por cada corrida con recorrido registrado, aunque se repita el mismo escenario.
-- Interfaz adaptable para escritorio y movil.
+- Editor visual para paquetes, estanterías y zonas A/B.
+- Administración de inventario: añadir, mover, reasignar o eliminar paquetes.
+- Estanterías configurables: añadir, mover o eliminar respetando el mínimo del escenario.
+- Reubicación libre de zonas de entrega A/B.
+- Biblioteca de escenarios persistentes.
+- Escenario base protegido: `Bodega clásica`.
+- Eliminación de escenarios personalizados sin borrar historial.
+- Autoguardado de diseños temporales al iniciar.
+- Checkpoints automáticos antes de reiniciar, pausar, reanudar, completar o reemplazar.
+- Ruta mínima BFS implementada en Prolog.
+- Sincronización de mapa, robot, paquetes, zonas y obstáculos en cada paso.
+- Selector de velocidad: lenta, normal, rápida y turbo.
+- Dashboard analítico con historial, métricas, detalle por corrida y decisiones paso a paso.
+- Reporte PDF individual por cada corrida con recorrido registrado.
+- Interfaz adaptable para escritorio y pantallas pequeñas.
 
-La vision por computadora no forma parte de esta version.
+La visión por computadora no forma parte de esta versión.
 
 ## Ejecutar con Docker Compose
 
 ```powershell
-cd proyecto_f2
+cd C:\Users\pabda\OneDrive\Escritorio\IA-VACAS\proyecto_f2
 docker compose up --build -d
 ```
 
@@ -33,7 +37,7 @@ Abrir:
 - API: http://localhost:8620/api/health
 - Swagger: http://localhost:8620/docs
 
-Si esos puertos estan ocupados, use otro par libre:
+Si esos puertos están ocupados:
 
 ```powershell
 $env:PROYECTO_F2_BACKEND_PORT="8720"
@@ -41,27 +45,48 @@ $env:PROYECTO_F2_FRONTEND_PORT="8721"
 docker compose up --build -d
 ```
 
-Este Compose usa nombres exclusivos para no mezclarse con practicas anteriores:
+Nombres Docker exclusivos:
 
-- Proyecto Compose: `ia-vacas-proyecto-f2`
-- Backend: `ia-vacas-proyecto-f2-backend`
-- Frontend: `ia-vacas-proyecto-f2-frontend`
-- Red: `ia-vacas-proyecto-f2-net`
-- Volumen: `ia-vacas-proyecto-f2-data`
+| Recurso | Nombre |
+|---|---|
+| Proyecto Compose | `ia-vacas-proyecto-f2` |
+| Backend | `ia-vacas-proyecto-f2-backend` |
+| Frontend | `ia-vacas-proyecto-f2-frontend` |
+| Red | `ia-vacas-proyecto-f2-net` |
+| Volumen | `ia-vacas-proyecto-f2-data` |
 
 ## Flujo recomendado
 
-1. Abrir `Simulacion`.
+1. Abrir `Simulación`.
 2. Pulsar `Editar mapa`.
-3. Administrar paquetes o seleccionar la pestaña `Estanterias` para reorganizar el mapa.
-4. Pulsar `Aplicar diseño`, o guardar la configuracion con `Guardar como`.
-5. Elegir velocidad, pulsar `Iniciar` y luego `Ejecutar paso` o `Automatico`.
-6. Observar la ruta BFS, el objetivo y la explicacion generada por Prolog.
-7. Abrir `Analitica` y pulsar `Analizar` o `Descargar` en cualquier proceso con recorrido.
+3. Añadir o mover paquetes, estanterías y zonas.
+4. Pulsar `Aplicar diseño` o `Guardar como`.
+5. Elegir velocidad.
+6. Pulsar `Iniciar`.
+7. Ejecutar paso a paso o en modo `Automático`.
+8. Revisar la ruta y explicación generada por Prolog.
+9. Abrir `Analítica`.
+10. Pulsar `Analizar` o `Descargar` para obtener el PDF de una corrida.
+
+## Capturas y evidencias
+
+| Evidencia | Archivo |
+|---|---|
+| Simulación con velocidad | `docs/evidencias/simulacion_velocidad_actualizada.png` |
+| Editor actualizado | `docs/evidencias/editor_mapa_actualizado.png` |
+| Historial con reportes PDF | `docs/evidencias/analitica_reportes_pdf.png` |
+| Detalle analítico | `docs/evidencias/detalle_analitica_pdf.png` |
+| PDF de ejemplo | `docs/evidencias/reporte_proceso_demo.pdf` |
+
+## Documentación
+
+- [Manual de usuario](docs/MANUAL_USUARIO.md)
+- [Manual técnico](docs/MANUAL_TECNICO.md)
+- [Evidencias](docs/evidencias/README.md)
 
 ## Pruebas
 
-Pruebas locales; la prueba integral se omite si `swipl` no esta instalado:
+Pruebas locales:
 
 ```powershell
 $env:PYTHONPATH="backend"
@@ -77,22 +102,28 @@ docker run --rm -v "${PWD}/backend/tests:/app/tests:ro" `
   ia-vacas-proyecto-f2-backend:latest python -m unittest discover -s tests -v
 ```
 
-La prueba integral exige que Prolog complete los cinco paquetes en menos de 250 decisiones sin devolver `esperar`.
+La prueba integral con Prolog verifica que el robot complete las entregas sin devolver `esperar` cuando el escenario tiene ruta válida.
 
-## Documentacion y evidencias
-
-- `docs/MANUAL_TECNICO.md`
-- `docs/MANUAL_USUARIO.md`
-- `docs/evidencias/simulacion_redisenada.png`
-- `docs/evidencias/dashboard_redisenado.png`
-
-## Estructura
+## Estructura resumida
 
 ```text
-backend/app/schemas/       validacion de escenarios
-backend/app/services/      simulacion, escenarios e integracion Prolog
-backend/tests/             pruebas unitarias e integrales
-prolog/                    hechos, BFS, reglas y entrada JSON
-frontend/                  simulacion, editor y dashboard
-docs/                      manuales y evidencias
+backend/app/schemas/       Validación de escenarios
+backend/app/services/      Simulación, escenarios, Prolog y PDF
+backend/app/routers/       API REST
+backend/tests/             Pruebas unitarias e integrales
+prolog/                    Hechos, BFS, reglas y entrada JSON
+frontend/                  Simulación, editor y dashboard
+docs/                      Manuales y evidencias
+```
+
+## Apagar
+
+```powershell
+docker compose down
+```
+
+Para borrar también el volumen de datos:
+
+```powershell
+docker compose down -v
 ```

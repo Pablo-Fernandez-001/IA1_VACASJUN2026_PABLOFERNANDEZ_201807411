@@ -1,85 +1,275 @@
 # Manual de Usuario - Smart Warehouse
 
-## Iniciar
+## 1. Objetivo del sistema
+
+Smart Warehouse permite simular una bodega inteligente en una cuadrícula configurable. El usuario puede diseñar escenarios, mover estanterías, administrar paquetes, reubicar zonas de entrega, ejecutar el robot paso a paso o en modo automático, revisar métricas y descargar reportes PDF por cada corrida.
+
+El robot toma decisiones con apoyo de SWI-Prolog: selecciona el objetivo más conveniente, calcula una ruta mínima con BFS y devuelve la acción que debe ejecutarse.
+
+## 2. Requisitos para ejecutar
+
+Para usar el proyecto se recomienda Docker Desktop, porque la imagen del backend ya incluye SWI-Prolog.
+
+También se puede ejecutar localmente, pero en ese caso debe instalarse SWI-Prolog y configurar Python con las dependencias del backend.
+
+## 3. Iniciar con Docker Compose
+
+Abra PowerShell en la carpeta raíz del repositorio y ejecute:
 
 ```powershell
-cd proyecto_f2
+cd C:\Users\pabda\OneDrive\Escritorio\IA-VACAS\proyecto_f2
 docker compose up --build -d
 ```
 
-Abra http://localhost:8621. La API queda en http://localhost:8620. Si el puerto esta ocupado, configure `PROYECTO_F2_BACKEND_PORT` y `PROYECTO_F2_FRONTEND_PORT` antes de ejecutar Docker Compose.
+Cuando los contenedores estén listos, abra:
 
-## Interpretar la interfaz
+- Interfaz web: http://localhost:8621
+- API: http://localhost:8620/api/health
+- Swagger: http://localhost:8620/docs
 
-- Robot: ficha circular verde.
-- Paquete: caja amarilla identificada como `P1`, `P2`, etc.
-- Obstaculo: estanteria oscura.
-- Zona A/B: casilla punteada de entrega.
-- Puntos verdes numerados: ruta calculada por Prolog.
+El proyecto usa nombres Docker aislados para no mezclarse con otras prácticas:
 
-El panel derecho muestra la accion, la explicacion, el objetivo, la longitud de la ruta, las metricas y el inventario.
+- Proyecto Compose: `ia-vacas-proyecto-f2`
+- Backend: `ia-vacas-proyecto-f2-backend`
+- Frontend: `ia-vacas-proyecto-f2-frontend`
+- Red: `ia-vacas-proyecto-f2-net`
+- Volumen: `ia-vacas-proyecto-f2-data`
 
-## Diseñar un escenario
+Si los puertos están ocupados, use otros:
 
-Solo se puede editar cuando no hay una simulacion activa.
+```powershell
+$env:PROYECTO_F2_BACKEND_PORT="8720"
+$env:PROYECTO_F2_FRONTEND_PORT="8721"
+docker compose up --build -d
+```
 
-1. Pulse `Editar mapa`.
-2. En `Paquetes`, seleccione una caja en el mapa, inventario o selector del editor.
-3. Pulse una casilla libre o arrastre la caja hasta ella.
-4. Use `Añadir paquete` o `Eliminar seleccionado` para cambiar el inventario y asigne su zona.
-5. Abra `Estanterias`, seleccione `E1`, `E2`, etc., muévala o pulse `Añadir estanteria`.
-6. Abra `Zonas A/B` y coloque cualquiera de los dos puntos en una casilla libre.
-7. Use una de estas opciones:
-   - `Aplicar diseño`: usa el diseño sin guardarlo permanentemente.
-   - `Guardar como`: crea un escenario persistente.
-   - `Actualizar`: modifica el escenario personalizado activo.
-   - `Salir sin aplicar`: descarta el borrador.
+## 4. Pantalla principal de simulación
 
-No se puede colocar una caja o estanteria sobre el robot, otra entidad o una zona. Los escenarios con menos de cinco paquetes son validos, aunque la interfaz advierte cuántos faltan para cumplir el mínimo académico. El escenario base es inmutable.
+La pantalla principal muestra el mapa, los controles de ejecución, el selector de escenarios, el selector de velocidad, la decisión actual de Prolog, métricas rápidas y el inventario.
 
-![Editor de estanterías y zonas](evidencias/editor_estanterias_zonas.png)
+![Simulación con selector de velocidad](evidencias/simulacion_velocidad_actualizada.png)
 
-## Cargar escenarios
+Elementos visuales:
 
-Seleccione un escenario en la barra superior y pulse el boton de carga. Debe reiniciar primero si existe una simulacion activa.
+| Elemento | Significado |
+|---|---|
+| Robot verde | Unidad que recoge y entrega paquetes |
+| Caja amarilla | Paquete pendiente, en tránsito o entregado |
+| Estantería oscura | Obstáculo que el robot debe evitar |
+| Zona A/B | Punto de entrega |
+| Puntos verdes numerados | Ruta calculada por Prolog |
+| Tarjetas de métricas | Entregas, movimientos, pasos, pendientes y velocidad |
 
-El botón `×` elimina el escenario seleccionado después de confirmación. `Bodega clasica` no se puede eliminar y el historial asociado a escenarios eliminados se conserva.
+## 5. Controles principales
 
-Si aplica un diseño sin guardarlo, al pulsar `Iniciar` el sistema crea automáticamente un escenario con nombre `Auto fecha-hora`.
+| Control | Uso |
+|---|---|
+| `Iniciar` | Crea una nueva corrida con el escenario activo |
+| `Pausar` | Detiene la ejecución automática y registra checkpoint |
+| `Reiniciar` | Cierra la corrida actual y restaura el escenario inicial |
+| `Ejecutar paso` | Pide a Prolog una sola acción y la ejecuta |
+| `Automático` | Ejecuta pasos continuos según la velocidad elegida |
+| `Velocidad` | Cambia el intervalo de avance automático |
+| `Editar mapa` | Activa el modo de diseño cuando no hay corrida activa |
 
-![Escenario guardado automáticamente](evidencias/escenario_autoguardado.png)
+Velocidades disponibles:
 
-## Ejecutar
+| Velocidad | Intervalo | Multiplicador visual |
+|---|---:|---:|
+| Lenta | 1100 ms/paso | 0.5x |
+| Normal | 650 ms/paso | 1x |
+| Rápida | 350 ms/paso | 2x |
+| Turbo | 180 ms/paso | 4x |
 
-- `Iniciar`: crea una corrida con el escenario activo.
-- `Ejecutar paso`: pide una decision a Prolog y ejecuta una accion.
-- `Automatico`: ejecuta pasos segun la velocidad elegida; en modo normal usa 650 ms por paso. Vuelva a pulsarlo para detenerlo.
-- `Velocidad`: controla el intervalo del recorrido automatico. Puede usar lenta, normal, rapida o turbo; si cambia la velocidad durante `Automatico`, el recorrido se ajusta sin reiniciar la corrida.
-- `Pausar`: detiene el modo automatico y marca la corrida en pausa.
-- `Reiniciar`: cierra la corrida y recupera la distribucion inicial del escenario.
+Puede cambiar la velocidad incluso durante el modo automático. El temporizador se ajusta sin reiniciar la corrida.
 
-Cada paso guarda un snapshot. También se crean puntos de control al iniciar, pausar, reanudar, completar y justo antes de reiniciar o reemplazar una ejecución.
+## 6. Diseñar un escenario
+
+El editor solo se puede abrir cuando no hay una simulación activa. Si el botón `Editar mapa` está deshabilitado, pulse `Reiniciar` primero.
+
+![Editor actualizado de mapa](evidencias/editor_mapa_actualizado.png)
+
+El editor tiene tres pestañas:
+
+### 6.1 Paquetes
+
+Permite:
+
+- Seleccionar un paquete desde el mapa, inventario o lista del editor.
+- Arrastrar el paquete a una casilla libre.
+- Añadir nuevos paquetes.
+- Eliminar el paquete seleccionado.
+- Cambiar la zona de entrega asignada.
+
+Reglas importantes:
+
+- Un paquete no puede colocarse sobre el robot.
+- Un paquete no puede colocarse sobre una estantería.
+- Un paquete no puede colocarse sobre otro paquete.
+- Un paquete debe estar asignado a una zona existente.
+
+### 6.2 Estanterías
+
+Permite:
+
+- Seleccionar una estantería.
+- Moverla por arrastre o clic.
+- Añadir estanterías nuevas.
+- Eliminar estanterías personalizadas si se conserva el mínimo requerido.
+
+El escenario debe conservar al menos ocho estanterías.
+
+### 6.3 Zonas A/B
+
+Permite mover libremente las zonas de entrega A y B, siempre que la nueva casilla no esté ocupada por robot, paquete u obstáculo.
+
+## 7. Guardar, aplicar y actualizar diseños
+
+En modo editor hay tres acciones principales:
+
+| Acción | Resultado |
+|---|---|
+| `Aplicar diseño` | Usa el diseño como escenario temporal |
+| `Guardar como` | Crea un escenario persistente con nombre propio |
+| `Actualizar` | Sobrescribe el escenario personalizado activo |
+| `Salir sin aplicar` | Descarta el borrador |
+
+Si aplica un diseño temporal y luego pulsa `Iniciar`, el sistema lo guarda automáticamente con un nombre del tipo `Auto fecha-hora`.
+
+El escenario base `Bodega clásica` no se puede modificar ni eliminar.
+
+## 8. Cargar y eliminar escenarios
+
+En la barra superior puede seleccionar un escenario guardado. Para activarlo, pulse el botón de carga.
+
+También puede eliminar escenarios personalizados con el botón `×`. El historial de corridas se conserva aunque el escenario sea eliminado.
+
+No se permite eliminar:
+
+- `Bodega clásica`.
+- Un escenario que esté ejecutándose en ese momento.
+
+## 9. Ejecutar una corrida
+
+Flujo recomendado:
+
+1. Seleccione o diseñe un escenario.
+2. Elija la velocidad.
+3. Pulse `Iniciar`.
+4. Use `Ejecutar paso` para revisar cada decisión o `Automático` para dejar avanzar al robot.
+5. Observe la tarjeta `Decisión actual`.
+6. Revise la ruta resaltada en el mapa.
+7. Al finalizar, abra `Analítica`.
 
 Estados de paquete:
 
-- `pendiente`: espera ser recogido.
-- `en_robot`: viaja con el robot.
-- `entregado`: llego a su zona.
+| Estado | Significado |
+|---|---|
+| `pendiente` | Aún no ha sido recogido |
+| `en_robot` | Está siendo transportado |
+| `entregado` | Llegó a su zona asignada |
 
-## Analitica
+## 10. Analítica e historial
 
-La vista `Analitica` presenta entregas, movimientos, pendientes, eficiencia, tiempo y un historial persistente. Pulse `Analizar` en una fila para ver duración, pasos por entrega, esperas, distribución de acciones, configuración inicial, velocidad y todas las explicaciones emitidas por Prolog paso a paso.
+La vista `Analítica` muestra métricas globales, historial de procesos, estado de cada corrida, pasos, entregas, eficiencia y acciones disponibles.
 
-Pulse `Descargar` para obtener un reporte PDF individual de la corrida con diseÃ±o similar a la vista de Analitica. El boton aparece por cada proceso con al menos un paso recorrido; si ejecuta el mismo escenario varias veces, cada pasada conserva su propio reporte.
+![Historial con descarga PDF](evidencias/analitica_reportes_pdf.png)
 
-La franja `Guardado automatico` muestra los checkpoints disponibles, incluida la copia creada antes de reiniciar.
+Cada fila del historial incluye:
 
-![Historial y checkpoints automáticos](evidencias/historial_autoguardado.png)
+- ID del proceso.
+- Escenario usado.
+- Fecha y hora de inicio.
+- Estado.
+- Duración.
+- Pasos.
+- Entregas.
+- Eficiencia.
+- Botón `Analizar`.
+- Botón `Descargar`.
 
-## Solucion de problemas
+El botón `Descargar` aparece habilitado cuando la corrida tiene al menos un paso recorrido.
 
-- `Puerto ocupado`: cambie los puertos en `.env` o detenga el contenedor que los utiliza.
-- `SWI-Prolog no esta instalado`: utilice Docker Compose; la imagen ya lo incluye.
-- `No se puede editar`: pulse `Reiniciar` para cerrar la simulacion activa.
-- `Casilla protegida`: seleccione una casilla sin robot, zona, obstaculo ni otro paquete.
-- `Prolog devuelve esperar`: revise que exista un camino entre el robot y los paquetes o zonas.
+## 11. Analizar un proceso individual
+
+Al pulsar `Analizar`, se abre el detalle del proceso:
+
+![Detalle analítico con botón PDF](evidencias/detalle_analitica_pdf.png)
+
+El detalle incluye:
+
+- Entregas realizadas.
+- Movimientos.
+- Velocidad usada.
+- Promedio de pasos por entrega.
+- Eficiencia.
+- Esperas.
+- Checkpoints automáticos.
+- Distribución de acciones.
+- Configuración inicial.
+- Decisiones paso a paso.
+
+La tabla de decisiones muestra qué acción devolvió Prolog, la explicación y la hora registrada.
+
+## 12. Descargar reporte PDF
+
+Desde el historial o desde el detalle individual, pulse `Descargar` o `Descargar reporte`.
+
+El sistema genera un archivo PDF con:
+
+- Encabezado visual tipo Analítica.
+- Resumen de la corrida.
+- Métricas principales.
+- Velocidad usada.
+- Distribución de acciones.
+- Configuración inicial.
+- Recorrido paso a paso.
+- Explicaciones generadas por Prolog.
+
+Cada corrida tiene su propio reporte aunque se haya ejecutado el mismo escenario varias veces.
+
+Ejemplo incluido en evidencias:
+
+[Reporte PDF de ejemplo](evidencias/reporte_proceso_demo.pdf)
+
+## 13. Guardado automático y checkpoints
+
+El sistema guarda información automáticamente en estos momentos:
+
+| Evento | Qué se guarda |
+|---|---|
+| Inicio | Snapshot inicial de la corrida |
+| Pausa | Estado actual antes de pausar |
+| Reanudación | Estado al continuar |
+| Finalización | Estado final completado |
+| Reinicio | Estado previo a restaurar el escenario |
+| Reemplazo | Estado previo a iniciar una nueva corrida |
+
+Esto permite consultar procesos anteriores aunque se reinicie o elimine un escenario personalizado.
+
+## 14. Solución de problemas
+
+| Problema | Solución |
+|---|---|
+| Puerto ocupado | Cambie `PROYECTO_F2_BACKEND_PORT` y `PROYECTO_F2_FRONTEND_PORT` |
+| No carga la interfaz | Verifique `docker compose ps` y abra `http://localhost:8621` |
+| No responde la API | Abra `http://localhost:8620/api/health` |
+| No puedo editar | Reinicie la simulación activa |
+| No puedo colocar un elemento | Use una casilla libre sin robot, paquete, estantería o zona |
+| Prolog devuelve `esperar` | Revise que exista camino libre hacia el objetivo |
+| No descarga el PDF | Asegúrese de que la corrida tenga al menos un paso |
+| SWI-Prolog no está instalado localmente | Use Docker Compose |
+
+## 15. Cierre del sistema
+
+Para detener los contenedores:
+
+```powershell
+docker compose down
+```
+
+Si desea borrar también la base persistente del proyecto:
+
+```powershell
+docker compose down -v
+```

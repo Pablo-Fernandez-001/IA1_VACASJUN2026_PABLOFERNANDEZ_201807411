@@ -1,17 +1,55 @@
 # Evidencias de funcionamiento
 
-Archivos incluidos:
+Esta carpeta contiene capturas y archivos de salida usados en los manuales del proyecto.
 
-- `simulacion_redisenada.png`: mapa 10x10, primer movimiento, objetivo, ruta BFS y fuente Prolog.
-- `dashboard_redisenado.png`: metricas e historial persistente asociado a escenarios.
-- `editor_estanterias.png`: una estanteria trasladada desde el editor.
-- `editor_inventario.png`: sexto paquete añadido y disponible para eliminar o configurar.
-- `analitica_proceso.png`: detalle individual con acciones y decisiones paso a paso.
-- `editor_estanterias_zonas.png`: estanteria adicional y zona A reubicada.
-- `escenario_autoguardado.png`: diseño temporal persistido automáticamente al iniciar.
-- `historial_autoguardado.png`: proceso conservado tras eliminar el escenario, con checkpoints de inicio y reinicio.
+## Evidencias actualizadas
 
-La prueba automatizada integral tambien constituye evidencia reproducible:
+| Archivo | Descripción |
+|---|---|
+| `simulacion_velocidad_actualizada.png` | Pantalla principal con selector de velocidad en modo turbo, métricas y mapa operativo |
+| `editor_mapa_actualizado.png` | Editor de mapa con pestaña de estanterías, selección visual y modo diseño |
+| `analitica_reportes_pdf.png` | Dashboard de Analítica con historial, botones `Analizar` y `Descargar` |
+| `detalle_analitica_pdf.png` | Detalle individual con métricas, checkpoints, acciones, tabla de decisiones y botón de PDF |
+| `reporte_proceso_demo.pdf` | Reporte PDF generado desde `/api/history/{id}/report` |
+
+## Evidencias anteriores conservadas
+
+| Archivo | Descripción |
+|---|---|
+| `simulacion_redisenada.png` | Simulación rediseñada inicial |
+| `dashboard_redisenado.png` | Dashboard inicial con métricas e historial |
+| `editor_estanterias.png` | Editor con estantería movida |
+| `editor_inventario.png` | Inventario con paquete añadido |
+| `analitica_proceso.png` | Primer detalle analítico por proceso |
+| `editor_estanterias_zonas.png` | Estantería adicional y zona reubicada |
+| `escenario_autoguardado.png` | Escenario temporal autoguardado |
+| `historial_autoguardado.png` | Historial con checkpoints previos al reinicio |
+
+## Cómo reproducir las evidencias
+
+1. Levantar la aplicación:
+
+   ```powershell
+   cd C:\Users\pabda\OneDrive\Escritorio\IA-VACAS\proyecto_f2
+   docker compose up --build -d
+   ```
+
+2. Abrir http://localhost:8621.
+3. Ejecutar una corrida con al menos un paso.
+4. Ir a `Analítica`.
+5. Pulsar `Analizar` para ver el detalle.
+6. Pulsar `Descargar` para generar el PDF.
+
+## Evidencia automatizada
+
+La suite de pruebas también funciona como evidencia reproducible:
+
+```powershell
+$env:PYTHONPATH="backend"
+python -m unittest discover -s backend/tests -v
+```
+
+Con Docker:
 
 ```powershell
 docker compose build backend
@@ -20,11 +58,4 @@ docker run --rm -v "${PWD}/backend/tests:/app/tests:ro" `
   ia-vacas-proyecto-f2-backend:latest python -m unittest discover -s tests -v
 ```
 
-Resultado verificado: cinco pruebas correctas, incluida una simulacion completa con cinco entregas y decisiones originadas en Prolog.
-
-Evidencias adicionales recomendadas para la presentacion:
-
-1. Editor con un paquete arrastrado a una nueva casilla.
-2. Biblioteca con un escenario personalizado guardado.
-3. Robot recogiendo y entregando una caja.
-4. Swagger en `/docs` mostrando los endpoints de escenarios.
+La prueba integral se ejecuta cuando SWI-Prolog está disponible.
