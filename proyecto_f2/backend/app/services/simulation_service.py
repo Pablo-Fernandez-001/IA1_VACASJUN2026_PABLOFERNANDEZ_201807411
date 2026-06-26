@@ -20,6 +20,38 @@ from app.services.scenario_service import DEFAULT_CONFIGURATION, create_auto_sce
 
 ACTIVE_CONFIGURATION = normalize_configuration(DEFAULT_CONFIGURATION)
 ACTIVE_SCENARIO = {"id": None, "name": "Bodega clasica", "is_default": True, "dirty": False}
+SPEED_PRESETS = {
+    "lenta": {"key": "lenta", "label": "Lenta", "interval_ms": 1100, "multiplier": 0.5},
+    "normal": {"key": "normal", "label": "Normal", "interval_ms": 650, "multiplier": 1},
+    "rapida": {"key": "rapida", "label": "Rapida", "interval_ms": 350, "multiplier": 2},
+    "turbo": {"key": "turbo", "label": "Turbo", "interval_ms": 180, "multiplier": 4},
+}
+SPEED_ALIASES = {
+    "slow": "lenta",
+    "normal": "normal",
+    "fast": "rapida",
+    "rapida": "rapida",
+    "rápida": "rapida",
+    "turbo": "turbo",
+}
+DEFAULT_SPEED_KEY = "normal"
+ACTIVE_SPEED = deepcopy(SPEED_PRESETS[DEFAULT_SPEED_KEY])
+
+
+def _speed_payload(key: str) -> dict:
+    return deepcopy(SPEED_PRESETS[key])
+
+
+def default_speed() -> dict:
+    return _speed_payload(DEFAULT_SPEED_KEY)
+
+
+def speed_options() -> list[dict]:
+    return [_speed_payload(key) for key in SPEED_PRESETS]
+
+
+def current_speed() -> dict:
+    return deepcopy(ACTIVE_SPEED)
 
 
 def _runtime_from_configuration(configuration: dict) -> dict:
@@ -42,6 +74,7 @@ def _runtime_from_configuration(configuration: dict) -> dict:
         "last_source": None,
         "last_route": [],
         "last_target": None,
+        "speed": current_speed(),
     }
 
 
@@ -57,7 +90,19 @@ def reset_state() -> dict:
 def current_state() -> dict:
     snapshot = deepcopy(STATE)
     snapshot["scenario"] = deepcopy(ACTIVE_SCENARIO)
+    snapshot["speed_options"] = speed_options()
     return snapshot
+
+
+def set_speed(speed: str) -> dict:
+    global ACTIVE_SPEED
+    requested = (speed or "").strip().lower()
+    key = SPEED_ALIASES.get(requested, requested)
+    if key not in SPEED_PRESETS:
+        raise HTTPException(status_code=422, detail="Velocidad no valida")
+    ACTIVE_SPEED = _speed_payload(key)
+    STATE["speed"] = current_speed()
+    return current_state()
 
 
 def activate_configuration(
@@ -339,4 +384,5 @@ def metrics() -> dict:
     result = _metrics()
     result["phase"] = STATE["phase"]
     result["scenario"] = ACTIVE_SCENARIO["name"]
+    result["speed"] = current_speed()
     return result

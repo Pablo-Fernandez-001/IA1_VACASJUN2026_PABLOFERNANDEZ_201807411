@@ -12,8 +12,10 @@ Smart Warehouse simula una bodega configurable de 10x10. Un robot recoge cinco p
 - Busqueda de ruta minima BFS implementada completamente en Prolog.
 - Sincronizacion de mapa, robots, paquetes, zonas y obstaculos con Prolog en cada paso.
 - Ruta calculada y explicacion de la decision visibles en el mapa.
+- Selector de velocidad para el recorrido automatico: lenta, normal, rapida y turbo.
 - Controles de inicio, pausa, reinicio, paso a paso y modo automatico.
-- Dashboard con analisis individual de cada proceso: duracion, acciones, esperas, configuracion inicial y decisiones paso a paso.
+- Dashboard con analisis individual de cada proceso: duracion, acciones, esperas, configuracion inicial, velocidad y decisiones paso a paso.
+- Descarga de reporte PDF con diseÃ±o de Analitica por cada corrida con recorrido registrado, aunque se repita el mismo escenario.
 - Interfaz adaptable para escritorio y movil.
 
 La vision por computadora no forma parte de esta version.
@@ -53,9 +55,9 @@ Este Compose usa nombres exclusivos para no mezclarse con practicas anteriores:
 2. Pulsar `Editar mapa`.
 3. Administrar paquetes o seleccionar la pestaña `Estanterias` para reorganizar el mapa.
 4. Pulsar `Aplicar diseño`, o guardar la configuracion con `Guardar como`.
-5. Pulsar `Iniciar` y luego `Ejecutar paso` o `Automatico`.
+5. Elegir velocidad, pulsar `Iniciar` y luego `Ejecutar paso` o `Automatico`.
 6. Observar la ruta BFS, el objetivo y la explicacion generada por Prolog.
-7. Abrir `Analitica` y pulsar `Analizar` en cualquier proceso para consultar sus decisiones.
+7. Abrir `Analitica` y pulsar `Analizar` o `Descargar` en cualquier proceso con recorrido.
 
 ## Pruebas
 

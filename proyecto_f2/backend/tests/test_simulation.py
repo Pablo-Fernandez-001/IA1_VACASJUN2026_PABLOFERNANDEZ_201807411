@@ -6,8 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.database.session import Base
-from app.models.entities import Scenario, SimulationCheckpoint
-from app.routers.simulation import history_detail
+from app.models.entities import Scenario, Simulation, SimulationCheckpoint, SimulationScenario, SimulationStep
+from app.routers.simulation import history_detail, history_report
 from app.services import simulation_service
 from app.services.scenario_service import DEFAULT_CONFIGURATION
 
@@ -21,6 +21,7 @@ class SimulationConfigurationTests(unittest.TestCase):
             "is_default": True,
             "dirty": False,
         }
+        simulation_service.ACTIVE_SPEED = simulation_service.default_speed()
         simulation_service.STATE = simulation_service._runtime_from_configuration(
             DEFAULT_CONFIGURATION
         )
@@ -61,6 +62,48 @@ class SimulationConfigurationTests(unittest.TestCase):
         self.assertEqual(result["phase"], "completed")
         self.assertEqual(result["deliveries"], 0)
         self.assertEqual(events, ["started", "completed", "reset"])
+
+    def test_speed_is_reported_for_recorded_run(self):
+        engine = create_engine("sqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        db = sessionmaker(bind=engine)()
+        simulation_service.set_speed("turbo")
+        simulation = Simulation(status="running", total_steps=1, moves=1, deliveries=0, efficiency=0)
+        db.add(simulation)
+        db.flush()
+        db.add(
+            SimulationScenario(
+                simulation_id=simulation.id,
+                scenario_id=None,
+                scenario_name="Prueba reporte",
+                initial_snapshot='{"map":{"width":10,"height":10},"packages":[],"zones":[],"obstacles":[]}',
+            )
+        )
+        db.add(
+            SimulationStep(
+                simulation_id=simulation.id,
+                step_number=1,
+                robot_id="r1",
+                action="mover_derecha",
+                reason="Ruta minima calculada por Prolog",
+                snapshot=(
+                    '{"robots":[{"id":"r1","x":2,"y":1,"carrying":"none","status":"libre"}],'
+                    '"last_target":{"x":5,"y":1},'
+                    '"last_route":[{"x":1,"y":1},{"x":2,"y":1}],'
+                    '"speed":{"key":"turbo","label":"Turbo","interval_ms":180,"multiplier":4}}'
+                ),
+            )
+        )
+        db.commit()
+        detail = history_detail(simulation.id, db)
+        report = history_report(simulation.id, db)
+        db.close()
+        self.assertEqual(detail["simulation"]["speed"]["key"], "turbo")
+        self.assertEqual(detail["steps"][0]["route_length"], 2)
+        self.assertIn("reporte_proceso_", report.headers["content-disposition"])
+        self.assertEqual(report.media_type, "application/pdf")
+        self.assertTrue(report.body.startswith(b"%PDF-1.4"))
+        self.assertIn(b"Reporte de corrida", report.body)
 
 
 @unittest.skipUnless(shutil.which("swipl"), "SWI-Prolog no esta disponible")

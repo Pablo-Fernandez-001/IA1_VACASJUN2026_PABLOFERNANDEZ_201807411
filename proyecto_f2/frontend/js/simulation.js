@@ -27,6 +27,11 @@ app.innerHTML = `
       <button id="step" class="button accent"><span>›</span> Ejecutar paso</button>
       <button id="auto" class="button dark"><span>↠</span> Automatico</button>
     </div>
+    <div class="speed-picker">
+      <label for="speedSelect">Velocidad</label>
+      <select id="speedSelect"></select>
+      <span id="speedHint">650 ms/paso</span>
+    </div>
     <div class="scenario-picker">
       <label for="scenarioSelect">Escenario</label>
       <select id="scenarioSelect"></select>
@@ -343,6 +348,7 @@ function renderMetrics() {
   const values = [
     ["Entregas", state.deliveries, "✓"], ["Movimientos", state.moves, "↗"],
     ["Pasos", state.steps, "#"], ["Pendientes", pending, "□"],
+    ["Velocidad", `${state.speed?.multiplier || 1}x`, "⚡"],
   ];
   $("#metrics").innerHTML = values.map(([label, value, icon]) => `
     <article class="metric-card"><span class="metric-icon">${icon}</span><div><small>${label}</small><strong>${value}</strong></div></article>
@@ -427,6 +433,20 @@ function renderScenarios() {
   if (state.scenario.id) select.value = String(state.scenario.id);
 }
 
+function renderSpeedPicker() {
+  const options = state.speed_options?.length ? state.speed_options : [
+    { key: "lenta", label: "Lenta", interval_ms: 1100, multiplier: 0.5 },
+    { key: "normal", label: "Normal", interval_ms: 650, multiplier: 1 },
+    { key: "rapida", label: "Rapida", interval_ms: 350, multiplier: 2 },
+    { key: "turbo", label: "Turbo", interval_ms: 180, multiplier: 4 },
+  ];
+  $("#speedSelect").innerHTML = options.map(option => `
+    <option value="${escapeHtml(option.key)}">${escapeHtml(option.label)} · ${option.multiplier}x</option>
+  `).join("");
+  $("#speedSelect").value = state.speed?.key || "normal";
+  $("#speedHint").textContent = `${state.speed?.interval_ms || 650} ms/paso`;
+}
+
 function renderControls() {
   const active = state.simulation_id !== null;
   const completed = state.phase === "completed";
@@ -437,6 +457,7 @@ function renderControls() {
   $("#editScenario").disabled = active || busy;
   $("#loadScenario").disabled = active || busy || editMode;
   $("#scenarioSelect").disabled = active || busy || editMode;
+  $("#speedSelect").disabled = busy || editMode;
   const selectedScenario = scenarios.find(item => String(item.id) === $("#scenarioSelect").value);
   $("#deleteScenario").disabled = active || busy || editMode || !selectedScenario || selectedScenario.is_default;
 }
@@ -458,6 +479,7 @@ function render() {
   renderPackages();
   renderEditor();
   renderScenarios();
+  renderSpeedPicker();
   renderControls();
 }
 
@@ -493,6 +515,25 @@ function stopAuto(message = "") {
   timer = null;
   $("#auto").innerHTML = "<span>↠</span> Automatico";
   if (message) notify(message);
+}
+
+function autoDelay() {
+  return Number(state?.speed?.interval_ms || 650);
+}
+
+async function autoTick() {
+  if (busy) return;
+  const progressed = await command("/api/simulation/step");
+  if (!progressed) return stopAuto("El modo automatico se detuvo por un error.");
+  if (state.phase === "completed" || state.last_action === "esperar") {
+    stopAuto(state.phase === "completed" ? "Todas las entregas fueron completadas." : "Prolog no encontro una ruta disponible.");
+  }
+}
+
+function restartAutoTimer() {
+  if (!timer) return;
+  window.clearInterval(timer);
+  timer = window.setInterval(autoTick, autoDelay());
 }
 
 function enterEditor() {
@@ -551,11 +592,20 @@ $("#step").addEventListener("click", () => command("/api/simulation/step"));
 $("#auto").addEventListener("click", () => {
   if (timer) return stopAuto("Modo automatico detenido.");
   $("#auto").innerHTML = "<span>■</span> Detener";
-  timer = window.setInterval(async () => {
-    const progressed = await command("/api/simulation/step");
-    if (!progressed) return stopAuto("El modo automatico se detuvo por un error.");
-    if (state.phase === "completed" || state.last_action === "esperar") stopAuto(state.phase === "completed" ? "Todas las entregas fueron completadas." : "Prolog no encontro una ruta disponible.");
-  }, 650);
+  timer = window.setInterval(autoTick, autoDelay());
+});
+$("#speedSelect").addEventListener("change", async event => {
+  const previous = state.speed?.key || "normal";
+  const changed = await command("/api/simulation/speed", {
+    method: "PUT",
+    body: JSON.stringify({ speed: event.target.value }),
+  });
+  if (!changed) {
+    $("#speedSelect").value = previous;
+    return;
+  }
+  restartAutoTimer();
+  notify(`Velocidad ${state.speed.label} aplicada (${state.speed.interval_ms} ms/paso).`);
 });
 $("#editScenario").addEventListener("click", enterEditor);
 $("#cancelEdit").addEventListener("click", leaveEditor);

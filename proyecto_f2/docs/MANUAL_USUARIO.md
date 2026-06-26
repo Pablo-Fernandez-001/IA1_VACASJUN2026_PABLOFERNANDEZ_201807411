@@ -53,7 +53,8 @@ Si aplica un diseño sin guardarlo, al pulsar `Iniciar` el sistema crea automát
 
 - `Iniciar`: crea una corrida con el escenario activo.
 - `Ejecutar paso`: pide una decision a Prolog y ejecuta una accion.
-- `Automatico`: ejecuta pasos cada 650 ms; vuelva a pulsarlo para detenerlo.
+- `Automatico`: ejecuta pasos segun la velocidad elegida; en modo normal usa 650 ms por paso. Vuelva a pulsarlo para detenerlo.
+- `Velocidad`: controla el intervalo del recorrido automatico. Puede usar lenta, normal, rapida o turbo; si cambia la velocidad durante `Automatico`, el recorrido se ajusta sin reiniciar la corrida.
 - `Pausar`: detiene el modo automatico y marca la corrida en pausa.
 - `Reiniciar`: cierra la corrida y recupera la distribucion inicial del escenario.
 
@@ -67,7 +68,9 @@ Estados de paquete:
 
 ## Analitica
 
-La vista `Analitica` presenta entregas, movimientos, pendientes, eficiencia, tiempo y un historial persistente. Pulse `Analizar` en una fila para ver duración, pasos por entrega, esperas, distribución de acciones, configuración inicial y todas las explicaciones emitidas por Prolog paso a paso.
+La vista `Analitica` presenta entregas, movimientos, pendientes, eficiencia, tiempo y un historial persistente. Pulse `Analizar` en una fila para ver duración, pasos por entrega, esperas, distribución de acciones, configuración inicial, velocidad y todas las explicaciones emitidas por Prolog paso a paso.
+
+Pulse `Descargar` para obtener un reporte PDF individual de la corrida con diseÃ±o similar a la vista de Analitica. El boton aparece por cada proceso con al menos un paso recorrido; si ejecuta el mismo escenario varias veces, cada pasada conserva su propio reporte.
 
 La franja `Guardado automatico` muestra los checkpoints disponibles, incluida la copia creada antes de reiniciar.
 
